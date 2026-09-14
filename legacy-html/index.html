@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroForge — Engineering, evolved.</title>
+<meta name="description" content="Describe an engineering problem. Explore how NeuroForge turns constraints into physics-tested, optimized designs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07100F;--surface:#101B19;--text:#F4F7F5;--muted:#94A29E;--accent:#79F2C0;--blue:#7C8CFF;--line:#26332F}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 'IBM Plex Sans',sans-serif}a{color:inherit;text-decoration:none}button,textarea{font:inherit}button,a{ -webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}a,button{transition:background .2s,color .2s,border-color .2s}a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:5px}::selection{background:var(--accent);color:var(--bg)}.wrap{max-width:1240px;margin:auto;padding:0 36px}.nav{height:92px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:11px;align-items:center;font:600 23px 'Space Grotesk',sans-serif;letter-spacing:-1px}.brand svg{width:29px;color:var(--accent)}nav{display:flex;align-items:center;gap:32px;font-size:14px}nav>a:not(.nav-cta){color:#b4bfb9}nav>a:hover{color:var(--accent)}.nav-cta{border:1px solid #41524a;padding:9px 17px;border-radius:5px;display:flex;align-items:center;gap:20px}.arrow{width:17px;height:17px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.5}.hero{padding:78px 0 58px;display:grid;grid-template-columns:1fr 1.06fr;gap:54px;align-items:center}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:11px;font-weight:500;letter-spacing:1.8px;text-transform:uppercase}.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block}.hero h1{font:500 clamp(42px,4.3vw,60px)/1.08 'Space Grotesk',sans-serif;letter-spacing:-2.8px;margin:23px 0}.hero h1 span{color:var(--accent)}.intro{max-width:440px;color:#adbab4;font-size:17px;line-height:1.7;margin:0 0 28px}.prompt-box{padding:16px;background:#111e1a;border:1px solid #3c5348;border-radius:8px}.prompt-box label{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}.prompt-box textarea{display:block;resize:vertical;min-height:83px;width:100%;color:var(--text);border:0;background:transparent;padding:10px 0;font-size:15px;line-height:1.5}.prompt-foot{display:flex;justify-content:space-between;align-items:center;gap:12px}.prompt-foot span{font-size:11px;color:var(--muted)}.button{display:inline-flex;justify-content:center;align-items:center;gap:20px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:#082318;font-size:13px;font-weight:600;padding:11px 18px}.button:hover{background:#a1f7d3;border-color:#a1f7d3}.suggestions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px;color:var(--muted);font-size:11px}.chip{font-size:11px;color:#adbab4;border:1px solid var(--line);background:transparent;border-radius:4px;padding:4px 9px}.chip:hover,.chip.active{border-color:#547365;color:var(--accent);background:#13231b}.window{border:1px solid #33423b;border-radius:9px;background:#0d1714;overflow:hidden;box-shadow:0 30px 80px #0005;position:relative}.window-top{padding:14px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);font-size:11px;color:#bac7be}.window-top .file{margin-right:auto}.mini{font-size:9px;color:var(--muted);letter-spacing:1px}.status{color:var(--accent);background:#183125;padding:3px 7px;border-radius:3px;font-size:9px}.viewport{height:293px;position:relative;background:radial-gradient(ellipse at 50% 70%,#19352755,transparent 70%)}.view-label{position:absolute;top:16px;left:17px;font-size:10px;letter-spacing:1px;color:var(--muted)}.view-tools{position:absolute;right:14px;top:12px;display:flex;gap:4px}.view-tools button{background:#13221b;border:1px solid #304335;color:var(--muted);padding:5px 8px;font-size:10px;border-radius:3px}.view-tools button.active{color:var(--accent);border-color:#547365}.bridge{width:100%;height:100%}.bridge .structure{transition:stroke .2s}.load-label{fill:#b7c7ba;font-size:10px;font-family:'IBM Plex Sans',sans-serif}.legend{position:absolute;bottom:12px;left:17px;font-size:9px;color:var(--muted);display:flex;gap:8px;align-items:center}.legend-bar{height:4px;width:72px;background:linear-gradient(90deg,#79f2c0,#c0e584,#dfa75b);border-radius:2px}.axis{position:absolute;right:18px;bottom:15px;font:10px 'IBM Plex Sans';color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.metric{padding:15px}.metric+.metric{border-left:1px solid var(--line)}.metric span{display:block;font-size:10px;color:var(--muted);margin-bottom:5px}.metric strong{font:500 23px 'Space Grotesk'}.metric small{font-size:11px;color:var(--muted)}.metric .green{color:var(--accent)}.engine{padding:15px 17px}.engine-title{display:flex;justify-content:space-between;font-size:11px;align-items:center}.engine-title b{font-weight:500}.engine-title span{font-size:10px;color:var(--accent)}.chart{width:100%;height:41px;display:block;margin:10px 0 4px}.engine-bottom{font-size:9px;color:var(--muted);display:flex;justify-content:space-between}.preview-note{font-size:10px;color:var(--muted);text-align:right;margin:10px 0 0}.foundation{display:flex;justify-content:space-between;align-items:center;gap:25px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:24px 0}.foundation>span{font-size:11px;color:var(--muted);max-width:155px}.foundation-list{display:flex;gap:36px;color:#b1bfb7;font:500 14px 'Space Grotesk'}.foundation-list span{display:flex;align-items:center;gap:9px}.foundation-list i{height:6px;width:6px;border:1px solid #709680;transform:rotate(45deg)}section.content{padding-top:86px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:40px;margin-bottom:32px}h2{font:500 35px/1.2 'Space Grotesk';letter-spacing:-1.4px;margin:0}h2 span{color:var(--muted)}.section-head p{max-width:375px;font-size:14px;color:var(--muted);margin:0}.pipeline{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden}.step{padding:25px 22px;background:var(--surface)}.step+.step{border-left:1px solid var(--line)}.step-no{display:flex;justify-content:space-between;font:11px 'Space Grotesk';color:var(--accent);margin-bottom:27px}.step h3{font:500 16px 'Space Grotesk';margin:0 0 10px}.step p{font-size:13px;color:var(--muted);margin:0}.loop{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:11px;padding:16px}.loop svg{color:var(--accent)}.proof{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}.proof>div{padding:29px;background:#101b19;border:1px solid var(--line);border-radius:6px}.proof h3{font:500 22px 'Space Grotesk';letter-spacing:-.5px;margin:0 0 9px}.proof p{font-size:13px;color:var(--muted);margin:0 0 24px;max-width:395px}.bar-row{display:grid;grid-template-columns:112px 1fr 52px;gap:12px;align-items:center;font-size:11px;margin:14px 0;color:#bbc5bf}.bar{height:7px;background:#26332f}.bar i{display:block;height:100%;background:#65796d}.bar-row:last-of-type i{background:var(--accent)}.bar-row:last-of-type{color:var(--accent)}.fine{font-size:10px!important;margin:22px 0 0!important}.checks{list-style:none;margin:0;padding:0}.checks li{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:11px 0;font-size:12px;color:#bcc7c0}.checks li span{color:var(--accent);font-size:11px}.projects{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.project{border-top:1px solid #3b4d42;padding:22px 0;display:flex;flex-direction:column;align-items:start}.project>span{font-size:10px;color:var(--accent);letter-spacing:1px}.project h3{font:500 20px 'Space Grotesk';margin:12px 0}.project p{font-size:14px;color:var(--muted);margin:0 0 22px;flex:1}.text-link{background:none;border:0;padding:0;color:var(--text);font-size:12px;display:inline-flex;align-items:center;gap:14px}.text-link:hover{color:var(--accent)}.cta{margin-top:55px;padding:40px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:30px}.cta h2{font-size:28px}.cta p{color:var(--muted);font-size:14px;margin:10px 0 0}footer{padding:28px 0;display:flex;align-items:center;justify-content:space-between;gap:25px;color:var(--muted);font-size:11px}footer .brand{font-size:16px}footer .brand svg{width:20px}footer div{display:flex;gap:25px}#feedback{font-size:12px;color:var(--accent);margin:8px 0 0}#feedback:empty{display:none}@media(min-width:1400px){.hero{padding-top:94px;padding-bottom:74px}}@media(max-width:1000px){.hero{gap:28px}.wrap{padding:0 25px}.foundation-list{gap:17px;font-size:12px}.hero h1{font-size:46px}.prompt-foot span{max-width:90px}.step{padding:20px 16px}}@media(max-width:760px){.nav{height:75px}nav{gap:15px}nav>a:not(.nav-cta){display:none}.hero{grid-template-columns:1fr;padding-top:45px;gap:35px}.hero h1{font-size:49px;max-width:500px}.intro{max-width:100%}.prompt-foot span{max-width:none}.foundation{align-items:start;flex-direction:column;gap:16px}.foundation>span{max-width:none}.foundation-list{flex-wrap:wrap;gap:16px 24px}.section-head{display:block}.section-head p{margin-top:16px}.pipeline{grid-template-columns:1fr 1fr}.step:nth-child(3){border-left:0}.step:nth-child(n+3){border-top:1px solid var(--line)}.proof{grid-template-columns:1fr}.projects{grid-template-columns:1fr;gap:0}.project{padding:23px 0}.cta{align-items:start;flex-direction:column}section.content{padding-top:58px}h2{font-size:30px}footer{flex-wrap:wrap}.wrap{padding:0 22px}.loop{font-size:10px}.bar-row{grid-template-columns:98px 1fr 47px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="nav">
+<a class="brand" href="/" aria-label="NeuroForge home"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 25V7l12 18V7l12 18V7M4 7l12-4 12 4M4 25l12 4 12-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>neuroforge</a>
+<nav aria-label="Main navigation"><a href="/technology">The engine</a><a href="/projects">Explore projects</a><a class="nav-cta" href="/workspace">Open workspace <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></nav>
+</header>
+<main>
+<section class="hero" aria-labelledby="hero-title">
+<div>
+<div class="eyebrow"><span class="dot"></span>Physics-grounded. AI-discovered.</div>
+<h1 id="hero-title">Tell us what you<br>want to build.<br><span>Let physics<br>find the way.</span></h1>
+<p class="intro">From an engineering problem to an optimized design. An AI that generates, simulates, and evolves physical systems—not just CAD models.</p>
+<form id="design-form" class="prompt-box">
+<label for="prompt">Your next engineering problem</label>
+<textarea id="prompt" required minlength="15" maxlength="1000">Design a lightweight bridge spanning 2 meters that supports 500 N.</textarea>
+<div class="prompt-foot"><span>Start with a goal. Add constraints.</span><button class="button" id="generate" type="submit">Generate design <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+</form>
+<div class="suggestions"><span>Try a problem:</span><button class="chip active" data-example="bridge">Bridge</button><button class="chip" data-example="drone">Drone frame</button><button class="chip" data-example="thermal">Heatsink</button></div>
+<p id="feedback" role="status" aria-live="polite"></p>
+</div>
+<div id="demo">
+<div class="window">
+<div class="window-top"><span class="dot"></span><span class="file">bridge_optimization.nf</span><span class="status" id="run-status">CONVERGED</span></div>
+<div class="viewport">
+<span class="view-label">DESIGN SPACE / 3D</span>
+<div class="view-tools" aria-label="Visualization mode"><button class="active" id="stress" aria-pressed="true">Stress</button><button id="wire" aria-pressed="false">Wireframe</button></div>
+<svg class="bridge" viewBox="0 0 520 293" role="img" aria-label="Perspective truss bridge visualization with a 500 newton central load">
+<defs><pattern id="grid" width="32" height="24" patternUnits="userSpaceOnUse" patternTransform="matrix(1 .27 -1 .48 270 120)"><path d="M32 0H0V24" fill="none" stroke="#304337" stroke-width=".7"/></pattern><linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b2f3af"/><stop offset=".5" stop-color="#79f2c0"/><stop offset="1" stop-color="#469c75"/></linearGradient></defs>
+<rect x="15" y="85" width="490" height="200" fill="url(#grid)" opacity=".6"/>
+<g stroke="#4d6455" stroke-width="1" fill="none"><path d="M62 209l314 61m-314-61-7 12m321 49-6 12M76 201l-14 8m322 51-8 10"/><path d="M218 34v42m-5-6 5 6 5-6" stroke="#a9c0ae"/></g>
+<text x="230" y="51" class="load-label">500 N</text><text x="204" y="260" class="load-label" transform="rotate(11 204 260)">2,000 mm</text>
+<g fill="#243d2e" stroke="#48654f"><path d="m61 181 20-9 13 15-19 12zM367 241l20-10 13 15-21 12zM130 151l19-9 13 14-21 12zM439 211l18-10 12 15-20 12z"/></g>
+<g class="structure" fill="none" stroke="url(#steel)" stroke-width="3.2" stroke-linejoin="round">
+<path d="M77 179 141 100 214 89 297 110 375 240 77 179 151 194 225 209 300 225 375 240M77 179l137-90-63 105-10-94 84 109 72-99 3 115-86-136 161 151M145 149l64-79 73-11 83 21 78 130-298-61 74 15 74 15 75 16 75 15M145 149 282 59l-63 105-10-94 84 109 72-99 3 115-86-136 161 151"/>
+<path d="m77 179 68-30m-4-49 68-30m5 19 68-30m15 51 68-30m10 160 68-30M151 194l68-30m6 45 68-30m7 46 68-30M77 179l142-15m-68 30 142-15m-68 30 143-14m-68 30 143-15" stroke-width="1.5" opacity=".65"/>
+</g>
+<g fill="#c4f7c8"><circle cx="141" cy="100" r="3"/><circle cx="214" cy="89" r="3"/><circle cx="297" cy="110" r="3"/><circle cx="151" cy="194" r="3"/><circle cx="225" cy="209" r="3"/><circle cx="300" cy="225" r="3"/></g>
+</svg>
+<div class="legend"><span>Low stress</span><span class="legend-bar"></span><span>High</span></div><span class="axis">Y ↑ &nbsp; X →</span>
+</div>
+<div class="metrics"><div class="metric"><span>Optimized mass</span><strong id="mass">2.94 <small>kg</small></strong></div><div class="metric"><span>Material reduction</span><strong class="green" id="reduction">39.0<small>%</small></strong></div><div class="metric"><span>Safety factor</span><strong id="safety">2.14<small> ×</small></strong></div></div>
+<div class="engine"><div class="engine-title"><b>Optimization history</b><span id="generation">Generation 50 / 50</span></div><svg class="chart" viewBox="0 0 480 41" preserveAspectRatio="none" aria-label="Illustrative mass optimization curve"><path d="M0 35H480M0 15H480" stroke="#28372d" stroke-dasharray="3 5"/><path d="m0 3 18 9 18-3 18 9 18-3 18 9 18-5 18 8 18-2 18 6 18-2 18 3 18-1 18 2 18-1 18 2 18-1 18 1 18 1 18-1 18 1 18 1 18-1 18 1h48" fill="none" stroke="#79f2c0" stroke-width="1.7"/></svg><div class="engine-bottom"><span id="tested">10,000 candidates explored</span><span>Objective: minimize mass ↓</span></div></div>
+</div>
+<p class="preview-note">Illustrative bridge study · Preview data, not a validated engineering result</p>
+</div>
+</section>
+<div class="foundation"><span>ONE CONNECTED<br>ENGINEERING LOOP</span><div class="foundation-list"><span><i></i>Parametric geometry</span><span><i></i>Physics simulation</span><span><i></i>ML surrogate models</span><span><i></i>Evolutionary search</span></div></div>
+<section class="content" id="engine">
+<div class="section-head"><h2>Not a prompt-to-CAD tool.<br><span>A search for what works.</span></h2><p>Language defines the problem. Physics tests the answer. Every experiment teaches the engine where to look next.</p></div>
+<div class="pipeline">
+<article class="step"><div class="step-no">01 <span>→</span></div><h3>Define the constraints</h3><p>Turn your brief into loads, dimensions, materials, and objectives you can inspect and adjust.</p></article>
+<article class="step"><div class="step-no">02 <span>→</span></div><h3>Explore the design space</h3><p>Generate diverse parametric structures. Start with possibilities, not a library of finished designs.</p></article>
+<article class="step"><div class="step-no">03 <span>→</span></div><h3>Test against physics</h3><p>Evaluate stress, displacement, and failure. Reject candidates that break your constraints.</p></article>
+<article class="step"><div class="step-no">04 <span>↗</span></div><h3>Learn. Optimize. Repeat.</h3><p>A surrogate model guides the search. Evolutionary optimization proposes the next generation.</p></article>
+</div>
+<div class="loop"><svg class="arrow" viewBox="0 0 24 24"><path d="M20 7v7a5 5 0 0 1-5 5H4m4-4-4 4 4 4M4 12V5h13"/></svg>Promising candidates return to simulation. Predictions never replace final validation.</div>
+<div class="proof">
+<div><h3>Less material. More intelligence.</h3><p>Compare a conventional baseline with each stage of the search. See what changed—and what it saved.</p><div class="bar-row"><span>Human baseline</span><div class="bar"><i style="width:100%"></i></div><span>4.82 kg</span></div><div class="bar-row"><span>Initial AI design</span><div class="bar"><i style="width:77%;background:#7c8cff"></i></div><span>3.71 kg</span></div><div class="bar-row"><span>Optimized design</span><div class="bar"><i style="width:61%"></i></div><span>2.94 kg</span></div><p class="fine">Illustrative comparison for the bridge preview. Results depend on constraints.</p></div>
+<div><h3>An answer you can interrogate.</h3><p>A lighter structure means nothing without the evidence. Follow the assumptions, trade-offs, and simulation results behind a design.</p><ul class="checks"><li>Loads, materials & boundary conditions <span>Inspect</span></li><li>Stress maps & constraint margins <span>Understand</span></li><li>Candidate history & objective trade-offs <span>Compare</span></li><li>Geometry & engineering report <span>Export</span></li></ul></div>
+</div>
+</section>
+<section class="content">
+<div class="section-head"><h2>Start with a real problem.</h2><a href="/projects" class="text-link">Explore all projects <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+<div class="projects">
+<article class="project"><span>STRUCTURAL / AEROSPACE</span><h3>A lighter drone frame</h3><p>Minimize frame mass while maintaining a safety factor of 2. Explore geometry and material distribution.</p><button class="text-link" data-example="drone">Try this brief <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></article>
+<article class="project"><span>MECHANICAL / ROBOTICS</span><h3>A more efficient robot arm</h3><p>Lift 2 kg with less motor torque. Search link lengths and geometry to find a better balance.</p><button class="text-link" data-example="robot">Try this brief <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></article>
+<article class="project"><span>THERMAL / ELECTRONICS</span><h3>A cooler 100 W processor</h3><p>Keep the processor below 80°C. Explore fin geometries that improve thermal performance.</p><button class="text-link" data-example="thermal">Try this brief <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></article>
+</div>
+</section>
+<section class="cta"><div><h2>Your constraints. Unexplored possibilities.</h2><p>Give the engine a problem worth solving.</p></div><a href="/workspace" class="button">Open the engineering workspace <svg class="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></section>
+</main>
+<footer><a href="/" class="brand">neuroforge</a><span>Engineering, evolved. © 2026 NeuroForge</span><div><a href="/technology">Technology</a><a href="/projects">Projects</a></div></footer>
+</div>
+<script>
+const promptField=document.getElementById('prompt');
+const briefs={bridge:'Design a lightweight bridge spanning 2 meters that supports 500 N.',drone:'Design a drone frame that minimizes mass while maintaining a safety factor of 2.',robot:'Design a robotic arm that can lift 2 kg while minimizing motor torque.',thermal:'Design a heatsink that keeps a 100 W processor below 80°C.'};
+document.querySelectorAll('[data-example]').forEach(button=>button.addEventListener('click',()=>{
+promptField.value=briefs[button.dataset.example];
+document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.example===button.dataset.example));
+promptField.scrollIntoView({behavior:'smooth',block:'center'});promptField.focus({preventScroll:true});
+document.getElementById('feedback').textContent='';
+}));
+['stress','wire'].forEach(mode=>document.getElementById(mode).addEventListener('click',()=>{
+['stress','wire'].forEach(m=>{const b=document.getElementById(m);b.classList.toggle('active',m===mode);b.setAttribute('aria-pressed',String(m===mode));});
+document.querySelector('.structure').style.stroke=mode==='wire'?'#9ab5aa':'url(#steel)';
+document.querySelector('.legend').style.visibility=mode==='wire'?'hidden':'visible';
+}));
+document.getElementById('design-form').addEventListener('submit',e=>{
+e.preventDefault();
+const feedback=document.getElementById('feedback');
+if(!/bridge/i.test(promptField.value)){feedback.textContent='Brief ready. Open the engineering workspace to configure this project. This homepage preview demonstrates bridge optimization only.';return;}
+const button=document.getElementById('generate');button.disabled=true;
+feedback.textContent='Playing an illustrative optimization sequence. No physics simulation is running in this preview.';
+document.getElementById('run-status').textContent='PREVIEW RUNNING';
+let gen=0;
+const timer=setInterval(()=>{
+gen+=5;
+document.getElementById('generation').textContent=`Generation ${gen} / 50`;
+document.getElementById('tested').textContent=`${(gen*200).toLocaleString()} candidates explored`;
+const mass=4.82-(1.88*gen/50);
+document.getElementById('mass').innerHTML=mass.toFixed(2)+' <small>kg</small>';
+document.getElementById('reduction').innerHTML=((1-mass/4.82)*100).toFixed(1)+'<small>%</small>';
+if(gen===50){clearInterval(timer);button.disabled=false;document.getElementById('run-status').textContent='CONVERGED';feedback.textContent='Preview complete. Open the workspace to define materials, boundary conditions, and simulation settings for your own design.';}
+},220);
+});
+</script>
+</body>
+</html>
