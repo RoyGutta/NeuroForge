@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build output and compiler caches
+dist/
+.tsc-out/
+*.tsbuildinfo
+.vite/
+coverage/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Editor and OS artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Browser automation and QA artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+*.png
+!docs/**/*.png
+!public/**/*.png
+
+# Local experiment output (records exported from the workspace, benchmark runs)
+experiments/local/
+benchmarks/local/
+*.experiment.json
+
+# Future Python / ML tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.ipynb_checkpoints
+*.pt
+*.onnx
+*.npz
+data/raw/
+data/generated/
+
+# AI-assistant and agent tooling (local development only, never published)
+CLAUDE.md
+.claude/
+.claude-mem/
+.agent*
+*.agent.md
+scratchpad/
