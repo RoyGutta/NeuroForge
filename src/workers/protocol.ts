@@ -3,13 +3,16 @@
  * crossing the boundary is structured-clone-safe JSON.
  */
 import type { ExperimentConfig, ExperimentRecord, GenerationSummary } from "../engine/experiments/experiment";
+import type { StudyOptions, SurrogateStudy } from "../engine/ml/study";
 
 export type WorkerRequest =
   | { type: "start"; config: ExperimentConfig }
-  | { type: "cancel" };
+  | { type: "cancel" }
+  | { type: "surrogateStudy"; config: ExperimentConfig; options: StudyOptions };
 
 export type WorkerResponse =
   | { type: "started"; record: ExperimentRecord }
   | { type: "generation"; summary: GenerationSummary; totalEvaluations: number; wallTimeMs: number }
   | { type: "finished"; record: ExperimentRecord }
+  | { type: "study"; study: SurrogateStudy }
   | { type: "error"; message: string };

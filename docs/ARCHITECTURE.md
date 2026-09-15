@@ -64,9 +64,12 @@ bisection to just satisfy the same constraints.
 
 ### `src/engine/optimization`
 Ask/tell `Optimizer` interface. The optimiser never evaluates anything; the
-runner does. This is what lets evaluation move to a surrogate or a remote
-worker later. Registry with parameter schemas drives the UI. Algorithms:
-evolutionary (μ+λ), simulated annealing, random search.
+runner does. The runner passes a `ScreeningSpec` (objective metric and
+constraint specs) so model-based optimisers can reason about metrics before
+the solver runs. Registry with parameter schemas drives the UI. Algorithms:
+evolutionary (μ+λ), surrogate-assisted evolutionary, constrained Bayesian
+optimisation, simulated annealing, random search. Optimisers may expose
+`diagnostics()`, stored in the record.
 
 ### `src/engine/experiments`
 `runExperiment(config)` is a synchronous generator yielding a `started` event
@@ -80,6 +83,13 @@ and the engine version. Stores are async behind `ExperimentStore`.
 Finite-difference parameter sensitivity (normalised by variable range),
 binding-constraint detection, and a structured diff between two designs. All
 derived by calling the real evaluator; no text templates.
+
+### `src/engine/ml`
+`dataset.ts` (regenerate designs from a config, build and split datasets),
+`metrics.ts` (MAE, RMSE, R², coverage), `models/` (`SurrogateModel` contract;
+ridge, MLP, Gaussian process behind a registry), `study.ts` (held-out
+evaluation of models on a real experiment). Consumed by the learning
+optimisers and by the workspace's learning panel. See `docs/ML_PIPELINE.md`.
 
 ### `src/engine/interpret`
 `ProblemInterpreter` contract. The rule-based implementation extracts span,

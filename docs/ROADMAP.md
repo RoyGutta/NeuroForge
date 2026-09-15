@@ -18,12 +18,13 @@ value. A stage ships only when it is real, tested, and honest in the UI.
 These are development directions, not commitments. Each stage ships only when
 it is real, tested, and honest in the interface.
 
-## Next — v0.2 · Learning from simulation data
-- [ ] Dataset builder: (parameters → metrics, feasibility) rows from experiment records, seeded train/validation/test splits
-- [ ] `SurrogateModel` contract; ridge/polynomial baseline, MLP (Adam, seeded), Gaussian process
-- [ ] Hold-out evaluation: MAE, RMSE, R², interval calibration for the GP; shown in the workspace with predicted-vs-actual plots
-- [ ] Surrogate-assisted search: pre-screen k·λ proposals per generation, evaluate the top λ by FEA, report surrogate accuracy in the record
-- [ ] Bayesian optimisation (GP + expected improvement with constraint handling) as an `OptimizerDescriptor`
+## Done — v0.2.0 (2026-09-14) · Learning from simulation data
+- [x] Dataset builder: (parameters → metrics, feasibility) rows regenerated from experiment configs, seeded train/validation/test splits
+- [x] `SurrogateModel` contract; ridge/polynomial baseline, MLP (Adam, seeded), Gaussian process
+- [x] Hold-out evaluation: MAE, RMSE, R², interval coverage for the GP; workspace learning panel with predicted-vs-actual plots
+- [x] Surrogate-assisted search: pre-screen k·λ proposals per generation, evaluate the top λ by FEA, online accuracy in the record
+- [x] Bayesian optimisation (GP + constrained expected improvement) as an `OptimizerDescriptor`
+- [x] Benchmark script and first measured comparison (`docs/BENCHMARKS.md`)
 - [ ] CMA-ES
 
 ## v0.3 · Trade-offs
@@ -32,8 +33,7 @@ it is real, tested, and honest in the interface.
 - [ ] Symmetry option to halve the design space
 
 ## v0.4 · Benchmarks and stronger tracking
-- [ ] Benchmark suite: fixed problems × optimisers × seeds at equal evaluation budget
-- [ ] Objective-vs-evaluations plots with confidence bands; CSV/JSON export
+- [ ] Benchmark suite in the interface: fixed problems × optimisers × seeds; objective-vs-evaluations plots with confidence bands; CSV/JSON export
 - [ ] Result checksums and engine-version pinning in records; experiment comparison view
 
 ## v0.5 · Autonomous engineering loop

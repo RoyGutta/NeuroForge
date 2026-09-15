@@ -189,6 +189,8 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           </div>
         )}
 
+        {record?.optimizerDiagnostics && !running && <Diagnostics d={record.optimizerDiagnostics} />}
+
         {record && !running && (
           <button className="wide secondary" onClick={exportRecord}>
             Export experiment · JSON
@@ -199,5 +201,49 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
         </p>
       </div>
     </aside>
+  );
+}
+
+/** Algorithm diagnostics recorded by model-based optimisers. */
+function Diagnostics({ d }: { d: Record<string, unknown> }) {
+  const r2 = d.onlineR2 as Record<string, number> | undefined;
+  const ls = d.lengthscale as Record<string, number> | undefined;
+  return (
+    <div className="insight">
+      <strong>Model diagnostics · {String(d.surrogate ?? "")}</strong>
+      {r2 &&
+        Object.entries(r2).map(([k, v]) => (
+          <div className="kv" key={k}>
+            <span>online R² · {k}</span>
+            <b className={v > 0.9 ? "green" : v < 0.5 ? "bad" : undefined}>{Number.isFinite(v) ? v.toFixed(3) : "—"}</b>
+          </div>
+        ))}
+      {typeof d.predictedPairs === "number" && (
+        <div className="kv">
+          <span>predicted-then-evaluated pairs</span>
+          <b>{d.predictedPairs}</b>
+        </div>
+      )}
+      {typeof d.screenedGenerations === "number" && (
+        <div className="kv">
+          <span>screened generations</span>
+          <b>{d.screenedGenerations}</b>
+        </div>
+      )}
+      {typeof d.gpPoints === "number" && (
+        <div className="kv">
+          <span>GP training points</span>
+          <b>{d.gpPoints}</b>
+        </div>
+      )}
+      {ls &&
+        Object.entries(ls).map(([k, v]) => (
+          <div className="kv" key={k}>
+            <span>lengthscale · {k}</span>
+            <b>{Number.isFinite(v) ? v.toFixed(3) : "—"}</b>
+          </div>
+        ))}
+      <small>Predictions were made before the solver ran; accuracy is measured on exactly those designs.</small>
+    </div>
   );
 }

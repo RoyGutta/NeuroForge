@@ -5,6 +5,7 @@ import { usePageMeta } from "../hooks/usePageMeta";
 import css from "../styles/workspace.css?inline";
 import { EvidenceSection } from "./workspace/EvidenceSection";
 import { ExperimentPanel } from "./workspace/ExperimentPanel";
+import { LearningSection } from "./workspace/LearningSection";
 import { SpecPanel } from "./workspace/SpecPanel";
 import { Viewport } from "./workspace/Viewport";
 import { useWorkspace } from "./workspace/useWorkspace";
@@ -51,6 +52,7 @@ export function WorkspacePage() {
             <ExperimentPanel ws={ws} />
           </div>
           <EvidenceSection ws={ws} />
+          <LearningSection ws={ws} />
         </main>
         <Footer
           current="workspace"

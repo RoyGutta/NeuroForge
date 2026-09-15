@@ -51,8 +51,41 @@ children within bounds with recorded parent ids. On the truss problem the
 runner test requires ≥ 10 % mass reduction over the baseline in 4,000
 evaluations (observed ≈ 60–70 %).
 
+## Surrogate-assisted evolutionary
+The evolutionary algorithm above with a pre-screening step. Each generation
+the inner optimiser proposes k x lambda children (k = `screeningFactor`,
+default 4). Degree-2 polynomial ridge models of log(objective) and log(each
+constraint metric) are refitted on the evaluated archive using incrementally
+maintained normal equations (one shared Gram matrix, one right-hand side per
+target, rank-1 updates as designs enter and leave the archive). Children are
+ranked under Deb's rules with *predicted* metrics and only the top lambda are
+evaluated by the solver. Because predictions precede evaluation, each
+generation produces an honest online accuracy measurement; the record stores
+the online R² per target, the number of predicted/actual pairs, and fit time.
+Screening starts after `warmupEvaluations` solver calls.
+
+## Bayesian optimisation (constrained)
+Gaussian processes (RBF kernel, marginal-likelihood hyperparameters) model
+log(objective) and log(each constraint metric) in normalised design space.
+Each generation a batch of q candidates maximises constrained expected
+improvement, EI(x) times the product over constraints of P(g_c(x) satisfied),
+over a pool of uniform samples and Gaussian perturbations of the best designs,
+with a minimum-distance rule for batch diversity. The initial design is a
+seeded Latin hypercube. Hyperparameters are re-selected every
+`hyperparameterInterval` generations and the training set is capped at
+`maxPoints` (best half plus most recent half) to bound the O(n³) cost.
+Suited to small budgets (hundreds of evaluations); the evolutionary methods
+are preferable when solver calls are cheap.
+
+## Verification of the learning optimisers
+Both run to completion with feasible results on the truss problem, are
+deterministic per seed, and record diagnostics. Bayesian optimisation beats
+random search at an equal 240-evaluation budget in the test; the surrogate
+optimiser's online R² for mass exceeds 0.5 after warm-up. Whether either
+beats the plain evolutionary algorithm at equal budget is a benchmark
+question, answered in `docs/BENCHMARKS.md` when measured, not asserted here.
+
 ## Planned
-CMA-ES; Bayesian optimisation with a Gaussian-process surrogate and expected
-improvement; NSGA-II for Pareto fronts; surrogate-assisted pre-screening. Each
-will be a new `OptimizerDescriptor` in the registry and will be benchmarked
-against random search before it is offered in the UI.
+CMA-ES; NSGA-II for Pareto fronts. Each will be a new `OptimizerDescriptor`
+in the registry and benchmarked against random search before it is offered
+in the UI.

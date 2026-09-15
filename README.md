@@ -15,7 +15,7 @@ result, and no language model in the loop today.
 
 - **Live demo (local):** `npm install && npm run dev`
 - **Reproduce the canonical experiment:** `npm run reproduce`
-- **Documentation:** [Architecture](docs/ARCHITECTURE.md) · [Engineering models](docs/ENGINEERING_MODELS.md) · [Optimisation](docs/OPTIMIZATION.md) · [Experiments and reproducibility](docs/EXPERIMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Limitations](docs/LIMITATIONS.md)
+- **Documentation:** [Architecture](docs/ARCHITECTURE.md) · [Engineering models](docs/ENGINEERING_MODELS.md) · [Optimisation](docs/OPTIMIZATION.md) · [Machine-learning pipeline](docs/ML_PIPELINE.md) · [Benchmarks](docs/BENCHMARKS.md) · [Experiments and reproducibility](docs/EXPERIMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Limitations](docs/LIMITATIONS.md)
 
 ## Contents
 
@@ -25,7 +25,7 @@ result, and no language model in the loop today.
 - [Current capabilities](#current-capabilities)
 - [Engineering engine](#engineering-engine)
 - [Optimisation](#optimisation)
-- [Machine learning roadmap](#machine-learning-roadmap)
+- [Machine learning](#machine-learning)
 - [Architecture](#architecture)
 - [Example experiment](#example-experiment)
 - [Reproducibility](#reproducibility)
@@ -43,9 +43,12 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.1.0) implements one problem family end to end, the
+The current release (v0.2.0) implements one problem family end to end, the
 planar truss bridge, deeply enough that every stage of the pipeline is real,
-tested, and inspectable. The domain, optimiser, interpreter, and storage layers
+tested, and inspectable, and adds a learning layer: surrogate models trained
+on simulation data with held-out evaluation, surrogate-assisted evolutionary
+search, and constrained Bayesian optimisation, all benchmarked against the
+plain optimisers at equal solver budget. The domain, optimiser, interpreter, and storage layers
 are contracts, so further physics domains, search algorithms, and learning
 components extend the platform without changing what already works.
 
@@ -116,20 +119,22 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Structural analysis | 2D pin-jointed truss finite-element solver: stiffness assembly, boundary conditions, Cholesky factorisation, member forces and stresses, reactions, compliance, mechanism detection |
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
 | Baseline | Conventional uniform-section Warren truss at span/8 depth, sized by bisection to just satisfy the same constraints |
-| Optimisation | Elitist (mu + lambda) evolutionary algorithm, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
+| Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, constrained Bayesian optimisation (Gaussian processes, expected improvement), simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
+| Learning | Dataset builder over reproducible runs with seeded splits; `SurrogateModel` contract with polynomial ridge, MLP (Adam, early stopping) and Gaussian-process implementations; held-out MAE, RMSE, R² and interval coverage; predicted-versus-actual plots in the workspace; online prediction accuracy recorded during surrogate-assisted search |
+| Benchmarks | `npm run benchmark`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR and evaluations-to-target; results in `docs/BENCHMARKS.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; evidence tables |
-| Testing | 80 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, determinism, and UI state mapping |
+| Testing | 104 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, surrogate recovery of known functions, Gaussian-process calibration, determinism, and UI state mapping |
 
 ### Planned / research direction
 
-Surrogate models trained from simulation data, surrogate-assisted search,
-Bayesian optimisation, multi-objective optimisation with Pareto fronts, a
-benchmark suite, additional engineering domains, 3D visualisation, and an
-autonomous engineering loop. None of these are implemented yet; the interface
-labels them as roadmap wherever they are mentioned. See [Roadmap](#roadmap).
+Multi-objective optimisation with Pareto fronts, active-learning acquisition
+inside the evolutionary loop, additional engineering domains, 3D
+visualisation, and an autonomous engineering loop. None of these are
+implemented yet; the interface labels them as roadmap wherever they are
+mentioned. See [Roadmap](#roadmap).
 
 ## Engineering engine
 
@@ -177,28 +182,48 @@ comparator drives selection, annealing acceptance, and reporting.
 - **Simulated annealing.** Several independent chains, Gaussian steps with
   geometric decay, Metropolis acceptance on relative objective change or
   violation change; feasibility is never abandoned for infeasibility.
+- **Surrogate-assisted evolutionary.** The same algorithm proposing k times
+  more children per generation; quadratic ridge models of the log objective
+  and log constraint metrics, refitted incrementally on the evaluated archive,
+  rank them and the solver evaluates only the top lambda. Predictions are made
+  before evaluation, so online accuracy is measured honestly and recorded.
+- **Bayesian optimisation.** Gaussian processes on the log objective and each
+  constraint metric; batch constrained expected improvement over a pool of
+  uniform and locally perturbed candidates; Latin-hypercube initial design.
 - **Random search.** Uniform sampling; the baseline every other method is
   measured against.
 
-Details and test criteria: [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md).
+Measured at equal budget (5 seeds, 1,500 solver evaluations), the
+surrogate-assisted optimiser reached a median best mass of 0.620 kg against
+0.684 kg for the plain evolutionary algorithm and needed 25 % fewer
+evaluations to reach half the baseline mass. Full table and caveats in
+[docs/BENCHMARKS.md](docs/BENCHMARKS.md); details and test criteria in
+[docs/OPTIMIZATION.md](docs/OPTIMIZATION.md).
 
-## Machine learning roadmap
+## Machine learning
 
-Every experiment already produces a labelled dataset of (design parameters,
-simulated metrics). The next development stage builds on it:
+Every experiment produces a labelled dataset of (design parameters, simulated
+metrics), and because runs are deterministic the dataset is regenerated from
+the configuration and seed rather than stored.
 
-1. Dataset construction from experiment records, with seeded train/validation/
-   test splits.
-2. A `SurrogateModel` contract with a linear/polynomial ridge baseline, a
-   multilayer perceptron, and a Gaussian process.
-3. Honest evaluation on held-out solver results: MAE, RMSE, R², and interval
-   calibration where the model provides uncertainty.
-4. Surrogate-assisted pre-screening inside the evolutionary optimiser.
-5. Bayesian optimisation with a Gaussian-process surrogate and expected
-   improvement, respecting constraints.
+- `SurrogateModel` contract: `fit`, `predict` returning a mean and, where the
+  model supports it, a standard deviation.
+- Implementations: closed-form ridge regression on degree-1 or degree-2
+  polynomial features; a two-hidden-layer MLP trained with Adam, mini-batches
+  and early stopping; exact Gaussian-process regression with an RBF kernel
+  and marginal-likelihood hyperparameter selection.
+- Evaluation: seeded 70/15/15 splits; MAE, RMSE, R² on the held-out test
+  split; empirical 95 % interval coverage for models with uncertainty. The
+  workspace's learning panel trains the selected models on the current
+  experiment and plots predicted against actual.
+- Use in search: ridge surrogates pre-screen candidates in the
+  surrogate-assisted optimiser; Gaussian processes drive constrained expected
+  improvement in the Bayesian optimiser. The solver alone decides feasibility
+  and produces recorded results.
 
-The solver remains the only authority on feasibility and recorded results.
-These components are not yet implemented.
+Not yet: uncertainty-aware screening inside the evolutionary loop, neural
+surrogates with uncertainty, graph representations of structures. See
+[docs/ML_PIPELINE.md](docs/ML_PIPELINE.md).
 
 ## Architecture
 
@@ -210,12 +235,13 @@ src/engine/            framework-free TypeScript; no React imports
   optimization/        Optimizer ask/tell contract and algorithms
   experiments/         experiment config, generator-based runner, records, stores
   explain/             sensitivity, binding constraints, design diff
+  ml/                  datasets, metrics, SurrogateModel contract and models, held-out studies
   interpret/           ProblemInterpreter contract and rule-based implementation
 src/workers/           Web Worker that drives the runner
 src/app/               worker client and shared store
 src/pages/             React pages; workspace/, home/, projects/, technology/
 tests/                 vitest suites mirroring src/
-scripts/               reproduce.ts, command-line reproduction
+scripts/               reproduce.ts (command-line reproduction), benchmark.ts (optimiser comparison)
 docs/                  technical documentation
 legacy-html/           the static pages the interface was originally ported from
 ```
@@ -313,10 +339,13 @@ npm run test:watch   # watch mode
 
 The suites cover: the seeded random generator, the Cholesky solver, the truss
 solver against analytical cases, mass and buckling metrics, the problem schema
-and validation, the design space and baseline sizing, the evaluator, all three
-optimisers (convergence, determinism, lineage, bounds), the experiment runner
-(reproducibility, cancellation, baseline improvement), the stores, the
-sensitivity module, the interpreter, and the workspace form mapping.
+and validation, the design space and baseline sizing, the evaluator, all five
+optimisers (convergence, determinism, lineage, bounds, diagnostics), the
+experiment runner (reproducibility, cancellation, baseline improvement), the
+stores, the sensitivity module, the interpreter, datasets and splits,
+regression metrics, the ridge, MLP and Gaussian-process models against known
+functions (including interval calibration), the surrogate study, and the
+workspace form mapping.
 
 Continuous integration runs type-checking, tests, the production build, and
 the reproduction script on every push.
@@ -326,20 +355,21 @@ the reproduction script on every push.
 Development directions, in approximate order. These are intentions, not
 commitments.
 
-1. **Current:** real finite-element analysis, optimisation, and reproducible
-   experiments for the planar truss bridge.
-2. **Next:** surrogate models trained from simulation data, with held-out
-   evaluation.
-3. Surrogate-assisted search.
-4. Bayesian optimisation.
-5. Multi-objective optimisation and Pareto-front visualisation.
-6. Benchmark suite comparing optimisers at equal evaluation budget across seeds.
-7. Autonomous engineering loop: staged strategy comparison, convergence
+1. **Done (v0.1):** real finite-element analysis, optimisation, and
+   reproducible experiments for the planar truss bridge.
+2. **Done (v0.2):** surrogate models with held-out evaluation,
+   surrogate-assisted search, constrained Bayesian optimisation, and a
+   benchmark script comparing optimisers at equal budget across seeds.
+3. **Next:** multi-objective optimisation (mass versus compliance) with a
+   Pareto-front view.
+4. Uncertainty-aware (active-learning) screening; CMA-ES.
+5. Autonomous engineering loop: staged strategy comparison, convergence
    detection, and a discovery report generated from measured data.
-8. Additional engineering domains behind the `EngineeringDomain` contract
+6. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, robotics, aerospace), tubular sections, 3D trusses.
-9. Advanced learning components where they earn their place: neural
-   surrogates, graph representations of structures, sketch-to-geometry.
+7. Advanced learning components where they earn their place: neural
+   surrogates with uncertainty, graph representations of structures,
+   sketch-to-geometry.
 
 The detailed list is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
