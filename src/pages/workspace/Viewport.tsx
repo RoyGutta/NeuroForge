@@ -27,7 +27,9 @@ export function Viewport({ ws }: { ws: Workspace }) {
       : null;
 
   const label =
-    showing === "baseline"
+    showing === "selected"
+      ? "PARETO FRONT · selected design"
+      : showing === "baseline"
       ? "BASELINE · conventional Warren truss"
       : scrub !== null && generations[scrub]
         ? `GENERATION ${generations[scrub].generation + 1} · best so far`
@@ -46,7 +48,7 @@ export function Viewport({ ws }: { ws: Workspace }) {
           ))}
         </div>
         <div className="tabs" aria-label="Design shown">
-          <button className={showing === "best" ? "active" : undefined} aria-pressed={showing === "best"} onClick={() => setShowing("best")}>
+          <button className={showing === "best" || showing === "selected" ? "active" : undefined} aria-pressed={showing === "best" || showing === "selected"} onClick={() => setShowing("best")}>
             Search result
           </button>
           <button className={showing === "baseline" ? "active" : undefined} aria-pressed={showing === "baseline"} onClick={() => setShowing("baseline")}>

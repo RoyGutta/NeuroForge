@@ -2,6 +2,7 @@ import type { Design } from "../core/design";
 import { annealingDescriptor } from "./annealing";
 import { bayesianDescriptor } from "./bayesian";
 import { evolutionaryDescriptor } from "./evolutionary";
+import { nsga2Descriptor } from "./nsga2";
 import { randomSearchDescriptor } from "./randomSearch";
 import { surrogateEvolutionaryDescriptor } from "./surrogateEvolutionary";
 import type { Optimizer, OptimizerContext, OptimizerDescriptor } from "./types";
@@ -13,6 +14,7 @@ const REGISTRY: Record<string, OptimizerDescriptor> = {
   [evolutionaryDescriptor.id]: evolutionaryDescriptor,
   [surrogateEvolutionaryDescriptor.id]: surrogateEvolutionaryDescriptor,
   [bayesianDescriptor.id]: bayesianDescriptor,
+  [nsga2Descriptor.id]: nsga2Descriptor,
   [annealingDescriptor.id]: annealingDescriptor,
   [randomSearchDescriptor.id]: randomSearchDescriptor,
 };

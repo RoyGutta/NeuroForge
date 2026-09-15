@@ -51,10 +51,11 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
               id="objective"
               aria-label="Objective"
               value={form.objective}
-              onChange={(e) => updateForm({ objective: e.target.value as "mass_kg" | "compliance_J" })}
+              onChange={(e) => updateForm({ objective: e.target.value as "mass_kg" | "compliance_J" | "multi" })}
             >
               <option value="mass_kg">Minimize mass</option>
               <option value="compliance_J">Minimize compliance (stiffest within a mass budget)</option>
+              <option value="multi">Trade off mass against compliance (Pareto front)</option>
             </select>
           </div>
           {form.objective === "compliance_J" && (

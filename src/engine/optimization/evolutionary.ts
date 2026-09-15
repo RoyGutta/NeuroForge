@@ -15,6 +15,9 @@
 import { compareDesigns, type Design } from "../core/design";
 import type { OptimizerContext, OptimizerDescriptor, Optimizer } from "./types";
 import { resolveParams } from "./types";
+import { blxCrossover, gaussianMutate, reflect } from "./variation";
+
+export { reflect };
 
 const PARAMS = [
   {
@@ -151,16 +154,7 @@ class EvolutionaryOptimizer implements Optimizer {
     let operator: string;
     if (rng.chance(this.p.crossoverRate)) {
       const p2 = this.tournament();
-      const u1 = space.normalize(p1.parameters);
-      const u2 = space.normalize(p2.parameters);
-      const alpha = this.p.blxAlpha;
-      genes = u1.map((a, i) => {
-        const b = u2[i];
-        const lo = Math.min(a, b);
-        const hi = Math.max(a, b);
-        const range = hi - lo;
-        return rng.uniform(lo - alpha * range, hi + alpha * range);
-      });
+      genes = blxCrossover(space.normalize(p1.parameters), space.normalize(p2.parameters), this.p.blxAlpha, rng);
       parents = p1.id === p2.id ? [p1.id] : [p1.id, p2.id];
       operator = "crossover";
     } else {
@@ -168,19 +162,7 @@ class EvolutionaryOptimizer implements Optimizer {
       parents = [p1.id];
       operator = "mutation";
     }
-    const pm = 1 / this.d;
-    let mutated = false;
-    for (let i = 0; i < this.d; i++) {
-      if (rng.chance(pm)) {
-        genes[i] += rng.gaussian() * this.p.mutationSigma;
-        mutated = true;
-      }
-    }
-    if (!mutated && operator === "mutation") {
-      const i = rng.int(this.d);
-      genes[i] += rng.gaussian() * this.p.mutationSigma;
-    }
-    for (let i = 0; i < this.d; i++) genes[i] = reflect(genes[i]);
+    gaussianMutate(genes, 1 / this.d, this.p.mutationSigma, rng, operator === "mutation");
     return {
       id: this.ctx.nextId(),
       generation,
@@ -189,15 +171,4 @@ class EvolutionaryOptimizer implements Optimizer {
       parameters: space.denormalize(genes),
     };
   }
-}
-
-/** Reflect a normalised coordinate back into [0, 1]. */
-export function reflect(u: number): number {
-  if (!Number.isFinite(u)) return 0.5;
-  let v = u;
-  for (let k = 0; k < 8 && (v < 0 || v > 1); k++) {
-    if (v < 0) v = -v;
-    if (v > 1) v = 2 - v;
-  }
-  return Math.min(1, Math.max(0, v));
 }

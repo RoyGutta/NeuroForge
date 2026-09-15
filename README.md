@@ -44,12 +44,13 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.2.0) implements one problem family end to end, the
+The current release (v0.3.0) implements one problem family end to end, the
 planar truss bridge, deeply enough that every stage of the pipeline is real,
 tested, and inspectable, and adds a learning layer: surrogate models trained
 on simulation data with held-out evaluation, surrogate-assisted evolutionary
 search, and constrained Bayesian optimisation, all benchmarked against the
-plain optimisers at equal solver budget. The domain, optimiser, interpreter, and storage layers
+plain optimisers at equal solver budget, plus multi-objective search with a
+Pareto front of mass against stiffness. The domain, optimiser, interpreter, and storage layers
 are contracts, so further physics domains, search algorithms, and learning
 components extend the platform without changing what already works.
 
@@ -120,20 +121,20 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Structural analysis | 2D pin-jointed truss finite-element solver: stiffness assembly, boundary conditions, Cholesky factorisation, member forces and stresses, reactions, compliance, mechanism detection |
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
 | Baseline | Conventional uniform-section Warren truss at span/8 depth, sized by bisection to just satisfy the same constraints |
-| Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, constrained Bayesian optimisation (Gaussian processes, expected improvement), simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
+| Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, constrained Bayesian optimisation (Gaussian processes, expected improvement), NSGA-II multi-objective search with an external Pareto archive and hypervolume tracking, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
 | Learning | Dataset builder over reproducible runs with seeded splits; `SurrogateModel` contract with polynomial ridge, MLP (Adam, early stopping) and Gaussian-process implementations; held-out MAE, RMSE, R² and interval coverage; predicted-versus-actual plots in the workspace; online prediction accuracy recorded during surrogate-assisted search |
 | Benchmarks | `npm run benchmark`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR and evaluations-to-target; results in `docs/BENCHMARKS.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
-| Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; evidence tables |
+| Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panel; evidence tables |
 | Testing | 104 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, surrogate recovery of known functions, Gaussian-process calibration, determinism, and UI state mapping |
 
 ### Planned / research direction
 
-Multi-objective optimisation with Pareto fronts, active-learning acquisition
-inside the evolutionary loop, additional engineering domains, 3D
-visualisation, and an autonomous engineering loop. None of these are
+Active-learning acquisition inside the evolutionary loop, per-member
+surrogates, additional engineering domains, 3D visualisation, a benchmark
+view in the interface, and an autonomous engineering loop. None of these are
 implemented yet; the interface labels them as roadmap wherever they are
 mentioned. See [Roadmap](#roadmap).
 
@@ -191,6 +192,10 @@ comparator drives selection, annealing acceptance, and reporting.
 - **Bayesian optimisation.** Gaussian processes on the log objective and each
   constraint metric; batch constrained expected improvement over a pool of
   uniform and locally perturbed candidates; Latin-hypercube initial design.
+- **NSGA-II.** Multi-objective search (mass against compliance) with
+  constrained domination and crowding distance. The runner keeps an external
+  archive of all feasible non-dominated designs and reports its hypervolume
+  relative to the baseline, which is monotone by construction.
 - **Random search.** Uniform sampling; the baseline every other method is
   measured against.
 
@@ -369,9 +374,11 @@ commitments.
 2. **Done (v0.2):** surrogate models with held-out evaluation,
    surrogate-assisted search, constrained Bayesian optimisation, and a
    benchmark script comparing optimisers at equal budget across seeds.
-3. **Next:** multi-objective optimisation (mass versus compliance) with a
-   Pareto-front view.
-4. Uncertainty-aware (active-learning) screening; CMA-ES.
+3. **Done (v0.3):** multi-objective optimisation (mass versus compliance)
+   with NSGA-II, an external Pareto archive, hypervolume tracking, and a
+   click-to-inspect front in the workspace.
+4. **Next:** uncertainty-aware (active-learning) screening; per-member
+   surrogates; CMA-ES; a benchmark view in the interface.
 5. Autonomous engineering loop: staged strategy comparison, convergence
    detection, and a discovery report generated from measured data.
 6. Additional engineering domains behind the `EngineeringDomain` contract

@@ -27,10 +27,12 @@ it is real, tested, and honest in the interface.
 - [x] Benchmark script and first measured comparison (`docs/BENCHMARKS.md`)
 - [ ] CMA-ES
 
-## v0.3 · Trade-offs
-- [ ] Multi-objective: mass vs compliance; NSGA-II; Pareto-front panel with click-to-inspect
+## Done — v0.3.0 (2026-09-15) · Trade-offs
+- [x] Multi-objective: mass vs compliance; NSGA-II with constrained domination; external Pareto archive with hypervolume history
+- [x] Pareto-front panel with click-to-inspect in the workspace
 - [ ] Tubular and I-section models; member removal with connectivity/stability check
 - [ ] Symmetry option to halve the design space
+- [ ] Per-member surrogates so constraint feasibility becomes learnable
 
 ## v0.4 · Benchmarks and stronger tracking
 - [ ] Benchmark suite in the interface: fixed problems × optimisers × seeds; objective-vs-evaluations plots with confidence bands; CSV/JSON export

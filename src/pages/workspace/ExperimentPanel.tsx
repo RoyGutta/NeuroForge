@@ -7,7 +7,7 @@ import type { Workspace } from "./useWorkspace";
 export function ExperimentPanel({ ws }: { ws: Workspace }) {
   const { settings, setSettings, status, start, cancel, error, record, generations, progress, compiled, baseline, latestBest, problem } = ws;
   const running = status === "running";
-  const optimizers = listOptimizers();
+  const optimizers = listOptimizers().filter((o) => (ws.multiObjective ? o.multiObjective : !o.multiObjective));
   const desc = optimizers.find((o) => o.id === settings.optimizerId) ?? optimizers[0];
   const objective = problem.objectives[0];
   const last = generations[generations.length - 1];

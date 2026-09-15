@@ -17,7 +17,7 @@ export interface SpecForm {
   panels: string;
   deflectionRatio: string;
   includeSelfWeight: boolean;
-  objective: "mass_kg" | "compliance_J";
+  objective: "mass_kg" | "compliance_J" | "multi";
   massBudget_kg: string;
   sources: Record<string, FieldSource>;
 }
@@ -75,7 +75,7 @@ export function formFromProblem(p: EngineeringProblem, extracted: ExtractedValue
     panels: String(g.panels),
     deflectionRatio: defl ? String(Math.round(g.span_m / defl.limit)) : "250",
     includeSelfWeight: p.analysis.includeSelfWeight,
-    objective: p.objectives[0]?.metric === "compliance_J" ? "compliance_J" : "mass_kg",
+    objective: p.objectives.length > 1 ? "multi" : p.objectives[0]?.metric === "compliance_J" ? "compliance_J" : "mass_kg",
     massBudget_kg: budget ? String(budget.limit) : "",
     sources: {
       span_m: src("span_m", "span"),

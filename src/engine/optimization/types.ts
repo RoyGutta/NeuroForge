@@ -25,6 +25,8 @@ export interface OptimizerContext {
   nextId(): string;
   /** Present when the problem exposes its objective metric and constraints (always, from the runner). */
   screening?: ScreeningSpec;
+  /** All objectives, for multi-objective optimisers. `objective` is the primary one. */
+  objectives?: Objective[];
 }
 
 export interface Optimizer {
@@ -39,6 +41,8 @@ export interface Optimizer {
   population(): Design[];
   /** Optional algorithm-specific diagnostics recorded at the end of a run. */
   diagnostics?(): Record<string, unknown>;
+  /** Multi-objective optimisers: the current feasible non-dominated set. */
+  front?(): Design[];
 }
 
 export interface OptimizerParamSpec {
@@ -55,6 +59,8 @@ export interface OptimizerDescriptor {
   id: string;
   label: string;
   description: string;
+  /** True when the algorithm optimises all objectives jointly (Pareto). */
+  multiObjective?: boolean;
   params: OptimizerParamSpec[];
   create(
     ctx: OptimizerContext,

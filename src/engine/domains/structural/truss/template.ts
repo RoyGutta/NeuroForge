@@ -25,8 +25,8 @@ export interface TrussBridgeOptions {
   id?: string;
   title?: string;
   brief?: string;
-  /** Objective metric; "mass_kg" (default) or "compliance_J" (stiffness). */
-  objectiveMetric?: "mass_kg" | "compliance_J";
+  /** Objective metric; "mass_kg" (default), "compliance_J" (stiffness), or "multi" (mass and compliance jointly). */
+  objectiveMetric?: "mass_kg" | "compliance_J" | "multi";
   /** Additional constraints appended to the standard stress/buckling/deflection set. */
   extraConstraints?: ConstraintSpec[];
 }
@@ -104,7 +104,12 @@ export function createTrussBridgeProblem(opts: TrussBridgeOptions): EngineeringP
   const objectives: Objective[] =
     opts.objectiveMetric === "compliance_J"
       ? [{ id: "compliance", metric: "compliance_J", direction: "minimize", label: "Compliance" }]
-      : [{ id: "mass", metric: "mass_kg", direction: "minimize", label: "Mass" }];
+      : opts.objectiveMetric === "multi"
+        ? [
+            { id: "mass", metric: "mass_kg", direction: "minimize", label: "Mass" },
+            { id: "compliance", metric: "compliance_J", direction: "minimize", label: "Compliance" },
+          ]
+        : [{ id: "mass", metric: "mass_kg", direction: "minimize", label: "Mass" }];
 
   const constraints: ConstraintSpec[] = [
     {

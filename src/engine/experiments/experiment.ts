@@ -38,6 +38,10 @@ export interface GenerationSummary {
   /** Snapshot of the best design found so far (for history scrubbing). */
   bestSoFar: Design;
   elapsedMs: number;
+  /** Multi-objective runs: size of the feasible non-dominated set. */
+  frontSize?: number;
+  /** Multi-objective runs: fraction of the baseline's objective box dominated by the front. */
+  hypervolume?: number;
 }
 
 export type ExperimentStatus = "running" | "completed" | "cancelled" | "failed";
@@ -59,6 +63,8 @@ export interface ExperimentRecord {
   error?: string;
   /** Algorithm-specific diagnostics, e.g. online surrogate accuracy. */
   optimizerDiagnostics?: Record<string, unknown>;
+  /** Multi-objective runs: final feasible non-dominated set. */
+  paretoFront?: Design[];
 }
 
 export interface ExperimentSummary {

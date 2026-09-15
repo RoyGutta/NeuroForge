@@ -9,6 +9,7 @@ import type { TrussModel } from "../../engine/domains/structural/truss/model";
 import type { ExperimentRecord, ExperimentSummary, GenerationSummary } from "../../engine/experiments/experiment";
 import { createExperimentConfig } from "../../engine/experiments/runner";
 import { interpretBrief, type InterpretResult } from "../../engine/interpret";
+import { getOptimizerDescriptor } from "../../engine/optimization";
 import type { ViewMode } from "./TrussSvg";
 import { defaultForm, defaultSettings, formFromProblem, problemFromForm, type RunSettings, type SpecForm } from "./model";
 
@@ -32,7 +33,8 @@ export function useWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<ViewMode>("structure");
   const [scrub, setScrub] = useState<number | null>(null);
-  const [showing, setShowing] = useState<"best" | "baseline">("best");
+  const [showing, setShowing] = useState<"best" | "baseline" | "selected">("best");
+  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
   const [library, setLibrary] = useState<ExperimentSummary[]>([]);
   const handleRef = useRef<ExperimentHandle | null>(null);
 
@@ -110,6 +112,7 @@ export function useWorkspace() {
     setGenerations([]);
     setScrub(null);
     setShowing("best");
+    setSelectedDesign(null);
     setProgress({ evaluations: 0, wallTimeMs: 0 });
     let buffer: GenerationSummary[] = [];
     let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -191,9 +194,23 @@ export function useWorkspace() {
 
   const displayed: Design | null = useMemo(() => {
     if (showing === "baseline") return baseline;
+    if (showing === "selected" && selectedDesign) return selectedDesign;
     if (scrub !== null && generations[scrub]) return generations[scrub].bestSoFar;
     return latestBest ?? baseline;
-  }, [showing, scrub, generations, latestBest, baseline]);
+  }, [showing, scrub, generations, latestBest, baseline, selectedDesign]);
+
+  const selectDesign = useCallback((d: Design) => {
+    setSelectedDesign(d);
+    setShowing("selected");
+  }, []);
+
+  const multiObjective = problem.objectives.length > 1;
+  // Keep the optimiser choice consistent with the objective structure.
+  useEffect(() => {
+    const desc = getOptimizerDescriptor(settings.optimizerId);
+    if (multiObjective && !desc?.multiObjective) setSettings((s) => ({ ...s, optimizerId: "nsga2", params: {} }));
+    if (!multiObjective && desc?.multiObjective) setSettings((s) => ({ ...s, optimizerId: "evolutionary", params: {} }));
+  }, [multiObjective, settings.optimizerId]);
 
   return {
     form,
@@ -222,6 +239,9 @@ export function useWorkspace() {
     baseline,
     latestBest,
     displayed,
+    selectedDesign,
+    selectDesign,
+    multiObjective,
     library,
     loadExperiment,
     deleteExperiment,

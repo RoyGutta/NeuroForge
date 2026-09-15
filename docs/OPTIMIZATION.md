@@ -85,7 +85,31 @@ optimiser's online R² for mass exceeds 0.5 after warm-up. Whether either
 beats the plain evolutionary algorithm at equal budget is a benchmark
 question, answered in `docs/BENCHMARKS.md` when measured, not asserted here.
 
+## NSGA-II (multi-objective)
+Non-dominated sorting genetic algorithm II (Deb, Pratap, Agarwal & Meyarivan,
+2002) with constrained domination (feasible beats infeasible, then lower
+violation, then Pareto dominance). Binary tournament on (front rank, crowding
+distance); the same BLX-alpha crossover and Gaussian mutation as the
+single-objective optimiser; elitist survival over parents plus offspring,
+filling fronts in order and truncating the last by crowding distance. Used
+when a problem declares two objectives (currently mass and compliance).
+
+The experiment runner keeps an **external archive** of every feasible
+non-dominated design evaluated during the run and reports that as the Pareto
+front, together with the 2-D hypervolume of the archive relative to the
+baseline's objective values (normalised to the fraction of the baseline box
+dominated). The archive's hypervolume is monotone by construction; the
+optimiser's own population is not, because crowding truncation can discard
+front points.
+
+Verification: exact fronts and crowding values on hand-built sets; on the
+ZDT1 test problem the front's mean distance to the analytical front
+f2 = 1 - sqrt(f1) is below 0.05 after 9,000 evaluations with a spread above
+0.6 in f1; on the truss problem the front is feasible, mutually
+non-dominated, spans more than 30 % in both objectives, and the hypervolume
+history never decreases.
+
 ## Planned
-CMA-ES; NSGA-II for Pareto fronts. Each will be a new `OptimizerDescriptor`
+CMA-ES; uncertainty-aware screening. Each will be a new `OptimizerDescriptor`
 in the registry and benchmarked against random search before it is offered
 in the UI.
