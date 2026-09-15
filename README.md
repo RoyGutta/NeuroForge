@@ -13,7 +13,8 @@ It is a real computational system with a polished interface on top, not an
 interface that claims to use AI. There is no scripted animation, no hardcoded
 result, and no language model in the loop today.
 
-- **Live demo (local):** `npm install && npm run dev`
+- **Live application:** https://neuroforge-chi.vercel.app
+- **Run locally:** `npm install && npm run dev`
 - **Reproduce the canonical experiment:** `npm run reproduce`
 - **Documentation:** [Architecture](docs/ARCHITECTURE.md) · [Engineering models](docs/ENGINEERING_MODELS.md) · [Optimisation](docs/OPTIMIZATION.md) · [Machine-learning pipeline](docs/ML_PIPELINE.md) · [Benchmarks](docs/BENCHMARKS.md) · [Experiments and reproducibility](docs/EXPERIMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Limitations](docs/LIMITATIONS.md)
 
@@ -329,6 +330,14 @@ npm run reproduce    # canonical experiment from the command line
 ```
 
 The project has no backend. Experiments persist in the browser's local storage.
+
+## Deployment
+
+The application is a static single-page build (Vite) with the engine running
+in a Web Worker in the visitor's browser; there is no server component.
+`vercel.json` rewrites every route to `index.html` so `/projects`,
+`/technology` and `/workspace` load directly, and marks hashed assets as
+immutable. Production deploys from the `main` branch of the repository.
 
 ## Testing
 
