@@ -1,14 +1,18 @@
 import type { Design } from "../core/design";
 import { annealingDescriptor } from "./annealing";
+import { bayesianDescriptor } from "./bayesian";
 import { evolutionaryDescriptor } from "./evolutionary";
 import { randomSearchDescriptor } from "./randomSearch";
+import { surrogateEvolutionaryDescriptor } from "./surrogateEvolutionary";
 import type { Optimizer, OptimizerContext, OptimizerDescriptor } from "./types";
 
-export type { Optimizer, OptimizerContext, OptimizerDescriptor, OptimizerParamSpec } from "./types";
+export type { Optimizer, OptimizerContext, OptimizerDescriptor, OptimizerParamSpec, ScreeningSpec } from "./types";
 export { resolveParams } from "./types";
 
 const REGISTRY: Record<string, OptimizerDescriptor> = {
   [evolutionaryDescriptor.id]: evolutionaryDescriptor,
+  [surrogateEvolutionaryDescriptor.id]: surrogateEvolutionaryDescriptor,
+  [bayesianDescriptor.id]: bayesianDescriptor,
   [annealingDescriptor.id]: annealingDescriptor,
   [randomSearchDescriptor.id]: randomSearchDescriptor,
 };
