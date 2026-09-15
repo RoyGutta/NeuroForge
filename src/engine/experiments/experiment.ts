@@ -57,6 +57,8 @@ export interface ExperimentRecord {
   totalEvaluations: number;
   wallTimeMs: number;
   error?: string;
+  /** Algorithm-specific diagnostics, e.g. online surrogate accuracy. */
+  optimizerDiagnostics?: Record<string, unknown>;
 }
 
 export interface ExperimentSummary {

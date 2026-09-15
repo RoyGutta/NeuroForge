@@ -8,15 +8,23 @@
  * a surrogate model, or a distributed job system without modification.
  */
 import type { Design } from "../core/design";
-import type { Objective } from "../core/problem";
+import type { ConstraintSpec, Objective } from "../core/problem";
 import type { Rng } from "../core/rng";
 import type { DesignSpace } from "../core/space";
+
+/** What a model-based optimiser needs to reason about metrics before the solver runs. */
+export interface ScreeningSpec {
+  objectiveMetric: string;
+  constraints: ConstraintSpec[];
+}
 
 export interface OptimizerContext {
   space: DesignSpace;
   objective: Objective;
   rng: Rng;
   nextId(): string;
+  /** Present when the problem exposes its objective metric and constraints (always, from the runner). */
+  screening?: ScreeningSpec;
 }
 
 export interface Optimizer {
@@ -29,6 +37,8 @@ export interface Optimizer {
   best(): Design | undefined;
   /** Current working set (population, chain state, ...). */
   population(): Design[];
+  /** Optional algorithm-specific diagnostics recorded at the end of a run. */
+  diagnostics?(): Record<string, unknown>;
 }
 
 export interface OptimizerParamSpec {

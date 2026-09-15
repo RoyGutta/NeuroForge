@@ -50,8 +50,14 @@ export type ExperimentEvent =
   | { type: "started"; record: ExperimentRecord; compiled: CompiledProblem }
   | { type: "generation"; summary: GenerationSummary; record: ExperimentRecord };
 
+export interface RunHooks {
+  /** Called with every evaluated batch, in order. Used to build datasets. */
+  onBatch?(designs: Design[]): void;
+}
+
 export function* runExperiment(
-  config: ExperimentConfig
+  config: ExperimentConfig,
+  hooks: RunHooks = {}
 ): Generator<ExperimentEvent, ExperimentRecord, void> {
   const compiled = compileProblem(config.problem);
   const objective = config.problem.objectives[0];
@@ -70,7 +76,13 @@ export function* runExperiment(
 
   const optimizer = createOptimizer(
     config.optimizer.id,
-    { space: compiled.space, objective, rng, nextId },
+    {
+      space: compiled.space,
+      objective,
+      rng,
+      nextId,
+      screening: { objectiveMetric: objective.metric, constraints: config.problem.constraints },
+    },
     config.optimizer.params,
     config.seedBaseline ? [baseline] : []
   );
@@ -117,6 +129,7 @@ export function* runExperiment(
         }
       }
       optimizer.tell(batch);
+      hooks.onBatch?.(batch);
       record.totalEvaluations += batch.length;
       const summary: GenerationSummary = {
         generation,
@@ -136,6 +149,7 @@ export function* runExperiment(
     }
     record.status = "completed";
   } finally {
+    if (optimizer.diagnostics) record.optimizerDiagnostics = optimizer.diagnostics();
     if (record.status === "running") record.status = "cancelled";
     record.finishedAt = new Date().toISOString();
     record.wallTimeMs = now() - t0;
