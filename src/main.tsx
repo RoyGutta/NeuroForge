@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
@@ -11,6 +11,9 @@ import { HomePage } from "./pages/HomePage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { TechnologyPage } from "./pages/TechnologyPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+
+/** Benchmark records are bundled with this page only, so they load on demand. */
+const BenchmarksPage = lazy(() => import("./pages/BenchmarksPage").then((m) => ({ default: m.BenchmarksPage })));
 
 /** The legacy site was four separate documents, so every navigation landed at
  *  the top of the page. Reproduce that on SPA route changes (hash links like
@@ -34,6 +37,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/technology" element={<TechnologyPage />} />
         <Route path="/workspace" element={<WorkspacePage />} />
+        <Route
+          path="/benchmarks"
+          element={
+            <Suspense fallback={null}>
+              <BenchmarksPage />
+            </Suspense>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

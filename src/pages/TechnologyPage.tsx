@@ -279,8 +279,8 @@ export function TechnologyPage() {
                   The output is a traceable engineering study: what was assumed,
                   what was tested, and why a candidate survived.
                 </p>
-                <Link className="text-link" to="/projects">
-                  Explore engineering problems <Arrow ariaHidden />
+                <Link className="text-link" to="/benchmarks">
+                  See the measured benchmarks <Arrow ariaHidden />
                 </Link>
               </div>
               <div>
@@ -357,6 +357,7 @@ export function TechnologyPage() {
           links={[
             { label: "Technology", to: "/technology", page: "technology" },
             { label: "Projects", to: "/projects", page: "projects" },
+            { label: "Benchmarks", to: "/benchmarks", page: "benchmarks" },
             { label: "Workspace", to: "/workspace", page: "workspace" },
           ]}
         />

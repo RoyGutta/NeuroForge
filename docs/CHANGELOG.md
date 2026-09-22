@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-09-22 · CMA-ES and the benchmark view
+- CMA-ES optimiser (rank-one and rank-mu covariance adaptation, cumulative
+  step-size adaptation) with a Jacobi symmetric eigendecomposition in the
+  linear-algebra module; benchmarked honestly (worse than the evolutionary
+  algorithm on the canonical truss at 1,500 evaluations).
+- Benchmarks page at `/benchmarks` reading committed benchmark and ablation
+  records: summary tables, median convergence curves with interquartile
+  bands, and per-run inspection. Linked from every footer and the Technology page.
+
 ## 0.4.0 — 2026-09-22 · Per-member surrogates and uncertainty-aware screening
 - Evaluations carry member axial forces; the structural domain exposes a
   response model deriving mass, stress and buckling exactly from any force vector.

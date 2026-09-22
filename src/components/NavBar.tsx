@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Arrow } from "./Arrow";
 import { Brand } from "./Brand";
 
-export type PageId = "home" | "projects" | "technology" | "workspace";
+export type PageId = "home" | "projects" | "technology" | "workspace" | "benchmarks";
 
 /**
  * The main navigation, reproducing each legacy page's header exactly:

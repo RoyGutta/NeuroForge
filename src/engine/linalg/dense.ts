@@ -83,3 +83,56 @@ export function choleskySolveWith(L: Float64Array, b: Float64Array, n: number): 
 export function choleskySolve(A: Float64Array, b: Float64Array, n: number): Float64Array {
   return choleskySolveWith(choleskyFactor(A, n), b, n);
 }
+
+/**
+ * Eigendecomposition of a symmetric matrix by cyclic Jacobi rotations.
+ * Returns eigenvalues in ascending order and the matching eigenvectors as
+ * the columns of a row-major n x n matrix. Adequate for the small covariance
+ * matrices CMA-ES adapts (tens of dimensions).
+ */
+export function symmetricEigen(A: Float64Array, n: number): { values: Float64Array; vectors: Float64Array } {
+  const a = Float64Array.from(A);
+  const v = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) v[i * n + i] = 1;
+  for (let sweep = 0; sweep < 100; sweep++) {
+    let off = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += a[i * n + j] * a[i * n + j];
+    if (off < 1e-22) break;
+    for (let p = 0; p < n; p++) {
+      for (let q = p + 1; q < n; q++) {
+        const apq = a[p * n + q];
+        if (Math.abs(apq) < 1e-300) continue;
+        const theta = (a[q * n + q] - a[p * n + p]) / (2 * apq);
+        const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+        const c = 1 / Math.sqrt(t * t + 1);
+        const s = t * c;
+        for (let k = 0; k < n; k++) {
+          const akp = a[k * n + p];
+          const akq = a[k * n + q];
+          a[k * n + p] = c * akp - s * akq;
+          a[k * n + q] = s * akp + c * akq;
+        }
+        for (let k = 0; k < n; k++) {
+          const apk = a[p * n + k];
+          const aqk = a[q * n + k];
+          a[p * n + k] = c * apk - s * aqk;
+          a[q * n + k] = s * apk + c * aqk;
+        }
+        for (let k = 0; k < n; k++) {
+          const vkp = v[k * n + p];
+          const vkq = v[k * n + q];
+          v[k * n + p] = c * vkp - s * vkq;
+          v[k * n + q] = s * vkp + c * vkq;
+        }
+      }
+    }
+  }
+  const order = Array.from({ length: n }, (_, i) => i).sort((i, j) => a[i * n + i] - a[j * n + j]);
+  const values = new Float64Array(n);
+  const vectors = new Float64Array(n * n);
+  order.forEach((src, dst) => {
+    values[dst] = a[src * n + src];
+    for (let k = 0; k < n; k++) vectors[k * n + dst] = v[k * n + src];
+  });
+  return { values, vectors };
+}

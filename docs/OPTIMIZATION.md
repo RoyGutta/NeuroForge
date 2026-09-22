@@ -127,7 +127,29 @@ f2 = 1 - sqrt(f1) is below 0.05 after 9,000 evaluations with a spread above
 non-dominated, spans more than 30 % in both objectives, and the hypervolume
 history never decreases.
 
+## CMA-ES
+Covariance matrix adaptation evolution strategy (Hansen's (mu/mu_w, lambda)
+formulation with rank-one and rank-mu covariance updates and cumulative
+step-size adaptation), running in the normalised cube with reflection at the
+bounds and the repaired points used in the update. Ranking uses the shared
+Deb comparator, so constraints are handled without penalties. Default
+lambda = 4 + floor(3 ln d) (12 for the canonical 19-variable truss);
+diagnostics report the step size and covariance condition number.
+
+Verified on the sphere (objective below 1e-8 in 3,000 evaluations), on the
+Rosenbrock valley (below 0.05 where the isotropic evolutionary algorithm is
+worse), on the constrained test problem (feasible, within 5 % of the optimum),
+determinism, bounds, and a 10 % improvement over the truss baseline.
+
+**Measured on the truss (5 seeds, 1,500 evaluations): median 0.732 kg, IQR
+0.640–0.804, 1,212 evaluations to target — worse than the plain evolutionary
+algorithm (0.684 kg) and far behind the surrogate methods.** A small
+population on a 19-variable box-constrained problem where many variables sit
+on their bounds is a poor fit for covariance adaptation; the reflection
+repair also distorts the update near the bounds. It is kept as a registered,
+benchmarked alternative rather than promoted; larger populations, restarts
+(IPOP) and a proper boundary-handling penalty are the obvious follow-ups.
+
 ## Planned
-CMA-ES. Each will be a new `OptimizerDescriptor`
-in the registry and benchmarked against random search before it is offered
-in the UI.
+Restarts and boundary handling for CMA-ES; NSGA-III or reference-point
+methods for more than two objectives.

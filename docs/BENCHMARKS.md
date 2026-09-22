@@ -16,11 +16,20 @@ Raw runs and convergence curves: `benchmarks/results/2026-09-22-truss-1500x5.jso
 | surrogate-evolutionary (global, v0.2) | 1,500 | 0.620 | 0.605-0.621 | 810 (5/5) | | |
 | **member-surrogate-evolutionary** (k = 2, explore 0.2) | 1,500 | **0.555** | 0.544-0.555 | **660** (5/5) | 0.2 % | 1.2 % |
 | bayesian | 300 | 1.087 | 1.002-1.095 | not reached | | |
+| cmaes (added 2026-09-22, engine 0.5.0) | 1,500 | 0.732 | 0.640-0.804 | 1,212 (5/5) | | |
 | annealing | 1,500 | 1.125 | 0.817-1.423 | 1,440 (2/5) | | |
 | random-search | 1,500 | 1.656 | 1.656-1.656 | not reached | | |
 
 Wall time per run (Node, Apple silicon): evolutionary 0.03 s, global surrogate
-0.87 s, member surrogate 2.6 s, bayesian 8.5 s.
+0.87 s, member surrogate 2.6 s, bayesian 8.5 s, CMA-ES 0.06 s.
+
+CMA-ES is a negative result on this problem: with the default population of
+12 it is worse than the plain evolutionary algorithm and highly variable
+across seeds. See `docs/OPTIMIZATION.md` for the likely causes.
+
+The interface's Benchmarks page (`/benchmarks`) renders these committed
+records: summary tables, median convergence curves with interquartile bands,
+and per-run inspection.
 
 ### Ablation · 8 seeds · 1,500 evaluations (`npm run ablation -- 8 1500 --out`)
 Raw: `benchmarks/results/2026-09-22-ablation-1500x8.json`.

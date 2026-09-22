@@ -64,6 +64,7 @@ export function WorkspacePage() {
             { label: "Home", to: "/", page: "home" },
             { label: "Technology", to: "/technology", page: "technology" },
             { label: "Projects", to: "/projects", page: "projects" },
+            { label: "Benchmarks", to: "/benchmarks", page: "benchmarks" },
             { label: "Workspace", to: "/workspace", page: "workspace" },
           ]}
         />

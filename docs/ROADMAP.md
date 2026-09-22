@@ -43,9 +43,10 @@ it is real, tested, and honest in the interface.
 - [ ] Symmetry option to halve the design space
 
 
-## v0.5 · CMA-ES and a benchmark view
-- [ ] CMA-ES as an `OptimizerDescriptor`, benchmarked at equal budget
-- [ ] Benchmark view in the interface reading `benchmarks/results/*.json`: medians, IQR, evaluations-to-target, convergence curves, per-run inspection
+## Done — v0.5.0 (2026-09-22) · CMA-ES and a benchmark view
+- [x] CMA-ES as an `OptimizerDescriptor`, benchmarked at equal budget (negative result on the truss; recorded)
+- [x] Benchmark view in the interface reading `benchmarks/results/*.json`: medians, IQR, evaluations-to-target, convergence curves, per-run inspection
+- [ ] CMA-ES restarts and boundary handling
 - [ ] Result checksums and engine-version pinning in records; experiment comparison view
 
 ## v0.6 · Autonomous engineering loop

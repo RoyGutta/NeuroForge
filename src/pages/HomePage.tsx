@@ -315,6 +315,7 @@ export function HomePage() {
           links={[
             { label: "Technology", to: "/technology", page: "technology" },
             { label: "Projects", to: "/projects", page: "projects" },
+            { label: "Benchmarks", to: "/benchmarks", page: "benchmarks" },
           ]}
         />
       </div>
