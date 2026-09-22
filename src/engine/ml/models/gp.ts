@@ -178,6 +178,83 @@ class GpSurrogate implements SurrogateModel {
   }
 }
 
+/** Unit-signal RBF kernel. */
+export function rbf(a: number[], b: number[], ls: number): number {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += (a[i] - b[i]) ** 2;
+  return Math.exp(-s / (2 * ls * ls));
+}
+
+export function gpKernelMatrix(X: number[][], ls: number): Float64Array {
+  const n = X.length;
+  const K = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) {
+    K[i * n + i] = 1;
+    for (let j = i + 1; j < n; j++) {
+      const v = rbf(X[i], X[j], ls);
+      K[i * n + j] = v;
+      K[j * n + i] = v;
+    }
+  }
+  return K;
+}
+
+/**
+ * Cholesky of K + noise I (reused across outputs when `Lin` is supplied),
+ * alpha = (K + noise I)^-1 z and the log marginal likelihood of z.
+ * Returns null when the matrix is not positive definite.
+ */
+export function gpFactor(K: Float64Array, n: number, noise: number, z: number[], Lin: Float64Array | null): { L: Float64Array; alpha: Float64Array; lml: number } | null {
+  let L = Lin;
+  if (!L) {
+    const A = new Float64Array(n * n);
+    A.set(K);
+    for (let i = 0; i < n; i++) A[i * n + i] += noise;
+    try {
+      L = choleskyFactorSafe(A, n);
+    } catch (e) {
+      if (e instanceof NotPositiveDefiniteError) return null;
+      throw e;
+    }
+  }
+  let logDet = 0;
+  for (let i = 0; i < n; i++) logDet += Math.log(L[i * n + i]);
+  const y1 = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let s = z[i];
+    for (let k = 0; k < i; k++) s -= L[i * n + k] * y1[k];
+    y1[i] = s / L[i * n + i];
+  }
+  const alpha = new Float64Array(n);
+  for (let i = n - 1; i >= 0; i--) {
+    let s = y1[i];
+    for (let k = i + 1; k < n; k++) s -= L[k * n + i] * alpha[k];
+    alpha[i] = s / L[i * n + i];
+  }
+  let fit = 0;
+  for (let i = 0; i < n; i++) fit += z[i] * alpha[i];
+  return { L, alpha, lml: -0.5 * fit - logDet - 0.5 * n * Math.log(2 * Math.PI) };
+}
+
+function choleskyFactorSafe(A: Float64Array, n: number): Float64Array {
+  const L = new Float64Array(n * n);
+  for (let j = 0; j < n; j++) {
+    let dgn = A[j * n + j];
+    for (let k = 0; k < j; k++) dgn -= L[j * n + k] * L[j * n + k];
+    if (!(dgn > 1e-14)) throw new NotPositiveDefiniteError(j);
+    const ljj = Math.sqrt(dgn);
+    L[j * n + j] = ljj;
+    for (let i = j + 1; i < n; i++) {
+      let s = A[i * n + j];
+      for (let k = 0; k < j; k++) s -= L[i * n + k] * L[j * n + k];
+      L[i * n + j] = s / ljj;
+    }
+  }
+  return L;
+}
+
+export const gpMedianDistance = medianDistance;
+
 /** Median pairwise distance over a deterministic sample of points. */
 function medianDistance(X: number[][]): number {
   const n = X.length;

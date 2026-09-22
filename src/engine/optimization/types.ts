@@ -9,6 +9,7 @@
  */
 import type { Design } from "../core/design";
 import type { ConstraintSpec, Objective } from "../core/problem";
+import type { CompiledProblem } from "../domains/domain";
 import type { Rng } from "../core/rng";
 import type { DesignSpace } from "../core/space";
 
@@ -27,6 +28,8 @@ export interface OptimizerContext {
   screening?: ScreeningSpec;
   /** All objectives, for multi-objective optimisers. `objective` is the primary one. */
   objectives?: Objective[];
+  /** The compiled problem, for optimisers that use its response model (never for evaluation). */
+  compiled?: CompiledProblem;
 }
 
 export interface Optimizer {

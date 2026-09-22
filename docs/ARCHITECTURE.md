@@ -67,9 +67,11 @@ Ask/tell `Optimizer` interface. The optimiser never evaluates anything; the
 runner does. The runner passes a `ScreeningSpec` (objective metric and
 constraint specs) so model-based optimisers can reason about metrics before
 the solver runs. Registry with parameter schemas drives the UI. Algorithms:
-evolutionary (μ+λ), surrogate-assisted evolutionary, constrained Bayesian
-optimisation, simulated annealing, random search. Optimisers may expose
-`diagnostics()`, stored in the record.
+evolutionary (μ+λ), surrogate-assisted evolutionary, member-surrogate
+uncertainty-aware evolutionary, constrained Bayesian optimisation, NSGA-II,
+simulated annealing, random search. The context also carries the compiled
+problem so model-based optimisers can use its response model (never to
+evaluate). Optimisers may expose `diagnostics()`, stored in the record.
 
 ### `src/engine/experiments`
 `runExperiment(config)` is a synchronous generator yielding a `started` event
@@ -85,11 +87,24 @@ binding-constraint detection, and a structured diff between two designs. All
 derived by calling the real evaluator; no text templates.
 
 ### `src/engine/ml`
-`dataset.ts` (regenerate designs from a config, build and split datasets),
-`metrics.ts` (MAE, RMSE, R², coverage), `models/` (`SurrogateModel` contract;
-ridge, MLP, Gaussian process behind a registry), `study.ts` (held-out
-evaluation of models on a real experiment). Consumed by the learning
-optimisers and by the workspace's learning panel. See `docs/ML_PIPELINE.md`.
+`dataset.ts` (regenerate designs from a config, build and split datasets,
+expand vector responses into columns), `metrics.ts` (MAE, RMSE, R²,
+coverage), `reliability.ts` (feasibility confusion, calibration bins),
+`models/` (`SurrogateModel` and `MultiOutputSurrogate` contracts; ridge,
+Bayesian ridge, MLP, Gaussian process behind registries), `hybrid.ts` (learned
+member forces + the domain's exact response model, nominal and conservative
+derivations), `study.ts` (held-out evaluation of global models and of the
+member-level pipeline on a real experiment). Consumed by the learning
+optimisers and by the workspace's learning panels. See `docs/ML_PIPELINE.md`.
+
+### Responses and the response model
+Evaluations may carry vector `responses` (the truss attaches member axial
+forces). A domain can publish a `ResponseModel` on the compiled problem:
+which metrics it can derive exactly from responses (`derive`) and per-component
+utilisations (`componentUtilizations`). This is the seam that lets a surrogate
+learn a smooth physical quantity while feasibility is still computed by the
+engineering equations, and it is domain-agnostic: a thermal domain could
+expose per-fin temperatures the same way.
 
 ### `src/engine/interpret`
 `ProblemInterpreter` contract. The rule-based implementation extracts span,

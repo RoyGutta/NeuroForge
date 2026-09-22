@@ -6,6 +6,7 @@ import css from "../styles/workspace.css?inline";
 import { EvidenceSection } from "./workspace/EvidenceSection";
 import { ExperimentPanel } from "./workspace/ExperimentPanel";
 import { LearningSection } from "./workspace/LearningSection";
+import { MemberLearningPanel } from "./workspace/MemberLearningPanel";
 import { ParetoSection } from "./workspace/ParetoSection";
 import { SpecPanel } from "./workspace/SpecPanel";
 import { Viewport } from "./workspace/Viewport";
@@ -55,6 +56,7 @@ export function WorkspacePage() {
           <ParetoSection ws={ws} />
           <EvidenceSection ws={ws} />
           <LearningSection ws={ws} />
+          <MemberLearningPanel ws={ws} />
         </main>
         <Footer
           current="workspace"

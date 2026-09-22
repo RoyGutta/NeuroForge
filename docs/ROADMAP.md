@@ -27,21 +27,31 @@ it is real, tested, and honest in the interface.
 - [x] Benchmark script and first measured comparison (`docs/BENCHMARKS.md`)
 - [ ] CMA-ES
 
+## Done — v0.4.0 (2026-09-22) · Per-member surrogates and uncertainty
+- [x] Member axial forces exposed on evaluations; exact response model for stress and buckling
+- [x] Multi-output Bayesian ridge and GP with predictive uncertainty
+- [x] Hybrid predictor with nominal and k-sigma conservative derivations
+- [x] Uncertainty-aware member-surrogate optimiser with recorded funnel, confusion, force error, calibration
+- [x] Member-level study and reliability panel in the workspace
+- [x] Ablation script; first measured results in `docs/BENCHMARKS.md` and `docs/RESEARCH.md`
+- [ ] Per-node displacement responses so deflection is derived rather than regressed
+
 ## Done — v0.3.0 (2026-09-15) · Trade-offs
 - [x] Multi-objective: mass vs compliance; NSGA-II with constrained domination; external Pareto archive with hypervolume history
 - [x] Pareto-front panel with click-to-inspect in the workspace
 - [ ] Tubular and I-section models; member removal with connectivity/stability check
 - [ ] Symmetry option to halve the design space
-- [ ] Per-member surrogates so constraint feasibility becomes learnable
 
-## v0.4 · Benchmarks and stronger tracking
-- [ ] Benchmark suite in the interface: fixed problems × optimisers × seeds; objective-vs-evaluations plots with confidence bands; CSV/JSON export
+
+## v0.5 · CMA-ES and a benchmark view
+- [ ] CMA-ES as an `OptimizerDescriptor`, benchmarked at equal budget
+- [ ] Benchmark view in the interface reading `benchmarks/results/*.json`: medians, IQR, evaluations-to-target, convergence curves, per-run inspection
 - [ ] Result checksums and engine-version pinning in records; experiment comparison view
 
-## v0.5 · Autonomous engineering loop
+## v0.6 · Autonomous engineering loop
 - [ ] Staged strategy comparison → convergence detection → discovery report generated from measured data
 
-## v0.6 · Domains and 3D
+## v0.7 · Domains and 3D
 - [ ] Second domain (thermal fin array or 2D frame with bending) behind `EngineeringDomain`
 - [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
 

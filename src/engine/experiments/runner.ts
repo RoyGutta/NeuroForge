@@ -84,6 +84,7 @@ export function* runExperiment(
       nextId,
       screening: { objectiveMetric: objective.metric, constraints: config.problem.constraints },
       objectives: config.problem.objectives,
+      compiled,
     },
     config.optimizer.params,
     config.seedBaseline ? [baseline] : []

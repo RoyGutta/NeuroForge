@@ -54,10 +54,29 @@ seed 42, 8,400 / 1,800 / 1,800):
   R² per target in surrogate-assisted runs makes this visible for every
   experiment, and it motivates the next steps below.
 
+## Member-level representation (v0.4)
+Evaluations now carry vector `responses` (member axial forces), the dataset
+expands them into columns `memberForces_N[i]`, and the structural domain
+exposes a `ResponseModel` that derives mass, peak stress, stress utilisation
+and buckling utilisation exactly from any force vector (per member as well).
+Multi-output surrogates (`src/engine/ml/models/multi.ts`) fit all members at
+once: Bayesian ridge with a shared Gram matrix and closed-form predictive
+variance s²(1 + φᵀ(ΦᵀΦ + λI)⁻¹φ), or a shared-kernel Gaussian process. The
+hybrid predictor (`src/engine/ml/hybrid.ts`) combines them with the response
+model and reports nominal and conservative derivations. `runMemberStudy`
+measures, on a held-out split: per-member MAE/RMSE, overall force R²,
+feasibility precision/recall/false-feasible/false-infeasible for both
+derivations, derived-metric R², 95 % coverage, mean std, error–std
+correlation and calibration bins by std quintile. The uncertainty is a
+statistical statement about surrogate error, not an engineering margin.
+
 ## Use in search
 - Surrogate-assisted evolutionary search: ridge models pre-screen children;
   the solver evaluates the survivors and the online prediction accuracy is
   recorded. See `docs/OPTIMIZATION.md`.
+- Member-surrogate evolutionary search: the hybrid predictor screens with a
+  conservative bound and an exploration share; reliability is recorded per
+  run. Measured effect: `docs/BENCHMARKS.md`, `docs/RESEARCH.md`.
 - Bayesian optimisation: GPs drive constrained expected improvement.
 
 ## Rules
@@ -68,8 +87,6 @@ seed 42, 8,400 / 1,800 / 1,800):
 4. All training is seeded and reproducible.
 
 ## Not yet
-Per-member surrogates (predict each member's force, then apply the exact
-constraint formulas, which removes the non-smooth max from the learning
-target), active-learning acquisition inside the evolutionary loop
-(uncertainty-aware screening), neural surrogates with uncertainty
-(ensembles), graph representations of structures, cross-problem transfer.
+Neural surrogates with uncertainty (ensembles), graph representations of
+structures, cross-problem transfer, per-node displacement responses so that
+deflection is derived rather than regressed.

@@ -1,7 +1,7 @@
 {
   "name": "neuroforge",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b && tsc -p tsconfig.test.json",
     "reproduce": "vite-node scripts/reproduce.ts",
-    "benchmark": "vite-node scripts/benchmark.ts"
+    "benchmark": "vite-node scripts/benchmark.ts",
+    "ablation": "vite-node scripts/ablation.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

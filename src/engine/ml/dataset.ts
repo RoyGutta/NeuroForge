@@ -19,9 +19,20 @@ export interface Dataset {
   designIds: string[];
   variableIds: string[];
   metricIds: string[];
+  /** Vector responses included, each expanded into columns "<id>[<i>]". */
+  responseIds: string[];
+  responseSizes: Record<string, number>;
   size: number;
   /** Designs skipped because their analysis failed (unstable / invalid). */
   skipped: number;
+  /** Rows of one response, aligned with `inputs`. */
+  responseMatrix(id: string): number[][];
+}
+
+export function responseColumns(ds: { responseSizes: Record<string, number> }, id: string): string[] {
+  const n = ds.responseSizes[id];
+  if (n === undefined) throw new Error(`dataset has no response "${id}"`);
+  return Array.from({ length: n }, (_, i) => `${id}[${i}]`);
 }
 
 /** Re-run an experiment and return every design it evaluated, in order. */
@@ -33,10 +44,11 @@ export function collectDesigns(config: ExperimentConfig): Design[] {
   return out;
 }
 
-export function buildDataset(space: DesignSpace, designs: Design[], metricIds: string[]): Dataset {
+export function buildDataset(space: DesignSpace, designs: Design[], metricIds: string[], responseIds: string[] = []): Dataset {
   const inputs: number[][] = [];
   const targets: Record<string, number[]> = {};
   for (const m of metricIds) targets[m] = [];
+  const responseSizes: Record<string, number> = {};
   const feasible: boolean[] = [];
   const designIds: string[] = [];
   let skipped = 0;
@@ -50,21 +62,43 @@ export function buildDataset(space: DesignSpace, designs: Design[], metricIds: s
       skipped++;
       continue;
     }
+    if (responseIds.some((r) => !ev.responses?.[r] || ev.responses[r].some((v) => !Number.isFinite(v)))) {
+      skipped++;
+      continue;
+    }
     inputs.push(space.normalize(d.parameters));
     for (const m of metricIds) targets[m].push(ev.metrics[m]);
+    for (const r of responseIds) {
+      const vec = ev.responses![r];
+      if (responseSizes[r] === undefined) {
+        responseSizes[r] = vec.length;
+        for (let i = 0; i < vec.length; i++) targets[`${r}[${i}]`] = [];
+      }
+      if (vec.length !== responseSizes[r]) throw new Error(`response "${r}" has inconsistent length`);
+      for (let i = 0; i < vec.length; i++) targets[`${r}[${i}]`].push(vec[i]);
+    }
     feasible.push(ev.feasible);
     designIds.push(d.id);
   }
-  return {
+  for (const r of responseIds) if (responseSizes[r] === undefined) responseSizes[r] = 0;
+  const ds: Dataset = {
     inputs,
     targets,
     feasible,
     designIds,
     variableIds: space.variables.map((v) => v.id),
     metricIds: metricIds.slice(),
+    responseIds: responseIds.slice(),
+    responseSizes,
     size: inputs.length,
     skipped,
+    responseMatrix(this: Dataset, id) {
+      // Reads from the object it is called on, so a sliced copy stays aligned.
+      const cols = responseColumns(this, id).map((c) => this.targets[c]);
+      return this.inputs.map((_, row) => cols.map((c) => c[row]));
+    },
   };
+  return ds;
 }
 
 export interface DatasetSlice {
@@ -96,7 +130,7 @@ export function splitDataset(
   const nVal = Math.round((fractions.validation / total) * ds.size);
   const slice = (idx: number[]): DatasetSlice => {
     const targets: Record<string, number[]> = {};
-    for (const m of ds.metricIds) targets[m] = idx.map((i) => ds.targets[m][i]);
+    for (const m of Object.keys(ds.targets)) targets[m] = idx.map((i) => ds.targets[m][i]);
     return { indices: idx, inputs: idx.map((i) => ds.inputs[i]), targets, size: idx.length };
   };
   return {

@@ -23,6 +23,8 @@ export interface TrussSvgProps {
   compact?: boolean;
   /** Applied external load to label (defaults to the largest nodal load, which includes lumped self-weight). */
   appliedLoad_N?: number;
+  /** Per-member colour override (e.g. an error or uncertainty map); wins over `mode` colouring. */
+  memberColors?: string[];
   ariaLabel?: string;
 }
 
@@ -30,14 +32,14 @@ const W = 600;
 const H = 300;
 const PAD = 54;
 
-export function TrussSvg({ model, result, mode, safetyFactor, areaMax_m2, compact, ariaLabel, appliedLoad_N }: TrussSvgProps) {
+export function TrussSvg({ model, result, mode, safetyFactor, areaMax_m2, compact, ariaLabel, appliedLoad_N, memberColors }: TrussSvgProps) {
   const view = useMemo(() => layout(model), [model]);
   const ok = result.status === "ok";
 
   const perMember = useMemo(() => {
     return model.members.map((m, i) => {
       const width = 1.2 + 9 * Math.sqrt(m.area_m2 / areaMax_m2);
-      if (!ok) return { width, color: "#7d8f86", title: "" };
+      if (!ok) return { width, color: memberColors?.[i] ?? "#7d8f86", title: "" };
       const N = result.memberForces_N[i];
       const stress = result.memberStresses_Pa[i];
       const L = result.memberLengths_m[i];
@@ -53,9 +55,9 @@ export function TrussSvg({ model, result, mode, safetyFactor, areaMax_m2, compac
         color = utilColor(util);
       }
       const title = `${N >= 0 ? "Tension" : "Compression"} ${Math.abs(N).toFixed(1)} N · stress ${(Math.abs(stress) / 1e6).toFixed(2)} MPa · utilisation ${(util * 100).toFixed(0)}%`;
-      return { width, color, title };
+      return { width, color: memberColors?.[i] ?? color, title };
     });
-  }, [model, result, mode, safetyFactor, areaMax_m2, ok]);
+  }, [model, result, mode, safetyFactor, areaMax_m2, ok, memberColors]);
 
   const deform = useMemo(() => {
     if (!ok || mode !== "deformed") return null;
@@ -206,6 +208,10 @@ function layout(model: TrussModel) {
 
 function formatForce(N: number): string {
   return Math.abs(N) >= 1000 ? `${(N / 1000).toFixed(2)} kN` : `${N.toFixed(0)} N`;
+}
+
+export function rampColor(t: number): string {
+  return utilColor(Math.min(1.5, Math.max(0, t)) );
 }
 
 function utilColor(u: number): string {

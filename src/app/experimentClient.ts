@@ -5,7 +5,7 @@
  */
 import type { ExperimentConfig, ExperimentRecord, GenerationSummary } from "../engine/experiments/experiment";
 import { runExperiment } from "../engine/experiments/runner";
-import { runSurrogateStudy, type StudyOptions, type SurrogateStudy } from "../engine/ml/study";
+import { runMemberStudy, runSurrogateStudy, type MemberStudy, type MemberStudyOptions, type StudyOptions, type SurrogateStudy } from "../engine/ml/study";
 import type { WorkerRequest, WorkerResponse } from "../workers/protocol";
 
 export interface ExperimentHandlers {
@@ -120,6 +120,39 @@ export function startSurrogateStudy(
     setTimeout(() => {
       try {
         resolve(runSurrogateStudy(config, options));
+      } catch (err) {
+        reject(err);
+      }
+    }, 0);
+  });
+}
+
+/** Run a member-level study off the main thread (worker) or inline as a fallback. */
+export function startMemberStudy(config: ExperimentConfig, options: MemberStudyOptions): Promise<MemberStudy> {
+  if (typeof Worker !== "undefined") {
+    try {
+      const worker = new Worker(new URL("../workers/experiment.worker.ts", import.meta.url), { type: "module" });
+      return new Promise((resolve, reject) => {
+        worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
+          if (ev.data.type === "memberStudy") resolve(ev.data.study);
+          else if (ev.data.type === "error") reject(new Error(ev.data.message));
+          worker.terminate();
+        };
+        worker.onerror = (e) => {
+          reject(new Error(e.message || "worker error"));
+          worker.terminate();
+        };
+        const msg: WorkerRequest = { type: "memberStudy", config, options };
+        worker.postMessage(msg);
+      });
+    } catch {
+      // fall through
+    }
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        resolve(runMemberStudy(config, options));
       } catch (err) {
         reject(err);
       }

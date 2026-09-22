@@ -2,6 +2,25 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-09-22 — Learn forces, compute constraints
+**Decision.** Surrogates predict member axial forces; the domain's exact
+equations derive stress, buckling and feasibility. Utilisations are never
+learned directly in the member method.
+**Why.** v0.2 showed aggregate utilisations (maxima over members of N/A and
+N/A²) were unlearnable by global regressors while mass was trivial. Forces are
+smooth in the design variables; the maximum is a computation, not a target.
+The ablation confirmed the representation change is the whole gain.
+**Cost.** Deflection cannot be derived from forces and keeps a global
+surrogate; per-node displacement responses are the planned fix.
+
+## 2026-09-22 — Default to the safety-leaning screen, report the trade
+**Decision.** Ship `riskK = 2`, `exploreFraction = 0.2` as defaults even though
+`k = 0, explore 0` gave the lowest mass on the canonical problem.
+**Why.** The conservative bound's measured benefit is a six-fold lower
+false-feasible rate; its cost (about 3 % mass) is problem-specific and the
+knobs are exposed. Both facts are in `docs/BENCHMARKS.md` so nobody has to
+take the default on faith.
+
 ## 2026-09-14 — Public release under the MIT license
 **Decision.** Publish the repository publicly at v0.1.0 under MIT.
 **Why.** The purpose of publication is inspection: the algorithms, solver,

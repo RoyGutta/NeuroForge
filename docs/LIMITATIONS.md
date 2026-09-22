@@ -19,6 +19,15 @@ Be explicit about these when presenting results.
 - Single objective per run today; the stiffness objective needs a mass budget.
 - No guarantee of global optimality; results are the best found within the budget and seed.
 
+## Learning and uncertainty
+- Surrogate uncertainty (Bayesian ridge predictive variance, GP variance) is
+  a statistical statement about the surrogate's error on data like its
+  training set. It is not a structural safety margin and must not be read as one.
+- Deflection is still predicted by a global surrogate; only stress and
+  buckling are derived from predicted forces.
+- Benchmark conclusions hold for the canonical truss family and the budgets
+  tested; they are not general claims about surrogate-assisted optimisation.
+
 ## Interpretation
 - The rule-based interpreter handles span/load/safety-factor/material/deflection
   phrasing in English with SI or kg units. Anything else becomes an assumption.

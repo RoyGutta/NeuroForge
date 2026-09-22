@@ -34,6 +34,8 @@ export interface Evaluation {
   /** What kind of analysis produced this, e.g. "linear-static-fea". */
   fidelity: string;
   backend: string;
+  /** Vector-valued responses (e.g. member axial forces) for learning at the component level. */
+  responses?: Record<string, number[]>;
 }
 
 export type DesignOperator =

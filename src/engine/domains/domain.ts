@@ -21,10 +21,35 @@ export interface BaselineDesign {
   parameters: number[];
 }
 
+/** A vector-valued response the evaluator exposes (e.g. one axial force per member). */
+export interface ResponseDescriptor {
+  id: string;
+  label: string;
+  unit: string;
+  size: number;
+}
+
+/**
+ * Exact physics after prediction: derives scalar metrics from responses using
+ * the domain's own equations, so a surrogate only has to learn the responses.
+ */
+export interface ResponseModel {
+  responseIds: string[];
+  /** Metric ids that `derive` can compute from responses alone. */
+  derivableMetrics: string[];
+  derive(params: number[], responses: Record<string, number[]>): Record<string, number>;
+  /** Per-component utilisation for each derivable constraint metric, keyed by metric id. */
+  componentUtilizations(params: number[], responses: Record<string, number[]>): Record<string, number[]>;
+}
+
 export interface CompiledProblem<TArtifact = unknown> {
   problem: EngineeringProblem;
   space: DesignSpace;
   metrics: MetricDescriptor[];
+  /** Vector responses the evaluator attaches to evaluations. */
+  responses: ResponseDescriptor[];
+  /** Present when the domain can derive metrics exactly from responses. */
+  responseModel?: ResponseModel;
   baseline: BaselineDesign;
   /** Deterministic evaluation of one parameter vector. */
   evaluate(params: number[]): Evaluation;

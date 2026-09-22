@@ -3,6 +3,7 @@
  */
 import { checkConstraints, FAILED_DESIGN_VIOLATION, type Evaluation } from "../../../core/design";
 import type { EngineeringProblem, MetricDescriptor } from "../../../core/problem";
+import type { ResponseDescriptor, ResponseModel } from "../../domain";
 import type { BridgeSpace } from "./bridgeSpace";
 import type { TrussSolution } from "./fea";
 import { solveTruss } from "./fea";
@@ -31,29 +32,77 @@ export const TRUSS_METRICS: MetricDescriptor[] = [
   { id: "compliance_J", label: "Compliance", unit: "J", description: "Strain energy 0.5 F.u; lower is stiffer." },
 ];
 
+export function trussResponses(memberCount: number): ResponseDescriptor[] {
+  return [{ id: "memberForces_N", label: "Member axial force", unit: "N", size: memberCount }];
+}
+
+/**
+ * Exact stress and Euler-buckling utilisations per member from a force
+ * vector. Shared by the evaluator and by the response model so a predicted
+ * force vector goes through precisely the same equations as a solved one.
+ */
+export function memberUtilizationsFromForces(
+  problem: EngineeringProblem,
+  model: TrussModel,
+  forces: ArrayLike<number>,
+  lengths: ArrayLike<number>
+): { stress: number[]; buckling: number[]; maxStress_Pa: number } {
+  const sf = problem.safetyFactor;
+  const E = problem.material.youngsModulus_Pa;
+  const sy = problem.material.yieldStrength_Pa;
+  const stress: number[] = [];
+  const buckling: number[] = [];
+  let maxStress = 0;
+  for (let m = 0; m < model.members.length; m++) {
+    const A = model.members[m].area_m2;
+    const N = forces[m];
+    const sigma = Math.abs(N) / A;
+    if (sigma > maxStress) maxStress = sigma;
+    stress.push((sigma * sf) / sy);
+    buckling.push(N < 0 ? (-N * sf) / eulerCriticalLoad_N(E, A, lengths[m]) : 0);
+  }
+  return { stress, buckling, maxStress_Pa: maxStress };
+}
+
+export function createTrussResponseModel(problem: EngineeringProblem, space: BridgeSpace): ResponseModel {
+  const lengthsOf = (model: TrussModel) => model.members.map((mem) => Math.hypot(model.nodes[mem.j].x - model.nodes[mem.i].x, model.nodes[mem.j].y - model.nodes[mem.i].y));
+  return {
+    responseIds: ["memberForces_N"],
+    derivableMetrics: ["mass_kg", "maxStress_Pa", "stressUtilization", "bucklingUtilization"],
+    derive(params, responses) {
+      const forces = responses.memberForces_N;
+      if (!forces) throw new Error("response model needs memberForces_N");
+      const model = space.buildModel(params);
+      const u = memberUtilizationsFromForces(problem, model, forces, lengthsOf(model));
+      return {
+        mass_kg: trussMass_kg(model),
+        maxStress_Pa: u.maxStress_Pa,
+        stressUtilization: Math.max(0, ...u.stress),
+        bucklingUtilization: Math.max(0, ...u.buckling),
+      };
+    },
+    componentUtilizations(params, responses) {
+      const forces = responses.memberForces_N;
+      if (!forces) throw new Error("response model needs memberForces_N");
+      const model = space.buildModel(params);
+      const u = memberUtilizationsFromForces(problem, model, forces, lengthsOf(model));
+      return { stressUtilization: u.stress, bucklingUtilization: u.buckling };
+    },
+  };
+}
+
 export function computeTrussMetrics(
   problem: EngineeringProblem,
   model: TrussModel,
   sol: TrussSolution
 ): Record<string, number> {
-  const sf = problem.safetyFactor;
-  const E = problem.material.youngsModulus_Pa;
-  let maxStress = 0;
-  let bucklingUtil = 0;
-  for (let m = 0; m < model.members.length; m++) {
-    const stress = Math.abs(sol.memberStresses_Pa[m]);
-    if (stress > maxStress) maxStress = stress;
-    const N = sol.memberForces_N[m];
-    if (N < 0) {
-      const pcr = eulerCriticalLoad_N(E, model.members[m].area_m2, sol.memberLengths_m[m]);
-      const u = (-N * sf) / pcr;
-      if (u > bucklingUtil) bucklingUtil = u;
-    }
-  }
+  const u = memberUtilizationsFromForces(problem, model, sol.memberForces_N, sol.memberLengths_m);
+  const maxStress = u.maxStress_Pa;
+  const bucklingUtil = Math.max(0, ...u.buckling);
   return {
     mass_kg: trussMass_kg(model),
     maxStress_Pa: maxStress,
-    stressUtilization: (maxStress * sf) / problem.material.yieldStrength_Pa,
+    stressUtilization: Math.max(0, ...u.stress),
     bucklingUtilization: bucklingUtil,
     maxDisplacement_m: sol.maxDisplacement_m,
     compliance_J: sol.compliance_J,
@@ -99,5 +148,6 @@ export function evaluateTrussDesign(
     diagnostics: [],
     fidelity: TRUSS_FIDELITY,
     backend: TRUSS_BACKEND_ID,
+    responses: { memberForces_N: Array.from(sol.memberForces_N) },
   };
 }

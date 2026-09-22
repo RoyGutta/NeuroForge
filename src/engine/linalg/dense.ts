@@ -32,16 +32,8 @@ export function matVec(
   return y;
 }
 
-/**
- * Solve A x = b for SPD A (n x n, row-major) by Cholesky factorisation.
- * A is not modified. Throws NotPositiveDefiniteError if a pivot is not
- * strictly positive relative to the matrix scale.
- */
-export function choleskySolve(
-  A: Float64Array,
-  b: Float64Array,
-  n: number
-): Float64Array {
+/** Lower-triangular Cholesky factor L with A = L L^T. A is not modified. */
+export function choleskyFactor(A: Float64Array, n: number): Float64Array {
   const L = new Float64Array(n * n);
   // Relative tolerance: a pivot smaller than this fraction of the largest
   // diagonal entry is treated as zero (numerically singular).
@@ -61,7 +53,11 @@ export function choleskySolve(
       L[i * n + j] = s / ljj;
     }
   }
+  return L;
+}
 
+/** Solve A x = b given the Cholesky factor L of A. */
+export function choleskySolveWith(L: Float64Array, b: Float64Array, n: number): Float64Array {
   // Forward substitution: L y = b
   const y = new Float64Array(n);
   for (let i = 0; i < n; i++) {
@@ -77,4 +73,13 @@ export function choleskySolve(
     x[i] = s / L[i * n + i];
   }
   return x;
+}
+
+/**
+ * Solve A x = b for SPD A (n x n, row-major) by Cholesky factorisation.
+ * A is not modified. Throws NotPositiveDefiniteError if a pivot is not
+ * strictly positive relative to the matrix scale.
+ */
+export function choleskySolve(A: Float64Array, b: Float64Array, n: number): Float64Array {
+  return choleskySolveWith(choleskyFactor(A, n), b, n);
 }

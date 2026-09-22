@@ -9,6 +9,8 @@ import type { ExperimentConfig } from "../experiments/experiment";
 import { buildDataset, collectDesigns, splitDataset, type Dataset } from "./dataset";
 import { coverage, mae, r2, rmse } from "./metrics";
 import { createSurrogate, getSurrogateDescriptor } from "./models";
+import { HybridPredictor, type ForceAccuracy } from "./hybrid";
+import { calibrationBins, confusionFromPairs, type CalibrationBin, type FeasibilityConfusion } from "./reliability";
 
 export interface SurrogateResult {
   modelId: string;
@@ -148,4 +150,110 @@ function hash(s: string): number {
 
 function now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+export interface MemberStudyOptions {
+  memberModel: string;
+  riskK: number;
+  splitSeed?: number;
+  maxTrainingPoints?: number;
+  sampleCap?: number;
+}
+
+export interface DerivedMetricResult {
+  target: string;
+  mae: number;
+  rmse: number;
+  r2: number;
+  sample: { actual: number; predicted: number; conservative: number }[];
+}
+
+export interface MemberStudy {
+  experimentId: string;
+  memberModel: string;
+  riskK: number;
+  dataset: { size: number; skipped: number; dimension: number; members: number };
+  split: { train: number; validation: number; test: number; seed: number };
+  forces: ForceAccuracy;
+  /** Nominal (mean) prediction versus solver on the test split. */
+  feasibility: FeasibilityConfusion;
+  /** Conservative (mu + k sigma) prediction versus solver on the test split. */
+  feasibilityConservative: FeasibilityConfusion;
+  derivedMetrics: DerivedMetricResult[];
+  calibration: CalibrationBin[];
+  /** Per-member mean predicted std on the test split (uncertainty map). */
+  perMemberMeanStd: number[];
+  fitMs: number;
+}
+
+/**
+ * Member-level study: train the hybrid predictor on the training split of an
+ * experiment's regenerated designs and report force accuracy, feasibility
+ * reliability, derived-metric accuracy and calibration on the test split.
+ */
+export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOptions): MemberStudy {
+  const compiled = compileProblem(config.problem);
+  const rm = compiled.responseModel;
+  if (!rm) throw new Error("member study needs a domain response model");
+  const designs = collectDesigns(config);
+  const constraintMetrics = config.problem.constraints.map((c) => c.metric);
+  const nonDerivable = constraintMetrics.filter((m) => !rm.derivableMetrics.includes(m));
+  const ds = buildDataset(compiled.space, designs, Array.from(new Set([...constraintMetrics, ...config.problem.objectives.map((o) => o.metric)])), rm.responseIds);
+  const splitSeed = opts.splitSeed ?? 1;
+  const split = splitDataset(ds, splitSeed, { train: 0.7, validation: 0.15, test: 0.15 });
+  const cap = Math.min(opts.maxTrainingPoints ?? Infinity, split.train.size);
+  const trainTargets: Record<string, number[]> = {};
+  for (const k of Object.keys(split.train.targets)) trainTargets[k] = split.train.targets[k].slice(0, cap);
+  const train: Dataset = { ...ds, inputs: split.train.inputs.slice(0, cap), targets: trainTargets, size: cap, designIds: split.train.indices.slice(0, cap).map((i) => ds.designIds[i]), feasible: split.train.indices.slice(0, cap).map((i) => ds.feasible[i]) };
+  const predictor = new HybridPredictor(compiled, { memberModel: opts.memberModel, riskK: opts.riskK }, new Rng(splitSeed * 104729 + hash(opts.memberModel)));
+  const t0 = now();
+  predictor.fit(train);
+  const fitMs = now() - t0;
+
+  const testIdx = split.test.indices;
+  const byId = new Map(designs.map((d) => [d.id, d]));
+  const testDesigns = testIdx.map((i) => byId.get(ds.designIds[i])!);
+  const params = testDesigns.map((d) => d.parameters);
+  const preds = predictor.predict(params);
+  const actualForces = testDesigns.map((d) => d.evaluation!.responses![rm.responseIds[0]]);
+  const forces = predictor.forceAccuracy(params, actualForces);
+  const feasibility = confusionFromPairs(preds.map((p, i) => ({ predicted: p.nominal.feasible, actual: testDesigns[i].evaluation!.feasible })));
+  const feasibilityConservative = confusionFromPairs(preds.map((p, i) => ({ predicted: p.conservative.feasible, actual: testDesigns[i].evaluation!.feasible })));
+  const sampleCap = opts.sampleCap ?? 300;
+  const derivedMetrics: DerivedMetricResult[] = Array.from(new Set([...constraintMetrics, ...nonDerivable])).map((target) => {
+    const actual = testDesigns.map((d) => d.evaluation!.metrics[target]);
+    const predicted = preds.map((p) => p.nominal.metrics[target]);
+    return {
+      target,
+      mae: mae(actual, predicted),
+      rmse: rmse(actual, predicted),
+      r2: r2(actual, predicted),
+      sample: actual.slice(0, sampleCap).map((a, i) => ({ actual: a, predicted: predicted[i], conservative: preds[i].conservative.metrics[target] })),
+    };
+  });
+  const errors: number[] = [];
+  const stds: number[] = [];
+  const members = actualForces[0]?.length ?? 0;
+  const perMemberStd = new Array(members).fill(0);
+  preds.forEach((p, i) => {
+    p.forces.mean.forEach((mu, j) => {
+      errors.push(Math.abs(mu - actualForces[i][j]));
+      stds.push(p.forces.std[j]);
+      perMemberStd[j] += p.forces.std[j];
+    });
+  });
+  return {
+    experimentId: config.id,
+    memberModel: opts.memberModel,
+    riskK: opts.riskK,
+    dataset: { size: ds.size, skipped: ds.skipped, dimension: ds.variableIds.length, members },
+    split: { train: split.train.size, validation: split.validation.size, test: split.test.size, seed: splitSeed },
+    forces,
+    feasibility,
+    feasibilityConservative,
+    derivedMetrics,
+    calibration: calibrationBins(errors, stds, 5),
+    perMemberMeanStd: perMemberStd.map((v) => (preds.length ? v / preds.length : 0)),
+    fitMs,
+  };
 }

@@ -4,7 +4,7 @@
  * the event loop so a cancel message can interrupt a long run.
  */
 import { runExperiment } from "../engine/experiments/runner";
-import { runSurrogateStudy } from "../engine/ml/study";
+import { runMemberStudy, runSurrogateStudy } from "../engine/ml/study";
 import type { WorkerRequest, WorkerResponse } from "./protocol";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
@@ -22,6 +22,14 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
   if (msg.type === "surrogateStudy") {
     try {
       post({ type: "study", study: runSurrogateStudy(msg.config, msg.options) });
+    } catch (err) {
+      post({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    }
+    return;
+  }
+  if (msg.type === "memberStudy") {
+    try {
+      post({ type: "memberStudy", study: runMemberStudy(msg.config, msg.options) });
     } catch (err) {
       post({ type: "error", message: err instanceof Error ? err.message : String(err) });
     }

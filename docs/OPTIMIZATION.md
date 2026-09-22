@@ -64,6 +64,24 @@ generation produces an honest online accuracy measurement; the record stores
 the online R² per target, the number of predicted/actual pairs, and fit time.
 Screening starts after `warmupEvaluations` solver calls.
 
+## Member-surrogate evolutionary (uncertainty-aware)
+The same inner (mu + lambda) algorithm, but screening uses the hybrid
+predictor in `src/engine/ml/hybrid.ts`: a multi-output Bayesian ridge maps
+the design vector to every member's axial force with a predictive standard
+deviation; the domain's response model then applies the exact stress and
+Euler equations to obtain utilisations, so only the forces are learned.
+Deflection, which cannot be derived from forces, keeps a single-output
+surrogate. Two derivations are made per candidate: nominal (mean forces) and
+conservative (|force| + k·σ for stress, force − k·σ for buckling, deflection
+× e^{kσ}). Ranking uses Deb's rules on the conservative metrics; a fraction
+of each batch is instead given to the most uncertain nominally-feasible
+candidates. Every gated design is solved, and its prediction is kept, so the
+record contains: the screening funnel, feasibility confusion (nominal and
+conservative), per-member force error, interval coverage, error–uncertainty
+correlation and calibration bins. Parameters `riskK` and `exploreFraction`
+control the policy; the ablation in `docs/BENCHMARKS.md` shows what each
+buys on the canonical problem.
+
 ## Bayesian optimisation (constrained)
 Gaussian processes (RBF kernel, marginal-likelihood hyperparameters) model
 log(objective) and log(each constraint metric) in normalised design space.
@@ -110,6 +128,6 @@ non-dominated, spans more than 30 % in both objectives, and the hypervolume
 history never decreases.
 
 ## Planned
-CMA-ES; uncertainty-aware screening. Each will be a new `OptimizerDescriptor`
+CMA-ES. Each will be a new `OptimizerDescriptor`
 in the registry and benchmarked against random search before it is offered
 in the UI.

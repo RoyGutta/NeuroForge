@@ -208,9 +208,32 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
 function Diagnostics({ d }: { d: Record<string, unknown> }) {
   const r2 = d.onlineR2 as Record<string, number> | undefined;
   const ls = d.lengthscale as Record<string, number> | undefined;
+  const funnel = d.funnel as { candidatesGenerated: number; surrogatePredictions: number; passedScreening: number; sentToSolver: number; warmupEvaluations: number; explorationPicks: number } | undefined;
+  const feas = d.feasibility as { precision: number; recall: number; falseFeasibleRate: number; falseInfeasibleRate: number; count: number } | undefined;
+  const forces = d.forces as { overallR2: number; coverage95: number } | undefined;
+  const pct = (v: number) => (Number.isFinite(v) ? `${(v * 100).toFixed(1)} %` : "—");
   return (
     <div className="insight">
       <strong>Model diagnostics · {String(d.surrogate ?? "")}</strong>
+      {funnel && (
+        <>
+          <div className="kv"><span>candidates generated</span><b>{funnel.candidatesGenerated.toLocaleString()}</b></div>
+          <div className="kv"><span>surrogate predictions</span><b>{funnel.surrogatePredictions.toLocaleString()}</b></div>
+          <div className="kv"><span>passed conservative screen</span><b>{funnel.passedScreening.toLocaleString()}</b></div>
+          <div className="kv"><span>sent to solver (after warm-up)</span><b>{funnel.sentToSolver.toLocaleString()}</b></div>
+          <div className="kv"><span>exploration picks</span><b>{funnel.explorationPicks.toLocaleString()}</b></div>
+        </>
+      )}
+      {feas && (
+        <>
+          <div className="kv"><span>screen precision / recall</span><b>{pct(feas.precision)} / {pct(feas.recall)}</b></div>
+          <div className="kv"><span>false-feasible rate</span><b className={feas.falseFeasibleRate > 0.2 ? "bad" : undefined}>{pct(feas.falseFeasibleRate)}</b></div>
+          <div className="kv"><span>false-infeasible rate</span><b>{pct(feas.falseInfeasibleRate)}</b></div>
+        </>
+      )}
+      {forces && (
+        <div className="kv"><span>member-force R² · 95 % coverage</span><b>{forces.overallR2.toFixed(3)} · {pct(forces.coverage95)}</b></div>
+      )}
       {r2 &&
         Object.entries(r2).map(([k, v]) => (
           <div className="kv" key={k}>
