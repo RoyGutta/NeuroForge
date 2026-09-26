@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 — 2026-09-26 · Autonomous engineering loop
+- `runLab`: analysis (baseline, sensitivity, binding constraints), pilots of
+  every strategy at equal solver budget on a derived seed, the winner run
+  until its best-so-far plateaus (new `shouldStop` hook on the runner) or the
+  budget is spent, an NSGA-II mass-versus-compliance stage, and a discovery
+  report computed from the stage records (solver evaluations, surrogate
+  predictions, strategies compared, improvement, stop reason, binding
+  constraints, top variables, Pareto front size and hypervolume, screen
+  reliability, wall time).
+- Workspace: "Run autonomous search" with a live stage log, the report, and
+  buttons that open the main and trade-off records in the existing panels.
+- Pilot populations are sized to the pilot budget so strategies can
+  differentiate within it.
+
 ## 0.5.0 — 2026-09-22 · CMA-ES and the benchmark view
 - CMA-ES optimiser (rank-one and rank-mu covariance adaptation, cumulative
   step-size adaptation) with a Jacobi symmetric eigendecomposition in the

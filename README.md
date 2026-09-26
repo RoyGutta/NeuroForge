@@ -44,14 +44,16 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.5.0) implements one problem family end to end, the
+The current release (v0.6.0) implements one problem family end to end, the
 planar truss bridge, deeply enough that every stage of the pipeline is real,
 tested, and inspectable, and adds a learning layer: surrogate models trained
 on simulation data with held-out evaluation, surrogate-assisted evolutionary
 search, and constrained Bayesian optimisation, all benchmarked against the
 plain optimisers at equal solver budget, multi-objective search with a Pareto
 front of mass against stiffness, and a per-member surrogate representation
-whose uncertainty-aware screen is measured against the solver on every run. The domain, optimiser, interpreter, and storage layers
+whose uncertainty-aware screen is measured against the solver on every run,
+and an autonomous search that pilots the strategies, runs the winner to a
+plateau, maps the trade-off front and reports what it found. The domain, optimiser, interpreter, and storage layers
 are contracts, so further physics domains, search algorithms, and learning
 components extend the platform without changing what already works.
 
@@ -126,16 +128,17 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Learning | Dataset builder over reproducible runs with seeded splits, including per-member force columns; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and applies the exact stress and buckling equations; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
 | Benchmarks | `npm run benchmark` and `npm run ablation`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR, evaluations-to-target and screening reliability; raw runs under `benchmarks/results/`, rendered on the `/benchmarks` page (tables, median convergence curves with interquartile bands, per-run inspection), tables in `docs/BENCHMARKS.md`, the research question in `docs/RESEARCH.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
+| Autonomous search | Staged lab: baseline analysis, equal-budget pilots of every strategy, the winner run until its best-so-far plateaus, NSGA-II trade-off stage, and a discovery report reconciled from the stage records; each stage opens in the workspace as a normal experiment |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panel; evidence tables |
-| Testing | 151 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Testing | 156 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
 Per-node displacement responses, CMA-ES restarts and boundary handling,
-additional engineering domains, 3D visualisation, and an autonomous
-engineering loop. None of these are
+multi-seed pilots in the autonomous lab, additional engineering domains, and
+3D visualisation. None of these are
 implemented yet; the interface labels them as roadmap wherever they are
 mentioned. See [Roadmap](#roadmap).
 
@@ -410,10 +413,11 @@ commitments.
    and an ablation answering whether it helps.
 5. **Done (v0.5):** CMA-ES (a recorded negative result on the truss) and a
    benchmark view rendering the committed records.
-6. **Next:** per-node displacement responses; CMA-ES restarts and boundary
-   handling; stronger multi-objective methods.
-7. Autonomous engineering loop: staged strategy comparison, convergence
-   detection, and a discovery report generated from measured data.
+6. **Done (v0.6):** autonomous engineering loop: staged strategy comparison,
+   convergence detection, trade-off mapping, and a discovery report generated
+   from measured data.
+7. **Next:** per-node displacement responses; CMA-ES restarts and boundary
+   handling; multi-seed pilots; stronger multi-objective methods.
 8. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, robotics, aerospace), tubular sections, 3D trusses.
 9. Advanced learning components where they earn their place: neural

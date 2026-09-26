@@ -4,6 +4,7 @@ import { NavBar } from "../components/NavBar";
 import { usePageMeta } from "../hooks/usePageMeta";
 import css from "../styles/workspace.css?inline";
 import { EvidenceSection } from "./workspace/EvidenceSection";
+import { AutonomousPanel } from "./workspace/AutonomousPanel";
 import { ExperimentPanel } from "./workspace/ExperimentPanel";
 import { LearningSection } from "./workspace/LearningSection";
 import { MemberLearningPanel } from "./workspace/MemberLearningPanel";
@@ -48,6 +49,7 @@ export function WorkspacePage() {
               fabrication tolerances and code compliance are outside the model.
             </span>
           </div>
+          <AutonomousPanel ws={ws} />
           <div className="workspace">
             <SpecPanel ws={ws} />
             <Viewport ws={ws} />

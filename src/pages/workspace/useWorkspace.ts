@@ -151,6 +151,31 @@ export function useWorkspace() {
 
   const cancel = useCallback(() => handleRef.current?.cancel(), []);
 
+  /** Show a finished record (e.g. an autonomous-lab stage) in the workspace and store it. */
+  const loadRecord = useCallback(
+    async (rec: ExperimentRecord) => {
+      setProblem(rec.config.problem);
+      setForm(formFromProblem(rec.config.problem));
+      setSettings({
+        optimizerId: rec.config.optimizer.id,
+        params: rec.config.optimizer.params,
+        maxEvaluations: rec.config.budget.maxEvaluations,
+        seed: rec.config.seed,
+        seedBaseline: rec.config.seedBaseline,
+      });
+      setRecord(rec);
+      setGenerations(rec.generations);
+      setProgress({ evaluations: rec.totalEvaluations, wallTimeMs: rec.wallTimeMs });
+      setStatus(rec.status === "completed" ? "completed" : "cancelled");
+      setScrub(null);
+      setShowing("best");
+      setSelectedDesign(null);
+      await getExperimentStore().save(rec);
+      void refreshLibrary();
+    },
+    [refreshLibrary]
+  );
+
   const loadExperiment = useCallback(async (id: string) => {
     const rec = await getExperimentStore().get(id);
     if (!rec) return;
@@ -244,6 +269,7 @@ export function useWorkspace() {
     multiObjective,
     library,
     loadExperiment,
+    loadRecord,
     deleteExperiment,
   };
 }

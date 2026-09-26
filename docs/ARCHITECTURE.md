@@ -106,6 +106,15 @@ learn a smooth physical quantity while feasibility is still computed by the
 engineering equations, and it is domain-agnostic: a thermal domain could
 expose per-fin temperatures the same way.
 
+### `src/engine/autonomous`
+`convergence.ts` (plateau detection on a best-so-far history) and `lab.ts`
+(the staged search: analysis, equal-budget pilots on a derived seed, the
+winning strategy run with a `shouldStop` hook until it plateaus, an NSGA-II
+trade-off stage, and a report reconciled from the stage records). The lab is
+a generator like the runner, so the worker streams its events and cancels it
+the same way, and every stage record is an ordinary `ExperimentRecord` that
+the workspace can open. It adds no physics and no numbers of its own.
+
 ### `src/engine/interpret`
 `ProblemInterpreter` contract. The rule-based implementation extracts span,
 load (N, kN, kg→N), safety factor, material, deflection ratio and objective,

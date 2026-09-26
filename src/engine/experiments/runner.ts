@@ -54,6 +54,8 @@ export type ExperimentEvent =
 export interface RunHooks {
   /** Called with every evaluated batch, in order. Used to build datasets. */
   onBatch?(designs: Design[]): void;
+  /** Checked after each generation; returning true ends the run as completed (e.g. on convergence). */
+  shouldStop?(record: ExperimentRecord): boolean;
 }
 
 export function* runExperiment(
@@ -168,6 +170,7 @@ export function* runExperiment(
       record.wallTimeMs = summary.elapsedMs;
       generation++;
       yield { type: "generation", summary, record };
+      if (hooks.shouldStop?.(record)) break;
     }
     record.status = "completed";
   } finally {

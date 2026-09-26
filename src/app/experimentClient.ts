@@ -6,6 +6,7 @@
 import type { ExperimentConfig, ExperimentRecord, GenerationSummary } from "../engine/experiments/experiment";
 import { runExperiment } from "../engine/experiments/runner";
 import { runMemberStudy, runSurrogateStudy, type MemberStudy, type MemberStudyOptions, type StudyOptions, type SurrogateStudy } from "../engine/ml/study";
+import { runLab, type LabConfig, type LabEvent, type LabRecord } from "../engine/autonomous/lab";
 import type { WorkerRequest, WorkerResponse } from "../workers/protocol";
 
 export interface ExperimentHandlers {
@@ -158,4 +159,68 @@ export function startMemberStudy(config: ExperimentConfig, options: MemberStudyO
       }
     }, 0);
   });
+}
+
+export interface LabHandlers {
+  onEvent?(event: Exclude<LabEvent, { type: "started" }>): void;
+  onFinished?(record: LabRecord): void;
+  onError?(message: string): void;
+}
+
+/** Run the autonomous lab off the main thread, with a time-sliced fallback. */
+export function startLab(config: LabConfig, handlers: LabHandlers): ExperimentHandle {
+  if (typeof Worker !== "undefined") {
+    try {
+      const worker = new Worker(new URL("../workers/experiment.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (ev: MessageEvent<WorkerResponse>) => {
+        const msg = ev.data;
+        if (msg.type === "labEvent") handlers.onEvent?.(msg.event);
+        else if (msg.type === "labFinished") {
+          handlers.onFinished?.(msg.record);
+          worker.terminate();
+        } else if (msg.type === "error") {
+          handlers.onError?.(msg.message);
+          worker.terminate();
+        }
+      };
+      worker.onerror = (e) => {
+        handlers.onError?.(e.message || "worker error");
+        worker.terminate();
+      };
+      const req: WorkerRequest = { type: "lab", config };
+      worker.postMessage(req);
+      return { cancel: () => worker.postMessage({ type: "cancel" } as WorkerRequest) };
+    } catch {
+      // fall through
+    }
+  }
+  let cancelled = false;
+  const gen = runLab(config);
+  let started: LabRecord | null = null;
+  const pump = () => {
+    try {
+      const slice = performance.now();
+      let step = gen.next();
+      while (!step.done) {
+        const ev = step.value;
+        if (ev.type === "started") started = ev.record;
+        else handlers.onEvent?.(ev);
+        if (cancelled) {
+          gen.return(undefined as never);
+          if (started) handlers.onFinished?.(started);
+          return;
+        }
+        if (performance.now() - slice > 16) {
+          setTimeout(pump, 0);
+          return;
+        }
+        step = gen.next();
+      }
+      handlers.onFinished?.(step.value);
+    } catch (err) {
+      handlers.onError?.(err instanceof Error ? err.message : String(err));
+    }
+  };
+  setTimeout(pump, 0);
+  return { cancel: () => (cancelled = true) };
 }

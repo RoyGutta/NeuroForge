@@ -5,7 +5,9 @@
  */
 import { runExperiment } from "../engine/experiments/runner";
 import { runMemberStudy, runSurrogateStudy } from "../engine/ml/study";
+import { runLab } from "../engine/autonomous/lab";
 import type { WorkerRequest, WorkerResponse } from "./protocol";
+import type { LabRecord as LabRecordRef } from "../engine/autonomous/lab";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 let cancelled = false;
@@ -32,6 +34,42 @@ ctx.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
       post({ type: "memberStudy", study: runMemberStudy(msg.config, msg.options) });
     } catch (err) {
       post({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    }
+    return;
+  }
+  if (msg.type === "lab") {
+    if (running) {
+      post({ type: "error", message: "an experiment is already running in this worker" });
+      return;
+    }
+    running = true;
+    cancelled = false;
+    try {
+      const gen = runLab(msg.config);
+      let step = gen.next();
+      let lastYield = performance.now();
+      let started: LabRecordRef | null = null;
+      while (!step.done) {
+        const ev = step.value;
+        if (ev.type === "started") started = ev.record;
+        else post({ type: "labEvent", event: ev });
+        if (cancelled) {
+          gen.return(undefined as never);
+          if (started) post({ type: "labFinished", record: started });
+          running = false;
+          return;
+        }
+        if (performance.now() - lastYield > 30) {
+          await new Promise((r) => setTimeout(r, 0));
+          lastYield = performance.now();
+        }
+        step = gen.next();
+      }
+      post({ type: "labFinished", record: step.value });
+    } catch (err) {
+      post({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    } finally {
+      running = false;
     }
     return;
   }

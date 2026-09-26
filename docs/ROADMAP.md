@@ -49,8 +49,9 @@ it is real, tested, and honest in the interface.
 - [ ] CMA-ES restarts and boundary handling
 - [ ] Result checksums and engine-version pinning in records; experiment comparison view
 
-## v0.6 · Autonomous engineering loop
-- [ ] Staged strategy comparison → convergence detection → discovery report generated from measured data
+## Done — v0.6.0 (2026-09-26) · Autonomous engineering loop
+- [x] Staged strategy comparison → convergence detection → trade-off stage → discovery report generated from measured data
+- [ ] Multi-seed pilots and a stored lab record type in the library
 
 ## v0.7 · Domains and 3D
 - [ ] Second domain (thermal fin array or 2D frame with bending) behind `EngineeringDomain`
