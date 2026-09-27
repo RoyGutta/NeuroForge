@@ -10,7 +10,6 @@ import type { Design } from "../../engine/core/design";
 import type { EngineeringProblem } from "../../engine/core/problem";
 import { compileProblem } from "../../engine/domains/registry";
 import type { CompiledProblem } from "../../engine/domains/domain";
-import type { TrussModel } from "../../engine/domains/structural/truss/model";
 import type { ExperimentRecord, GenerationSummary } from "../../engine/experiments/experiment";
 import { createExperimentConfig } from "../../engine/experiments/runner";
 import { interpretBrief, type InterpretResult } from "../../engine/interpret";
@@ -36,7 +35,7 @@ export function useHomeDemo(initialBrief: string) {
 
   const compiled = useMemo(() => {
     try {
-      return compileProblem(problem) as CompiledProblem<TrussModel>;
+      return compileProblem(problem) as CompiledProblem;
     } catch {
       return null;
     }
@@ -75,7 +74,7 @@ export function useHomeDemo(initialBrief: string) {
         `Interpreted: ${r.extracted
           .filter((e) => e.field !== "objective")
           .map((e) => `${e.field.replace(/_.*$/, "")} ${typeof e.value === "number" ? +e.value.toFixed(3) : e.value}`)
-          .join(" · ")}. Running ${DEMO_BUDGET.toLocaleString()} finite-element evaluations in a Web Worker.`
+          .join(" · ")}. Running ${DEMO_BUDGET.toLocaleString()} ${r.problem.domain === "robotics" ? "static arm" : "finite-element"} evaluations in a Web Worker.`
       );
       const config = createExperimentConfig({
         problem: r.problem,
@@ -112,9 +111,11 @@ export function useHomeDemo(initialBrief: string) {
           const b = rec.baseline.evaluation?.objectives[rec.config.problem.objectives[0].id];
           const o = rec.best?.evaluation?.objectives[rec.config.problem.objectives[0].id];
           if (b && o !== undefined) {
+            const metric = rec.config.problem.objectives[0].metric;
+            const what = metric === "mass_kg" ? "lighter than" : metric === "peakTorque_Nm" ? "lower in peak torque than" : "better than";
             setMessage(
-              `Search complete: ${rec.totalEvaluations.toLocaleString()} FEA evaluations in ${(rec.wallTimeMs / 1000).toFixed(1)} s. ` +
-                `Best feasible design is ${((1 - o / b) * 100).toFixed(1)} % lighter than the conventionally sized baseline under identical constraints.`
+              `Search complete: ${rec.totalEvaluations.toLocaleString()} solver evaluations in ${(rec.wallTimeMs / 1000).toFixed(1)} s. ` +
+                `Best feasible design is ${((1 - o / b) * 100).toFixed(1)} % ${what} the conventionally sized baseline under identical constraints.`
             );
           }
         },

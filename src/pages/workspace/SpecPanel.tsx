@@ -1,12 +1,15 @@
+import type { DomainId } from "../../engine/core/problem";
+import { listDomains } from "../../engine/domains/registry";
 import { MATERIALS } from "../../engine/domains/structural/truss/materials";
 import type { Workspace } from "./useWorkspace";
-import type { FieldSource } from "./model";
+import { DOMAIN_LABELS, type FieldSource, type ObjectiveChoice } from "./model";
 
 const SOURCE_LABEL: Record<FieldSource, string> = { brief: "from brief", assumed: "assumed", user: "set by you" };
 
 export function SpecPanel({ ws }: { ws: Workspace }) {
-  const { form, updateForm, applyForm, interpret, interpretation, problem, issues, status } = ws;
+  const { form, updateForm, applyForm, switchDomain, interpret, interpretation, problem, issues, status } = ws;
   const busy = status === "running";
+  const isArm = form.domain === "robotics";
   const src = (k: keyof typeof form.sources) => (
     <em className={`src src-${form.sources[k] ?? "user"}`}>{SOURCE_LABEL[form.sources[k] ?? "user"]}</em>
   );
@@ -18,6 +21,16 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
         <span className="tiny">v{problem.version}</span>
       </div>
       <div className="panel-body">
+        <div className="field">
+          <label htmlFor="domain">Engineering domain</label>
+          <select id="domain" value={form.domain} disabled={busy} onChange={(e) => switchDomain(e.target.value as DomainId)}>
+            {listDomains().map((d) => (
+              <option key={d.id} value={d.id}>
+                {DOMAIN_LABELS[d.id as DomainId] ?? d.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="field">
           <label htmlFor="brief">Brief</label>
           <textarea id="brief" value={form.brief} onChange={(e) => updateForm({ brief: e.target.value })} minLength={8} />
@@ -47,18 +60,23 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
         >
           <p className="section-label">Objective</p>
           <div className="field">
-            <select
-              id="objective"
-              aria-label="Objective"
-              value={form.objective}
-              onChange={(e) => updateForm({ objective: e.target.value as "mass_kg" | "compliance_J" | "multi" })}
-            >
-              <option value="mass_kg">Minimize mass</option>
-              <option value="compliance_J">Minimize compliance (stiffest within a mass budget)</option>
-              <option value="multi">Trade off mass against compliance (Pareto front)</option>
+            <select id="objective" aria-label="Objective" value={form.objective} onChange={(e) => updateForm({ objective: e.target.value as ObjectiveChoice })}>
+              {isArm ? (
+                <>
+                  <option value="peakTorque_Nm">Minimize peak joint torque</option>
+                  <option value="mass_kg">Minimize link mass</option>
+                  <option value="multi">Trade off torque against mass (Pareto front)</option>
+                </>
+              ) : (
+                <>
+                  <option value="mass_kg">Minimize mass</option>
+                  <option value="compliance_J">Minimize compliance (stiffest within a mass budget)</option>
+                  <option value="multi">Trade off mass against compliance (Pareto front)</option>
+                </>
+              )}
             </select>
           </div>
-          {form.objective === "compliance_J" && (
+          {!isArm && form.objective === "compliance_J" && (
             <div className="field">
               <label htmlFor="massBudget">Mass budget</label>
               <div className="unit-field">
@@ -77,6 +95,24 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           )}
 
           <p className="section-label">Constraints</p>
+          {isArm ? (
+            <div className="two">
+              <div className="field">
+                <label htmlFor="payload">Payload {src("payload_kg")}</label>
+                <div className="unit-field">
+                  <input id="payload" type="number" min="0.01" max="1000" step="0.1" required value={form.payload_kg} onChange={(e) => updateForm({ payload_kg: e.target.value }, "payload_kg")} />
+                  <span>kg</span>
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="reach">Reach {src("reach_m")}</label>
+                <div className="unit-field">
+                  <input id="reach" type="number" min="0.05" max="10" step="0.05" required value={form.reach_m} onChange={(e) => updateForm({ reach_m: e.target.value }, "reach_m")} />
+                  <span>m</span>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="two">
             <div className="field">
               <label htmlFor="span">Span {src("span_m")}</label>
@@ -93,11 +129,21 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
               </div>
             </div>
           </div>
+          )}
           <div className="two">
             <div className="field">
               <label htmlFor="sf">Safety factor {src("safetyFactor")}</label>
               <input id="sf" type="number" min="1" max="10" step="0.1" required value={form.safetyFactor} onChange={(e) => updateForm({ safetyFactor: e.target.value }, "safetyFactor")} />
             </div>
+            {isArm ? (
+              <div className="field">
+                <label htmlFor="tipdefl">Tip deflection limit</label>
+                <div className="unit-field">
+                  <input id="tipdefl" type="number" min="0.05" max="100" step="0.05" required value={form.tipDeflection_mm} onChange={(e) => updateForm({ tipDeflection_mm: e.target.value })} />
+                  <span>mm</span>
+                </div>
+              </div>
+            ) : (
             <div className="field">
               <label htmlFor="defl">Deflection limit</label>
               <div className="unit-field">
@@ -105,6 +151,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
                 <span>L / n</span>
               </div>
             </div>
+            )}
           </div>
           <div className="field">
             <label htmlFor="material">Material {src("materialId")}</label>
@@ -118,6 +165,27 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           </div>
 
           <p className="section-label">Design space</p>
+          {isArm ? (
+            <>
+              <div className="boundary">
+                <span>Base</span>
+                <b>Fixed at the origin · gravity in-plane</b>
+              </div>
+              <div className="boundary">
+                <span>Variables</span>
+                <b>Two link lengths · two tube radii</b>
+              </div>
+              <div className="boundary">
+                <span>Section</span>
+                <b>Hollow round tube, inner radius 0.8 x outer</b>
+              </div>
+              <div className="boundary">
+                <span>Task points</span>
+                <b>{problem.geometry.kind === "planar-manipulator" ? `${problem.geometry.taskPoints.length} static holds across the envelope` : "—"}</b>
+              </div>
+            </>
+          ) : (
+          <>
           <div className="two">
             <div className="field">
               <label htmlFor="panels">Truss panels</label>
@@ -149,6 +217,8 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
             <span>Section</span>
             <b>Solid round bar</b>
           </div>
+          </>
+          )}
 
           <button className="wide secondary" type="submit" disabled={busy} style={{ marginTop: 14 }}>
             Apply specification

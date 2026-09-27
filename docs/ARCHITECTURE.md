@@ -53,14 +53,25 @@ brief ──► ProblemInterpreter ──► EngineeringProblem (typed, versione
 ### `src/engine/domains`
 `EngineeringDomain` is the extension point: `validate(problem)`,
 `compile(problem) → CompiledProblem { space, evaluate, baseline, artifact,
-metrics, backendId }`. The registry maps domain id → module. Adding thermal or
-robotics means implementing this interface; nothing above it changes.
+metrics, backendId }`. The registry maps domain id → module. Two domains are
+registered: `structural` (truss bridge) and `robotics` (planar manipulator).
+Adding thermal or aerospace means implementing this interface; nothing above
+it changes.
 
 The structural module compiles a `truss-bridge` geometry into a Warren
 ground-structure space (`bridgeSpace.ts`), evaluates with the FEA solver
 (`fea.ts`) and derives metrics (`evaluate.ts`, `metrics.ts`). The baseline is
 a uniform-section truss at span/8 depth whose common area is found by
 bisection to just satisfy the same constraints.
+
+The robotics module compiles a `planar-manipulator` geometry into a
+four-variable space (two link lengths, two tube radii), evaluates each task
+point with closed-form inverse kinematics, static gravity torques and
+cantilever bending (`kinematics.ts`, `statics.ts`, `beam.ts`, `evaluate.ts`),
+and exposes joint torques and tip deflections as responses. Optimisers,
+the experiment runner, the surrogates, the study registry and the autonomous
+lab run on it unchanged; only the viewport renderer and the specification
+form are domain-specific in the UI.
 
 ### `src/engine/optimization`
 Ask/tell `Optimizer` interface. The optimiser never evaluates anything; the

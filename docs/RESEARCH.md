@@ -143,6 +143,20 @@ regressor, so that every constraint is derived from learned responses?
   cause; with λ = 24, σ₀ = 0.1 and IPOP restarts it beats the plain EA
   (0.672 vs 0.686 kg, A = 0.63, small effect) but not the surrogates.
 
+## Cross-domain check (2026-09-27, engine 0.8.0): the manipulator
+
+The same six optimisers were run on the planar manipulator (registered study
+`manipulator-optimizers`, 10 seeds, 1,500 evaluations, peak torque). The
+member-response surrogate keeps its advantage over the plain evolutionary
+algorithm (A = 0.68 and 0.77) but the margin is small because the objective
+has a hard floor: the payload moment at full reach fixes 15.69 of the
+baseline's 17.55 N m. CMA-ES wins outright, reaching one optimum on every
+seed in 304 evaluations. The global surrogate and Bayesian optimisation lose
+to the reference. Two conclusions: the representation result transfers
+(learn the physical responses, derive the constraints), and optimiser
+rankings do not transfer between domains, which is what the autonomous
+lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
+
 ## Next experiments
 
 - Repeat with an artificially expensive or noisy evaluator (or a larger

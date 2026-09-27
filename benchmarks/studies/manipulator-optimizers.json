@@ -1,0 +1,19 @@
+{
+  "id": "manipulator-optimizers",
+  "title": "Do the optimisers that win on the truss also win on a domain with different mathematics (planar manipulator, peak torque)?",
+  "hypothesis": "At an equal solver budget on the two-link manipulator, the member-response surrogate optimiser reaches a lower median peak torque than the plain evolutionary algorithm; CMA-ES, which was a small effect on the truss, is competitive on this smooth four-variable problem.",
+  "benchmark": { "problem": "planar-manipulator", "payload_kg": 2, "reach_m": 0.8, "safetyFactor": 2 },
+  "budget": 1500,
+  "seeds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "reference": "evolutionary",
+  "methods": [
+    { "id": "evolutionary", "optimizer": "evolutionary", "params": { "populationSize": 30 } },
+    { "id": "global-surrogate", "optimizer": "surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200 } },
+    { "id": "member-k0", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 0, "exploreFraction": 0 } },
+    { "id": "member-k2", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 2, "exploreFraction": 0.2 } },
+    { "id": "cmaes", "optimizer": "cmaes", "params": {} },
+    { "id": "bayesian", "optimizer": "bayesian", "params": {} }
+  ],
+  "metrics": ["bestObjective", "evaluationsToTarget", "falseFeasibleRate", "falseInfeasibleRate", "forceR2"],
+  "targetFraction": 0.97
+}

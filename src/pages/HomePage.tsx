@@ -17,19 +17,21 @@ const BRIEFS: Record<string, string> = {
   stiff: "2 m aluminium bridge carrying 500 N; make it as stiff as possible.",
   drone: "Design a drone frame that minimizes mass while maintaining a safety factor of 2.",
   thermal: "Design a heatsink that keeps a 100 W processor below 80°C.",
+  robot: "Design a robot arm that lifts a 2 kg payload anywhere within a 0.8 m reach while minimizing motor torque.",
 };
 
 const CHIPS: [string, string][] = [
   ["bridge", "Bridge · 2 m · 500 N"],
   ["steel", "Steel footbridge · 1.5 kN"],
   ["stiff", "Stiffest at fixed mass"],
+  ["robot", "Robot arm · 2 kg · 0.8 m"],
   ["thermal", "Heatsink (not yet)"],
 ];
 
 export function HomePage() {
   usePageMeta(
     "NeuroForge — Engineering, evolved.",
-    "Describe a structural problem. NeuroForge turns it into a specification, runs a real finite-element optimization in your browser, and shows the evidence."
+    "Describe a structural or robotics problem. NeuroForge turns it into a specification, runs a real physics-based optimization in your browser, and shows the evidence."
   );
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState(BRIEFS.bridge);
@@ -95,7 +97,7 @@ export function HomePage() {
                   onChange={(e) => setPrompt(e.target.value)}
                 />
                 <div className="prompt-foot">
-                  <span>Span, load, material, safety factor. Missing values become explicit assumptions.</span>
+                  <span>Span and load, or payload and reach; material; safety factor. Missing values become explicit assumptions.</span>
                   <button className="button" id="generate" type="submit" disabled={running}>
                     {running ? "Searching…" : "Discover design"} <Arrow />
                   </button>
@@ -198,8 +200,8 @@ export function HomePage() {
             </div>
             <div className="loop">
               <Arrow d="M20 7v7a5 5 0 0 1-5 5H4m4-4-4 4 4 4M4 12V5h13" />
-              Tens of thousands of finite-element solves per second in a Web Worker. Surrogate models and active learning
-              are the next stage of the roadmap.
+              Tens of thousands of solver evaluations per second in a Web Worker. Surrogates screen candidates with a
+              measured error; the solver always has the last word.
             </div>
             <div className="proof">
               <div>
@@ -280,6 +282,14 @@ export function HomePage() {
                 <h3>Stiffest bridge at fixed mass</h3>
                 <p>Same span and load, but minimize compliance within the baseline's mass budget. A different optimum.</p>
                 <button className="text-link" onClick={() => applyExample("stiff")}>
+                  Try this brief <Arrow />
+                </button>
+              </article>
+              <article className="project">
+                <span>ROBOTICS · RUNNABLE NOW</span>
+                <h3>A lower-torque robot arm</h3>
+                <p>Lift 2 kg anywhere within 0.8 m. Link lengths and tube radii searched under stress and tip-deflection limits.</p>
+                <button className="text-link" onClick={() => applyExample("robot")}>
                   Try this brief <Arrow />
                 </button>
               </article>

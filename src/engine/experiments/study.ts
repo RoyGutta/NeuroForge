@@ -6,11 +6,13 @@
  * reference method. Keeping the two apart is what makes cherry-picking
  * visible: the analysis is a function of all the runs the spec declared.
  */
+import { createManipulatorProblem } from "../domains/robotics/manipulator/template";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
 import { compileProblem } from "../domains/registry";
 import { getOptimizerDescriptor } from "../optimization";
 import { bootstrapMedianCI, cliffsDelta, median, quantile, varghaDelaneyA, type BootstrapCI } from "../ml/statistics";
 import { ENGINE_VERSION } from "../version";
+import type { EngineeringProblem } from "../core/problem";
 import type { ExperimentRecord } from "./experiment";
 import { createExperimentConfig, runExperimentToCompletion } from "./runner";
 
@@ -26,21 +28,35 @@ export interface StudySpec {
   id: string;
   title: string;
   hypothesis: string;
-  benchmark: { problem: "truss-bridge"; span_m: number; load_N: number; panels: number; safetyFactor?: number; materialId?: string };
+  benchmark: StudyBenchmark;
   budget: number;
   seeds: number[];
   reference: string;
   methods: StudyMethod[];
   metrics: string[];
-  /** Target mass as a fraction of the baseline mass, for evaluations-to-target. */
+  /** Target objective as a fraction of the baseline objective, for evaluations-to-target. */
   targetFraction: number;
+}
+
+export type StudyBenchmark =
+  | { problem: "truss-bridge"; span_m: number; load_N: number; panels: number; safetyFactor?: number; materialId?: string }
+  | { problem: "planar-manipulator"; payload_kg: number; reach_m: number; safetyFactor?: number; materialId?: string; objectiveMetric?: "peakTorque_Nm" | "mass_kg" };
+
+export function studyProblem(b: StudyBenchmark): EngineeringProblem {
+  if (b.problem === "planar-manipulator") return createManipulatorProblem({ payload_kg: b.payload_kg, reach_m: b.reach_m, safetyFactor: b.safetyFactor, materialId: b.materialId, objectiveMetric: b.objectiveMetric });
+  return createTrussBridgeProblem({ span_m: b.span_m, load_N: b.load_N, panels: b.panels, safetyFactor: b.safetyFactor, materialId: b.materialId });
+}
+
+export function studyProblemTitle(b: StudyBenchmark): string {
+  return b.problem === "planar-manipulator" ? `Planar manipulator (${b.payload_kg} kg payload, ${b.reach_m} m reach)` : `Truss bridge (${b.span_m} m span, ${b.load_N} N, ${b.panels} panels)`;
 }
 
 export interface StudyRun {
   method: string;
   seed: number;
   budget: number;
-  bestMass_kg: number | null;
+  /** Best feasible objective value at the end of the run (null when no feasible design was found). */
+  bestObjective: number | null;
   feasible: boolean;
   evaluationsToTarget: number | null;
   wallTimeMs: number;
@@ -49,11 +65,19 @@ export interface StudyRun {
   record: ExperimentRecord;
 }
 
+export interface StudyObjective {
+  metric: string;
+  label: string;
+  unit: string;
+  direction: "minimize" | "maximize";
+}
+
 export interface StudyResult {
   spec: StudySpec;
   engineVersion: string;
-  baselineMass_kg: number;
-  targetMass_kg: number;
+  objective: StudyObjective;
+  baselineObjective: number;
+  targetObjective: number;
   runs: StudyRun[];
 }
 
@@ -63,7 +87,7 @@ export interface MethodAnalysis {
   budget: number;
   runs: number;
   feasibleRuns: number;
-  bestMass: BootstrapCI;
+  best: BootstrapCI;
   q1Best: number;
   q3Best: number;
   medianEvaluationsToTarget: number | null;
@@ -81,7 +105,7 @@ export interface MethodComparison {
   varghaDelaneyA: number;
   cliffsDelta: number;
   effectLabel: "negligible" | "small" | "medium" | "large";
-  medianDifference_kg: number;
+  medianDifference: number;
 }
 
 export interface StudyAnalysis {
@@ -89,8 +113,9 @@ export interface StudyAnalysis {
   engineVersion: string;
   seeds: number;
   budget: number;
-  baselineMass_kg: number;
-  targetMass_kg: number;
+  objective: StudyObjective;
+  baselineObjective: number;
+  targetObjective: number;
   methods: MethodAnalysis[];
   comparisons: MethodComparison[];
   bootstrap: { resamples: number; level: number; seed: number };
@@ -106,10 +131,14 @@ function reliabilityOf(rec: ExperimentRecord): StudyRun["reliability"] {
 export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number, total: number) => void): StudyResult {
   if (!spec.methods.some((m) => m.id === spec.reference)) throw new Error(`reference method "${spec.reference}" is not among the study's methods`);
   for (const m of spec.methods) if (!getOptimizerDescriptor(m.optimizer)) throw new Error(`unknown optimizer "${m.optimizer}" in method "${m.id}"`);
-  const problem = createTrussBridgeProblem({ span_m: spec.benchmark.span_m, load_N: spec.benchmark.load_N, panels: spec.benchmark.panels, safetyFactor: spec.benchmark.safetyFactor, materialId: spec.benchmark.materialId });
+  const problem = studyProblem(spec.benchmark);
   const compiled = compileProblem(problem);
-  const baselineMass = compiled.evaluate(compiled.baseline.parameters).metrics.mass_kg;
-  const target = baselineMass * spec.targetFraction;
+  const obj = problem.objectives[0];
+  const metricDesc = compiled.metrics.find((m) => m.id === obj.metric);
+  const objective: StudyObjective = { metric: obj.metric, label: metricDesc?.label ?? obj.label, unit: metricDesc?.unit ?? "", direction: obj.direction };
+  const baselineObjective = compiled.evaluate(compiled.baseline.parameters).objectives[obj.id];
+  const target = baselineObjective * spec.targetFraction;
+  const better = (v: number) => (obj.direction === "minimize" ? v <= target : v >= target);
   const runs: StudyRun[] = [];
   const total = spec.methods.length * spec.seeds.length;
   for (const m of spec.methods) {
@@ -119,16 +148,16 @@ export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number,
       const t0 = now();
       const rec = runExperimentToCompletion(cfg);
       const ev = rec.best?.evaluation;
-      const hit = rec.generations.find((g) => g.bestSoFar.evaluation?.feasible && g.bestSoFar.evaluation.metrics.mass_kg <= target);
+      const hit = rec.generations.find((g) => g.bestSoFar.evaluation?.feasible && better(g.bestSoFar.evaluation.objectives[obj.id]));
       const run: StudyRun = {
         method: m.id,
         seed,
         budget,
-        bestMass_kg: ev?.feasible ? ev.metrics.mass_kg : null,
+        bestObjective: ev?.feasible ? ev.objectives[obj.id] : null,
         feasible: !!ev?.feasible,
         evaluationsToTarget: hit?.cumulativeEvaluations ?? null,
         wallTimeMs: now() - t0,
-        curve: rec.generations.map((g) => ({ evaluations: g.cumulativeEvaluations, best: g.bestSoFar.evaluation?.feasible ? g.bestSoFar.evaluation.metrics.mass_kg : NaN })).filter((c) => Number.isFinite(c.best)),
+        curve: rec.generations.map((g) => ({ evaluations: g.cumulativeEvaluations, best: g.bestSoFar.evaluation?.feasible ? g.bestSoFar.evaluation.objectives[obj.id] : NaN })).filter((c) => Number.isFinite(c.best)),
         reliability: reliabilityOf(rec),
         record: rec,
       };
@@ -136,7 +165,7 @@ export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number,
       onRun?.(run, runs.length, total);
     }
   }
-  return { spec, engineVersion: ENGINE_VERSION, baselineMass_kg: baselineMass, targetMass_kg: target, runs };
+  return { spec, engineVersion: ENGINE_VERSION, objective, baselineObjective, targetObjective: target, runs };
 }
 
 function effectLabel(delta: number): MethodComparison["effectLabel"] {
@@ -152,7 +181,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
   for (const r of result.runs) byMethod.set(r.method, (byMethod.get(r.method) ?? []).concat(r));
   const methods: MethodAnalysis[] = result.spec.methods.map((m) => {
     const runs = byMethod.get(m.id) ?? [];
-    const bests = runs.map((r) => r.bestMass_kg).filter((v): v is number => v !== null);
+    const bests = runs.map((r) => r.bestObjective).filter((v): v is number => v !== null);
     const tt = runs.map((r) => r.evaluationsToTarget).filter((v): v is number => v !== null);
     const ff = runs.map((r) => r.reliability?.falseFeasibleRate).filter((v): v is number => v !== undefined);
     const fi = runs.map((r) => r.reliability?.falseInfeasibleRate).filter((v): v is number => v !== undefined);
@@ -163,7 +192,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
       budget: m.budget ?? result.spec.budget,
       runs: runs.length,
       feasibleRuns: bests.length,
-      bestMass: bests.length ? bootstrapMedianCI(bests, { seed, resamples, level }) : { median: NaN, lower: NaN, upper: NaN, level, resamples, seed },
+      best: bests.length ? bootstrapMedianCI(bests, { seed, resamples, level }) : { median: NaN, lower: NaN, upper: NaN, level, resamples, seed },
       q1Best: bests.length ? quantile(bests, 0.25) : NaN,
       q3Best: bests.length ? quantile(bests, 0.75) : NaN,
       medianEvaluationsToTarget: tt.length ? median(tt) : null,
@@ -174,16 +203,16 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
       medianForceR2: fr.length ? median(fr) : undefined,
     };
   });
-  const refBests = (byMethod.get(result.spec.reference) ?? []).map((r) => r.bestMass_kg).filter((v): v is number => v !== null);
+  const refBests = (byMethod.get(result.spec.reference) ?? []).map((r) => r.bestObjective).filter((v): v is number => v !== null);
   const comparisons: MethodComparison[] = result.spec.methods
     .filter((m) => m.id !== result.spec.reference)
     .map((m) => {
-      const bests = (byMethod.get(m.id) ?? []).map((r) => r.bestMass_kg).filter((v): v is number => v !== null);
+      const bests = (byMethod.get(m.id) ?? []).map((r) => r.bestObjective).filter((v): v is number => v !== null);
       const A = varghaDelaneyA(bests, refBests);
       const delta = cliffsDelta(bests, refBests);
-      return { method: m.id, reference: result.spec.reference, varghaDelaneyA: A, cliffsDelta: delta, effectLabel: effectLabel(delta), medianDifference_kg: median(bests) - median(refBests) };
+      return { method: m.id, reference: result.spec.reference, varghaDelaneyA: A, cliffsDelta: delta, effectLabel: effectLabel(delta), medianDifference: median(bests) - median(refBests) };
     });
-  return { studyId: result.spec.id, engineVersion: result.engineVersion, seeds: result.spec.seeds.length, budget: result.spec.budget, baselineMass_kg: result.baselineMass_kg, targetMass_kg: result.targetMass_kg, methods, comparisons, bootstrap: { resamples, level, seed } };
+  return { studyId: result.spec.id, engineVersion: result.engineVersion, seeds: result.spec.seeds.length, budget: result.spec.budget, objective: result.objective, baselineObjective: result.baselineObjective, targetObjective: result.targetObjective, methods, comparisons, bootstrap: { resamples, level, seed } };
 }
 
 function now(): number {

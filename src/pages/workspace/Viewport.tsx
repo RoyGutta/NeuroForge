@@ -1,21 +1,46 @@
 import { useMemo } from "react";
+import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
+import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
+import type { TrussModel } from "../../engine/domains/structural/truss/model";
+import { ManipulatorSvg } from "./ManipulatorSvg";
 import { TrussSvg, type ViewMode } from "./TrussSvg";
 import { formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
-const MODES: [ViewMode, string][] = [
+const TRUSS_MODES: [ViewMode, string][] = [
   ["structure", "Structure"],
   ["force", "Axial force"],
   ["utilization", "Utilisation"],
   ["deformed", "Deformed"],
 ];
+const ARM_MODES: [ViewMode, string][] = [
+  ["structure", "Arm and task points"],
+  ["force", "Joint torque"],
+  ["utilization", "Stress utilisation"],
+  ["deformed", "Tip deflection"],
+];
+const TRUSS_METRICS: [string, string][] = [
+  ["Peak stress", "maxStress_Pa"],
+  ["Buckling util.", "bucklingUtilization"],
+  ["Max deflection", "maxDisplacement_m"],
+];
+const ARM_METRICS: [string, string][] = [
+  ["Stress util.", "stressUtilization"],
+  ["Tip deflection", "maxTipDeflection_m"],
+  ["Link mass", "mass_kg"],
+];
 
 export function Viewport({ ws }: { ws: Workspace }) {
   const { compiled, displayed, baseline, mode, setMode, generations, scrub, setScrub, showing, setShowing, problem, status } = ws;
   const design = displayed;
+  const isArm = problem.domain === "robotics";
+  const MODES = isArm ? ARM_MODES : TRUSS_MODES;
+  const METRICS = isArm ? ARM_METRICS : TRUSS_METRICS;
 
-  const model = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
+  const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
+  const model = !isArm && artifact ? (artifact as TrussModel) : null;
+  const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
   const ev = design?.evaluation;
   const objective = problem.objectives[0];
@@ -26,16 +51,17 @@ export function Viewport({ ws }: { ws: Workspace }) {
       ? (1 - currentObj / baselineObj) * 100
       : null;
 
+  const baselineLabel = `BASELINE · ${(compiled?.baseline.label ?? "baseline").toLowerCase()}`;
   const label =
     showing === "selected"
       ? "PARETO FRONT · selected design"
       : showing === "baseline"
-      ? "BASELINE · conventional Warren truss"
+      ? baselineLabel
       : scrub !== null && generations[scrub]
         ? `GENERATION ${generations[scrub].generation + 1} · best so far`
         : generations.length > 0
           ? `BEST DESIGN · generation ${generations.length}`
-          : "BASELINE · conventional Warren truss";
+          : baselineLabel;
 
   return (
     <section className="center" aria-label="Design visualization and results">
@@ -68,28 +94,61 @@ export function Viewport({ ws }: { ws: Workspace }) {
             result={result}
             mode={mode}
             safetyFactor={problem.safetyFactor}
-            areaMax_m2={problem.geometry.areaMax_m2}
+            areaMax_m2={trussGeometry(problem).areaMax_m2}
             appliedLoad_N={problem.loads[0]?.magnitude_N}
             ariaLabel={`Truss elevation, ${label.toLowerCase()}`}
           />
         )}
+        {arm && problem.geometry.kind === "planar-manipulator" && (
+          <ManipulatorSvg
+            artifact={arm}
+            geometry={problem.geometry}
+            mode={mode}
+            safetyFactor={problem.safetyFactor}
+            yieldStrength_Pa={problem.material.yieldStrength_Pa}
+            deflectionLimit_m={problem.constraints.find((c) => c.id === "deflection")?.limit ?? Infinity}
+            ariaLabel={`Manipulator drawing, ${label.toLowerCase()}`}
+          />
+        )}
         <div className="legend">
-          {mode === "force" && (
+          {isArm && mode === "structure" && <span>{problem.material.name} · width ∝ tube radius · arm drawn at the worst-torque task point · ghosts at every other pose</span>}
+          {isArm && mode === "force" && (
+            <>
+              <span>0</span>
+              <i className="ramp" />
+              <span>peak joint torque · points and links coloured by |torque|</span>
+            </>
+          )}
+          {isArm && mode === "utilization" && (
+            <>
+              <span>0 %</span>
+              <i className="ramp" />
+              <span>100 % of allowable bending stress</span>
+            </>
+          )}
+          {isArm && mode === "deformed" && (
+            <>
+              <span>0</span>
+              <i className="ramp" />
+              <span>tip deflection / limit · dashed tick at the worst pose</span>
+            </>
+          )}
+          {!isArm && mode === "force" && (
             <>
               <i className="sw sw-comp" /> <span>compression</span>
               <i className="sw sw-tens" /> <span>tension</span>
               <span>· width ∝ bar diameter</span>
             </>
           )}
-          {mode === "utilization" && (
+          {!isArm && mode === "utilization" && (
             <>
               <span>0 %</span>
               <i className="ramp" />
               <span>100 % of allowable (stress or buckling)</span>
             </>
           )}
-          {mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
-          {mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
+          {!isArm && mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
+          {!isArm && mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
         </div>
         <div className="view-note">{ev ? (ev.feasible ? "feasible" : `infeasible · violation ${ev.totalViolation.toFixed(3)}`) : ""}</div>
       </div>
@@ -105,18 +164,12 @@ export function Viewport({ ws }: { ws: Workspace }) {
             {improvement === null ? "—" : `${improvement > 0.05 ? "−" : improvement < -0.05 ? "+" : ""}${Math.abs(improvement).toFixed(1)} %`}
           </strong>
         </div>
-        <div className="metric">
-          <span>Peak stress</span>
-          <strong>{formatMetric("maxStress_Pa", ev?.metrics.maxStress_Pa)}</strong>
-        </div>
-        <div className="metric">
-          <span>Buckling util.</span>
-          <strong>{formatMetric("bucklingUtilization", ev?.metrics.bucklingUtilization)}</strong>
-        </div>
-        <div className="metric">
-          <span>Max deflection</span>
-          <strong>{formatMetric("maxDisplacement_m", ev?.metrics.maxDisplacement_m)}</strong>
-        </div>
+        {METRICS.map(([l, id]) => (
+          <div className="metric" key={id}>
+            <span>{l}</span>
+            <strong>{formatMetric(id, ev?.metrics[id])}</strong>
+          </div>
+        ))}
       </div>
 
       <HistoryChart ws={ws} />

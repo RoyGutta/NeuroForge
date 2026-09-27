@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { createManipulatorProblem } from "../../../src/engine/domains/robotics/manipulator/template";
 import { createTrussBridgeProblem } from "../../../src/engine/domains/structural/truss/template";
 import { detectPlateau } from "../../../src/engine/autonomous/convergence";
 import { createLabConfig, runLab, runLabToCompletion, type LabEvent } from "../../../src/engine/autonomous/lab";
@@ -82,5 +83,18 @@ describe("autonomous lab", () => {
     const fin = gen.return(undefined as never);
     expect(fin.done).toBe(true);
     expect((first as { type: "started"; record: { status: string } }).record.status).toBe("cancelled");
+  });
+
+  test("runs on the robotics domain and maps a torque-versus-mass trade-off", () => {
+    const arm = createManipulatorProblem({ payload_kg: 2, reach_m: 0.8 });
+    const cfg = createLabConfig({ problem: arm, seed: 5, strategies: ["evolutionary", "cmaes"], pilotBudget: 300, totalBudget: 2500, tradeoffBudget: 600, convergence: { window: 15, minRelativeImprovement: 0.002 } });
+    const record = runLabToCompletion(cfg);
+    expect(record.status).toBe("completed");
+    expect(record.report.objectiveMetric).toBe("peakTorque_Nm");
+    expect(record.report.bestObjective).toBe(record.main.best!.evaluation!.metrics.peakTorque_Nm);
+    expect(record.report.improvementPercent).toBeCloseTo((1 - record.report.bestObjective / record.report.baselineObjective) * 100, 9);
+    expect(record.tradeoff).not.toBeNull();
+    expect(record.tradeoff!.config.problem.objectives.map((o) => o.metric)).toEqual(["peakTorque_Nm", "mass_kg"]);
+    expect(record.report.paretoFrontSize).toBeGreaterThan(0);
   });
 });

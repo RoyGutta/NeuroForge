@@ -5,6 +5,40 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-09-27 · engine 0.8.0 · manipulator study, 10 seeds, 1,500 evaluations
+
+Registered study `benchmarks/studies/manipulator-optimizers.json`, raw runs
+and analysis in `benchmarks/results/manipulator-optimizers-2026-09-27.json`.
+Problem: two-link manipulator, 2 kg payload, 0.8 m reach, safety factor 2,
+objective peak joint torque. Baseline (equal links, common radius sized by
+bisection) 17.55 N m; target 0.97 x baseline = 17.02 N m. The payload moment
+at the full-reach task point alone is g x 2 kg x 0.8 m = 15.69 N m, so the
+whole design freedom is worth at most about 11 % of the baseline torque; the
+tip-deflection limit is the binding constraint on every good design.
+
+| Method | Median best N m | 95 % CI | IQR | Evaluations to target (runs) | A vs EA | Effect |
+|---|---|---|---|---|---|---|
+| evolutionary (reference) | 16.981 | 16.977–17.000 | 16.977–16.996 | 630 (10/10) | – | – |
+| global-surrogate | 17.281 | 17.129–17.355 | 17.143–17.349 | 705 (2/10) | 0.00 | large (worse) |
+| member-k0 | 16.970 | 16.958–16.989 | 16.959–16.985 | 1,140 (10/10) | 0.68 | medium |
+| member-k2 | 16.968 | 16.961–16.978 | 16.962–16.975 | 480 (10/10) | 0.77 | large |
+| cmaes | 16.950 | 16.950–16.950 | 16.950–16.950 | 304 (10/10) | 1.00 | large |
+| bayesian | 17.394 | 17.227–17.518 | 17.235–17.496 | not reached | 0.00 | large (worse) |
+
+Reading. The ranking is not the truss ranking. CMA-ES, a small effect on the
+19-variable truss, converges to the same optimum (16.950 N m) on every seed of
+this smooth four-variable problem and reaches the target in a fifth of the
+evolutionary algorithm's budget. The member-response surrogates still beat
+the plain evolutionary algorithm (medium and large effects) but by a few
+hundredths of a newton-metre, because there is little torque left to
+remove. The global surrogate and constrained Bayesian optimisation are worse
+than the plain evolutionary algorithm here: their scalar regressors of the
+torque and of the deflection constraint are less reliable than the exact
+constraint derivation, and the Bayesian optimiser's expected-improvement
+proposals concentrate near the deflection limit. Optimiser choice is
+domain-dependent; the autonomous lab's equal-budget pilots exist for this
+reason.
+
 ## 2026-09-27 · engine 0.7.0 · registered study, 10 seeds, 1,500 evaluations
 
 Study `representation-and-screening` (`benchmarks/studies/representation-and-screening.json`,

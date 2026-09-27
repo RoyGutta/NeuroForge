@@ -12,7 +12,7 @@
  */
 import type { Material } from "../domains/structural/truss/model";
 
-export type DomainId = "structural";
+export type DomainId = "structural" | "robotics";
 
 export type Confidence = "high" | "medium" | "low";
 
@@ -55,14 +55,14 @@ export interface PointLoadSpec {
   magnitude_N: number;
   /** Currently only vertical downward loads are modelled. */
   direction: "down";
-  location: "midspan";
+  location: "midspan" | "tip";
 }
 
 export type LoadSpec = PointLoadSpec;
 
 export interface SupportSpec {
-  kind: "pin" | "roller";
-  location: "left-end" | "right-end";
+  kind: "pin" | "roller" | "fixed";
+  location: "left-end" | "right-end" | "base";
 }
 
 /** Planar truss bridge: bottom chord on the supports, top chord free. */
@@ -78,7 +78,26 @@ export interface TrussBridgeGeometry {
   sectionShape: "solid-round";
 }
 
-export type ProblemGeometry = TrussBridgeGeometry;
+export interface TaskPoint {
+  x_m: number;
+  y_m: number;
+}
+
+/** Planar two-link manipulator in a vertical plane, base at the origin. */
+export interface PlanarManipulatorGeometry {
+  kind: "planar-manipulator";
+  /** Farthest task point distance; sets the link-length bounds. */
+  reach_m: number;
+  linkMin_m: number;
+  linkMax_m: number;
+  radiusMin_m: number;
+  radiusMax_m: number;
+  /** Tube inner radius as a fraction of the outer radius. */
+  wallRatio: number;
+  taskPoints: TaskPoint[];
+}
+
+export type ProblemGeometry = TrussBridgeGeometry | PlanarManipulatorGeometry;
 
 export interface AnalysisSettings {
   includeSelfWeight: boolean;

@@ -85,9 +85,10 @@ export class HybridPredictor {
     const rm = compiled.responseModel;
     if (!rm) throw new Error("hybrid predictor needs a domain response model");
     this.forceId = rm.responseIds[0];
-    this.representation = opts.representation ?? "forces";
+    // Domains without a displacement field (no linear force map) fall back to
+    // learning their primary response; the representation actually used is recorded.
+    this.representation = rm.forcesFromDisplacements ? (opts.representation ?? "forces") : "forces";
     this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
-    if (this.representation !== "forces" && !rm.forcesFromDisplacements) throw new Error("domain has no displacement response");
     const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);
     const needed = new Set([...compiled.problem.constraints.map((c) => c.metric), ...compiled.problem.objectives.map((o) => o.metric)]);
     this.nonDerivable = Array.from(needed).filter((m) => !derivable.includes(m));
@@ -96,6 +97,11 @@ export class HybridPredictor {
   /** Metrics that still need a global (non-derived) surrogate under this representation. */
   get globalMetrics(): string[] {
     return this.nonDerivable.slice();
+  }
+
+  /** Representation actually in use (may differ from the request when the domain lacks a displacement field). */
+  get representationUsed(): HybridRepresentation {
+    return this.representation;
   }
 
   get trainingSize(): number {

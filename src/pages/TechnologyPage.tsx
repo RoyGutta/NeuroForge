@@ -49,8 +49,8 @@ const STAGES: Stage[] = [
     tag: "04 / FROM EXPERIMENTS TO PREDICTIONS",
     title: "Learn where to look next.",
     description:
-      "Every experiment already produces a labelled dataset of (design parameters, simulated metrics). The next stage trains surrogate models on it and evaluates them honestly against held-out solver results before letting them propose candidates. This stage is on the roadmap and is not in the product yet; nothing on this site pretends otherwise.",
-    codeLabel: "SURROGATE LEARNING · ROADMAP",
+      "Every experiment produces a labelled dataset of (design parameters, responses, metrics). Surrogates are trained on it and evaluated against held-out solver results before they screen candidates; the per-component models predict member forces or joint torques with an uncertainty, and the exact equations of the domain turn those into constraints. Every prediction is later checked against the solver and the reliability is recorded.",
+    codeLabel: "SURROGATE LEARNING · MEASURED",
     codeOutput:
       "training_data   physics-evaluated candidates\nfeatures        geometry + material parameters\ntargets         objective + constraint response\nselection       promise + uncertainty\nverification    return to physics solver",
   },
@@ -197,7 +197,7 @@ export function TechnologyPage() {
                 <div className="code">
                   <div className="code-head">
                     <span id="code-label">{stage.codeLabel}</span>
-                    <span>{selected === 3 ? "PLANNED" : "LIVE DATA"}</span>
+                    <span>LIVE DATA</span>
                   </div>
                   <pre id="code-output">{data.codePanels[selected]}</pre>
                 </div>
@@ -315,10 +315,10 @@ export function TechnologyPage() {
                 <details>
                   <summary>What is on the roadmap?</summary>
                   <p>
-                    Surrogate models trained on run data with honest hold-out metrics; ML-assisted and Bayesian search;
-                    multi-objective optimisation with a Pareto front; further domains (thermal, robotics, aerospace) as
-                    modules behind the same domain interface; a benchmark suite comparing optimisers at equal budget;
-                    3D visualisation. Each ships only when it is real and tested.
+                    A cross-domain autonomous framework with multi-seed pilots and stored lab records; robustness and
+                    tolerance studies; further domains (thermal, aerospace, fluids) as modules behind the same domain
+                    interface; 3D visualisation. Surrogates, Bayesian and CMA-ES search, Pareto fronts, a benchmark
+                    suite and the robotics domain have already shipped. Each item ships only when it is real and tested.
                   </p>
                 </details>
                 <details>

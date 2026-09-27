@@ -5,8 +5,8 @@
  *   pilot     -> each strategy on an equal solver budget, same derived seed
  *   main      -> the strategy with the best pilot result, run until the
  *                best-so-far plateaus or the remaining budget is spent
- *   tradeoff  -> NSGA-II on mass versus compliance (when the domain exposes
- *                compliance) for a Pareto front around the discovery
+ *   tradeoff  -> NSGA-II on the objective against a second metric the domain
+ *                exposes (compliance when minimising mass, otherwise mass)
  *   report    -> every number computed from the stage records
  *
  * The lab composes the existing runner and optimisers; it introduces no new
@@ -107,8 +107,12 @@ export interface LabReport {
   strategiesCompared: number;
   chosenStrategy: string;
   chosenStrategyLabel: string;
+  objectiveMetric: string;
+  baselineObjective: number;
+  bestObjective: number;
   baselineMass_kg: number;
   bestMass_kg: number;
+  /** Relative improvement of the objective in its favourable direction. */
   improvementPercent: number;
   bestDesignId: string;
   mainGenerations: number;
@@ -216,6 +220,9 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       strategiesCompared: 0,
       chosenStrategy: "",
       chosenStrategyLabel: "",
+      objectiveMetric: objective.metric,
+      baselineObjective: NaN,
+      bestObjective: NaN,
       baselineMass_kg: NaN,
       bestMass_kg: NaN,
       improvementPercent: NaN,
@@ -288,11 +295,12 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       return false;
     });
 
-    // Stage 4: trade-off front (when the domain can express compliance).
-    const complianceMetric = compiled.metrics.find((m) => m.id === "compliance_J");
-    if (complianceMetric && problem.objectives.length === 1 && objective.metric === "mass_kg") {
-      yield { type: "stage", stage: "tradeoff", message: `Mapping the mass-versus-compliance trade-off with NSGA-II (${config.tradeoffBudget.toLocaleString()} evaluations).` };
-      const moProblem: EngineeringProblem = { ...problem, objectives: [objective, { id: "compliance", metric: "compliance_J", direction: "minimize", label: "Compliance" }] };
+    // Stage 4: trade-off front against a second metric the domain exposes.
+    const secondId = objective.metric === "mass_kg" ? "compliance_J" : "mass_kg";
+    const second = compiled.metrics.find((m) => m.id === secondId);
+    if (second && problem.objectives.length === 1) {
+      yield { type: "stage", stage: "tradeoff", message: `Mapping the ${objective.label.toLowerCase()}-versus-${second.label.toLowerCase()} trade-off with NSGA-II (${config.tradeoffBudget.toLocaleString()} evaluations).` };
+      const moProblem: EngineeringProblem = { ...problem, objectives: [objective, { id: second.id, metric: second.id, direction: "minimize", label: second.label }] };
       const moCfg = createExperimentConfig({ id: `${config.id}-tradeoff`, label: "autonomous trade-off", problem: moProblem, seed: config.seed * 7 + 3, optimizer: { id: "nsga2", params: config.optimizerParams.nsga2 ?? {} }, budget: { maxEvaluations: config.tradeoffBudget } });
       record.tradeoff = yield* runStage(moCfg, "tradeoff");
     } else {
@@ -309,8 +317,9 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     const forces = diag?.forces as { overallR2: number; coverage95: number } | undefined;
     const surrogatePredictions = funnel?.surrogatePredictions ?? (typeof diag?.predictedPairs === "number" ? (diag.predictedPairs as number) : 0);
     const lastTrade = record.tradeoff?.generations[record.tradeoff.generations.length - 1];
-    const baselineMass = baselineEval.metrics.mass_kg;
-    const bestMass = bestEval?.metrics.mass_kg ?? NaN;
+    const baselineObjective = baselineEval.objectives[objective.id];
+    const bestObjective = bestEval?.objectives[objective.id] ?? NaN;
+    const improvementPercent = objective.direction === "minimize" ? (1 - bestObjective / baselineObjective) * 100 : (bestObjective / baselineObjective - 1) * 100;
     record.report = {
       solverEvaluations: record.pilots.reduce((s, p) => s + p.evaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0),
       surrogatePredictions,
@@ -318,9 +327,12 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       strategiesCompared: record.pilots.length,
       chosenStrategy: record.chosenStrategy,
       chosenStrategyLabel: ranked[0].label,
-      baselineMass_kg: baselineMass,
-      bestMass_kg: bestMass,
-      improvementPercent: (1 - bestMass / baselineMass) * 100,
+      objectiveMetric: objective.metric,
+      baselineObjective,
+      bestObjective,
+      baselineMass_kg: baselineEval.metrics.mass_kg,
+      bestMass_kg: bestEval?.metrics.mass_kg ?? NaN,
+      improvementPercent,
       bestDesignId: best?.id ?? "",
       mainGenerations: record.main.generations.length,
       stopReason,

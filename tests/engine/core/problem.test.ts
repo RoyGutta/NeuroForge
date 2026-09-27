@@ -1,3 +1,4 @@
+import { trussGeometry } from "../../../src/engine/domains/structural/truss/bridgeSpace";
 import { describe, expect, test } from "vitest";
 import { validateProblem } from "../../../src/engine/domains/registry";
 import { createTrussBridgeProblem } from "../../../src/engine/domains/structural/truss/template";
@@ -8,7 +9,7 @@ describe("truss bridge problem template", () => {
     expect(validateProblem(p)).toEqual([]);
     expect(p.domain).toBe("structural");
     expect(p.geometry.kind).toBe("truss-bridge");
-    expect(p.geometry.span_m).toBe(2);
+    expect(p.geometry.kind === "truss-bridge" ? p.geometry.span_m : NaN).toBe(2);
     expect(p.loads[0].magnitude_N).toBe(500);
     expect(p.safetyFactor).toBe(2);
     expect(p.objectives.map((o) => o.metric)).toContain("mass_kg");
@@ -53,8 +54,8 @@ describe("validateProblem", () => {
 
   test("rejects a safety factor below 1 and inverted bounds", () => {
     const p = createTrussBridgeProblem({ span_m: 2, load_N: 500, safetyFactor: 0.5 });
-    p.geometry.depthMin_m = 0.5;
-    p.geometry.depthMax_m = 0.1;
+    trussGeometry(p).depthMin_m = 0.5;
+    trussGeometry(p).depthMax_m = 0.1;
     const paths = validateProblem(p).map((i) => i.path);
     expect(paths).toContain("safetyFactor");
     expect(paths).toContain("geometry.depthMin_m");

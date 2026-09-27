@@ -109,7 +109,8 @@ class MemberSurrogateEvolutionary implements Optimizer {
     const compiled = ctx.compiled;
     if (!compiled?.responseModel) throw new Error("member-surrogate optimiser needs a compiled problem with a response model");
     this.forceId = compiled.responseModel.responseIds[0];
-    this.representation = p.representation >= 2 ? "both" : p.representation >= 1 ? "displacements" : "forces";
+    const requested = p.representation >= 2 ? "both" : p.representation >= 1 ? "displacements" : "forces";
+    this.representation = compiled.responseModel.forcesFromDisplacements ? requested : "forces";
     this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
     const rm = compiled.responseModel;
     const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);

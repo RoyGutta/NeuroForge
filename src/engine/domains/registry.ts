@@ -4,10 +4,12 @@
  */
 import type { DomainId, EngineeringProblem, ValidationIssue } from "../core/problem";
 import type { CompiledProblem, EngineeringDomain } from "./domain";
+import { roboticsDomain } from "./robotics";
 import { structuralDomain } from "./structural";
 
 const DOMAINS: Record<string, EngineeringDomain> = {
   structural: structuralDomain as EngineeringDomain,
+  robotics: roboticsDomain as EngineeringDomain,
 };
 
 export function getDomain(id: DomainId | string): EngineeringDomain | undefined {

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { startMemberStudy } from "../../app/experimentClient";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
+import type { TrussModel } from "../../engine/domains/structural/truss/model";
 import type { MemberStudy } from "../../engine/ml/study";
 import { listMultiOutputSurrogates } from "../../engine/ml/models";
 import { rampColor, TrussSvg } from "./TrussSvg";
@@ -15,6 +17,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   const { record, compiled, latestBest, problem, status } = ws;
   const [model, setModel] = useState("ridge");
   const [representation, setRepresentation] = useState<"forces" | "both" | "displacements">("both");
+  const domainRepresentation = ws.problem.domain === "structural" ? representation : "forces";
   const [riskK, setRiskK] = useState(2);
   const [study, setStudy] = useState<MemberStudy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,7 +29,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
     setBusy(true);
     setError(null);
     try {
-      setStudy(await startMemberStudy(record.config, { memberModel: model, riskK, representation, splitSeed: record.config.seed, maxTrainingPoints: 2000 }));
+      setStudy(await startMemberStudy(record.config, { memberModel: model, riskK, representation: domainRepresentation, splitSeed: record.config.seed, maxTrainingPoints: 2000 }));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -35,7 +38,12 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   };
 
   const design = latestBest;
-  const trussModel = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
+  const isTruss = problem.domain === "structural";
+  const response = compiled?.responses[0];
+  const unit = response?.unit ?? "";
+  const componentLabel = (i: number) =>
+    isTruss ? compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}` : `task point ${Math.floor(i / 2) + 1} · joint ${(i % 2) + 1}`;
+  const trussModel = useMemo(() => (isTruss && compiled && design ? (compiled.artifact(design.parameters) as TrussModel) : null), [isTruss, compiled, design]);
   const result = useMemo(() => (trussModel ? solveTruss(trussModel) : null), [trussModel]);
   const colors = useMemo(() => {
     if (!study) return undefined;
@@ -51,10 +59,11 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   return (
     <section className="under member-learning" aria-label="Member-level surrogate">
       <div>
-        <h2>Learn member forces, apply exact physics</h2>
+        <h2>{isTruss ? "Learn member forces, apply exact physics" : `Learn ${response?.label.toLowerCase() ?? "responses"}, apply exact physics`}</h2>
         <p>
-          Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress
-          and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver.
+          {isTruss
+            ? "Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver."
+            : "A multi-output surrogate predicts the joint torque at every task point with an uncertainty; peak torque and bending stress are then computed exactly from those torques (tip deflection is regressed separately). The screen's reliability is measured on the held-out split against the solver."}
         </p>
         <div className="row wrap">
           <label className="check">
@@ -70,9 +79,15 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
           <label className="check">
             learn
             <select value={representation} onChange={(e) => setRepresentation(e.target.value as "forces" | "both" | "displacements")} disabled={busy} aria-label="Learned response">
-              <option value="both">forces + displacements (all metrics derived)</option>
-              <option value="forces">member forces (deflection regressed)</option>
-              <option value="displacements">displacements only (forces differenced)</option>
+              {isTruss ? (
+                <>
+                  <option value="both">forces + displacements (all metrics derived)</option>
+                  <option value="forces">member forces (deflection regressed)</option>
+                  <option value="displacements">displacements only (forces differenced)</option>
+                </>
+              ) : (
+                <option value="forces">joint torques (deflection regressed)</option>
+              )}
             </select>
           </label>
           <label className="check">
@@ -91,7 +106,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         {study && f && fc && (
           <>
             <p className="fine">
-              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} members · train {study.split.train} / test {study.split.test} · {study.memberModel} · {study.representation} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
+              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} {isTruss ? "members" : "response components"} · train {study.split.train} / test {study.split.test} · {study.memberModel} · {study.representation} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
             </p>
             <table className="table">
               <thead>
@@ -132,13 +147,13 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
             <table className="table">
               <tbody>
                 <tr>
-                  <td>Member-force R² (all members)</td>
+                  <td>{isTruss ? "Member-force R² (all members)" : "Response R² (all components)"}</td>
                   <td className={study.forces.overallR2 > 0.9 ? "green" : undefined}>{study.forces.overallR2.toFixed(3)}</td>
                 </tr>
                 <tr>
                   <td>95 % interval coverage · mean predicted std</td>
                   <td>
-                    {pct(study.forces.coverage95)} · {study.forces.meanStd.toFixed(1)} N
+                    {pct(study.forces.coverage95)} · {study.forces.meanStd.toFixed(isTruss ? 1 : 3)} {unit}
                   </td>
                 </tr>
                 <tr>
@@ -154,7 +169,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
               </tbody>
             </table>
             <p className="fine">
-              Calibration by predicted-std quintile (mean |error| N / coverage):{" "}
+              Calibration by predicted-std quintile (mean |error| {unit} / coverage):{" "}
               {study.calibration.map((b) => `${b.meanAbsError.toFixed(1)} / ${(b.coverage95 * 100).toFixed(0)} %`).join(" → ")}. A calibrated model shows error rising left to right and
               coverage near 95 % in every bin.
             </p>
@@ -162,13 +177,15 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         )}
       </div>
       <div>
-        <h2>{map === "error" ? "Error by member" : "Uncertainty by member"}</h2>
+        <h2>{map === "error" ? `Error by ${isTruss ? "member" : "component"}` : `Uncertainty by ${isTruss ? "member" : "component"}`}</h2>
         <p>
           {study
             ? map === "error"
-              ? "Mean absolute force error on held-out designs, per member (red = hardest to predict). Drawn on the best design."
-              : "Mean predicted force standard deviation, per member (red = least understood). Drawn on the best design."
-            : "Train the member surrogate to colour the structure by prediction error or uncertainty."}
+              ? `Mean absolute error on held-out designs, per ${isTruss ? "member (red = hardest to predict). Drawn on the best design." : "task point and joint (largest first)."}`
+              : `Mean predicted standard deviation, per ${isTruss ? "member (red = least understood). Drawn on the best design." : "task point and joint."}`
+            : isTruss
+              ? "Train the member surrogate to colour the structure by prediction error or uncertainty."
+              : "Train the surrogate to list prediction error and uncertainty per task point and joint."}
         </p>
         {study && (
           <div className="tabs" style={{ marginBottom: 8 }}>
@@ -182,7 +199,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         )}
         {trussModel && result && (
           <div className="map-viewport">
-            <TrussSvg model={trussModel} result={result} mode="structure" safetyFactor={problem.safetyFactor} areaMax_m2={problem.geometry.areaMax_m2} appliedLoad_N={problem.loads[0]?.magnitude_N} memberColors={colors} compact ariaLabel="Structure coloured by member prediction error or uncertainty" />
+            <TrussSvg model={trussModel} result={result} mode="structure" safetyFactor={problem.safetyFactor} areaMax_m2={trussGeometry(problem).areaMax_m2} appliedLoad_N={problem.loads[0]?.magnitude_N} memberColors={colors} compact ariaLabel="Structure coloured by member prediction error or uncertainty" />
           </div>
         )}
         {study && (
@@ -190,9 +207,9 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
             <tbody>
               {study.forces.perMemberMae.map((v, i) => (
                 <tr key={i}>
-                  <td>{compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}`}</td>
-                  <td>MAE {v.toFixed(1)} N</td>
-                  <td>std {study.perMemberMeanStd[i].toFixed(1)} N</td>
+                  <td>{componentLabel(i)}</td>
+                  <td>MAE {v.toFixed(isTruss ? 1 : 3)} {unit}</td>
+                  <td>std {study.perMemberMeanStd[i].toFixed(isTruss ? 1 : 3)} {unit}</td>
                 </tr>
               ))}
             </tbody>

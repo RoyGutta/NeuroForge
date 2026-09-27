@@ -3,7 +3,7 @@ import { formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
 export function EvidenceSection({ ws }: { ws: Workspace }) {
-  const { baseline, latestBest, problem, library, loadExperiment, deleteExperiment, record } = ws;
+  const { baseline, latestBest, problem, library, loadExperiment, deleteExperiment, record, compiled } = ws;
   const rows = TRUSS_METRICS.filter((m) => m.id !== "compliance_J" || problem.objectives[0].metric === "compliance_J");
   const b = baseline?.evaluation?.metrics;
   const o = latestBest?.evaluation?.metrics;
@@ -41,7 +41,7 @@ export function EvidenceSection({ ws }: { ws: Workspace }) {
           </tbody>
         </table>
         <p className="fine">
-          Baseline: {record ? record.config.problem.title : problem.title} · conventional uniform-section Warren truss sized to the same constraints. Improvement is measured under identical assumptions.
+          Baseline: {record ? record.config.problem.title : problem.title} · {(compiled?.baseline.description ?? "conventional design sized to the same constraints").replace(/\.$/, "")}. Improvement is measured under identical assumptions.
         </p>
       </div>
       <div>

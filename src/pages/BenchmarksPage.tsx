@@ -28,7 +28,7 @@ export function BenchmarksPage() {
               <h1>Benchmarks</h1>
               <p>
                 Every table and curve on this page is read from a benchmark record committed to the repository and produced by
-                <code> npm run benchmark</code> or <code>npm run ablation</code>: identical seeds, equal solver budgets, medians and
+                <code> npm run benchmark</code>, <code>npm run ablation</code> or <code>npm run study</code>: identical seeds, equal solver budgets, medians and
                 interquartile ranges across seeds. Nothing is generated in the browser.
               </p>
             </div>
@@ -59,7 +59,7 @@ export function BenchmarksPage() {
               )}
               <p className="meta">
                 {report.kind === "ablation" ? "Ablation" : report.kind === "study" ? `Registered study · reference method ${report.reference}` : "Optimiser comparison"} · engine {report.engineVersion} · {report.seeds} seeds · {report.budget.toLocaleString()} solver evaluations per run ·
-                baseline {report.baselineMass.toFixed(3)} kg · target {report.targetMass.toFixed(3)} kg · {new Date(report.createdAt).toISOString().slice(0, 10)}
+                baseline {report.baselineMass.toFixed(3)} {report.objectiveUnit} · target {report.targetMass.toFixed(3)} {report.objectiveUnit} · {new Date(report.createdAt).toISOString().slice(0, 10)}
               </p>
               <SummaryTable report={report} selected={selected} onSelect={(g) => setSelected({ group: g, seed: report.groups[g].runs[0]?.seed ?? 1 })} />
               {report.groups.some((g) => g.runs.some((r) => r.curve.length > 0)) && <ConvergenceChart report={report} selected={selected} />}
@@ -95,9 +95,9 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
           <tr>
             <th>{report.kind === "ablation" ? "Variant" : isStudy ? "Method" : "Optimiser"}</th>
             <th>Budget</th>
-            <th>Median best (kg)</th>
+            <th>Median best ({report.objectiveUnit})</th>
             {isStudy && <th>95 % bootstrap CI</th>}
-            <th>IQR (kg)</th>
+            <th>IQR ({report.objectiveUnit})</th>
             <th>Feasible</th>
             <th>Evaluations to target</th>
             {isStudy && <th>A vs reference</th>}
@@ -105,7 +105,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
             {report.kind === "benchmark" && <th>s / run</th>}
             {hasRel && <th>False-feasible</th>}
             {hasRel && <th>False-infeasible</th>}
-            {hasRel && <th>Force R²</th>}
+            {hasRel && <th>Response R²</th>}
           </tr>
         </thead>
         <tbody>
@@ -137,7 +137,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
         </tbody>
       </table>
       <p className="fine">
-        Lower median mass is better. Evaluations to target: median cumulative solver evaluations at which the best feasible design first reached the target mass (runs reaching it / runs).
+        Lower median {report.objectiveLabel} is better. Evaluations to target: median cumulative solver evaluations at which the best feasible design first reached the target {report.objectiveLabel} (runs reaching it / runs).
         False-feasible and false-infeasible: screening error rates of surrogate methods, measured on the designs each model gated.
         {isStudy && " 95 % CI: seeded percentile bootstrap of the median across seeds. A vs reference: Vargha–Delaney A, the probability that a run of the method beats a run of the reference (above 0.5 favours the method); effect labels follow Cliff's delta thresholds 0.147 / 0.33 / 0.474."}
       </p>
@@ -166,7 +166,7 @@ function ConvergenceChart({ report, selected }: { report: NormalizedReport; sele
   return (
     <section className="chart-panel">
       <div className="chart-title">
-        Convergence: best feasible mass against solver evaluations <span>median line, interquartile band, per group</span>
+        Convergence: best feasible {report.objectiveLabel} against solver evaluations <span>median line, interquartile band, per group</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Convergence curves: median best feasible mass and interquartile band against evaluations, one per optimiser">
         <g stroke="#2b3c33" strokeDasharray="3 5">
@@ -210,7 +210,7 @@ function ConvergenceChart({ report, selected }: { report: NormalizedReport; sele
             {report.budget.toLocaleString()} evaluations
           </text>
           <text x={12} y={H / 2} textAnchor="middle" transform={`rotate(-90 12 ${H / 2})`}>
-            mass / kg
+            {report.objectiveLabel} / {report.objectiveUnit}
           </text>
         </g>
       </svg>
@@ -243,13 +243,13 @@ function RunInspector({ report, selected, onSelect }: { report: NormalizedReport
           <thead>
             <tr>
               <th>Seed</th>
-              <th>Best (kg)</th>
+              <th>Best ({report.objectiveUnit})</th>
               <th>Feasible</th>
               <th>Evaluations to target</th>
               {group.runs.some((r) => r.wallTimeMs !== undefined) && <th>Wall time</th>}
               {group.runs.some((r) => r.reliability) && <th>Precision / recall</th>}
               {group.runs.some((r) => r.reliability) && <th>False-feasible / false-infeasible</th>}
-              {group.runs.some((r) => r.reliability?.forceR2 !== undefined) && <th>Force R² · coverage</th>}
+              {group.runs.some((r) => r.reliability?.forceR2 !== undefined) && <th>Response R² · coverage</th>}
             </tr>
           </thead>
           <tbody>

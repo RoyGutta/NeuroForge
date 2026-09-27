@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { startSurrogateStudy } from "../../app/experimentClient";
-import { TRUSS_METRICS } from "../../engine/domains/structural/truss/evaluate";
 import { listSurrogates } from "../../engine/ml/models";
 import type { SurrogateResult, SurrogateStudy } from "../../engine/ml/study";
 import { formatNumber } from "./model";
 import type { Workspace } from "./useWorkspace";
 
-const TARGETS = ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"];
+const TARGETS: Record<string, string[]> = {
+  structural: ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"],
+  robotics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "maxTipDeflection_m"],
+};
 
 /**
  * Learning panel: trains surrogate models on the designs of the current
@@ -15,7 +17,8 @@ const TARGETS = ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacem
  * shown without its measurement.
  */
 export function LearningSection({ ws }: { ws: Workspace }) {
-  const { record, status } = ws;
+  const { record, status, problem, compiled } = ws;
+  const targets = TARGETS[problem.domain] ?? TARGETS.structural;
   const [models, setModels] = useState<string[]>(["ridge", "gp"]);
   const [study, setStudy] = useState<SurrogateStudy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,7 +35,7 @@ export function LearningSection({ ws }: { ws: Workspace }) {
     setBusy(true);
     setError(null);
     try {
-      const s = await startSurrogateStudy(record.config, { models, targets: TARGETS, splitSeed: record.config.seed, maxTrainingPoints: 2000 });
+      const s = await startSurrogateStudy(record.config, { models, targets, splitSeed: record.config.seed, maxTrainingPoints: 2000 });
       setStudy(s);
       setSelected({ model: s.results[0]?.modelId, target: s.results[0]?.target });
     } catch (e) {
@@ -46,7 +49,7 @@ export function LearningSection({ ws }: { ws: Workspace }) {
     () => study?.results.find((r) => r.modelId === selected?.model && r.target === selected?.target),
     [study, selected]
   );
-  const label = (id: string) => TRUSS_METRICS.find((m) => m.id === id)?.label ?? id;
+  const label = (id: string) => compiled?.metrics.find((m) => m.id === id)?.label ?? id;
 
   return (
     <section className="under learning" aria-label="Surrogate learning">

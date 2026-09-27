@@ -13,7 +13,7 @@ const spec: StudySpec = {
     { id: "ea", optimizer: "evolutionary", params: { populationSize: 20 } },
     { id: "surrogate", optimizer: "surrogate-evolutionary", params: { populationSize: 20, warmupEvaluations: 100 } },
   ],
-  metrics: ["bestMass_kg", "evaluationsToTarget"],
+  metrics: ["bestObjective", "evaluationsToTarget"],
   targetFraction: 0.6,
 };
 
@@ -30,9 +30,9 @@ describe("study registry", () => {
     const analysis = analyzeStudy(result);
     expect(analysis.methods.map((m) => m.id)).toEqual(["ea", "surrogate"]);
     for (const m of analysis.methods) {
-      expect(Number.isFinite(m.bestMass.median)).toBe(true);
-      expect(m.bestMass.lower).toBeLessThanOrEqual(m.bestMass.median);
-      expect(m.bestMass.upper).toBeGreaterThanOrEqual(m.bestMass.median);
+      expect(Number.isFinite(m.best.median)).toBe(true);
+      expect(m.best.lower).toBeLessThanOrEqual(m.best.median);
+      expect(m.best.upper).toBeGreaterThanOrEqual(m.best.median);
       expect(m.runs).toBe(4);
     }
     const cmp = analysis.comparisons.find((c) => c.method === "surrogate")!;
@@ -50,6 +50,18 @@ describe("study registry", () => {
     const strip = (m: (typeof a.methods)[number]) => ({ ...m, meanWallTimeS: 0 });
     expect(a.methods.map(strip)).toEqual(b.methods.map(strip));
     expect(a.comparisons).toEqual(b.comparisons);
+  });
+
+  test("runs on the manipulator benchmark and reports the torque objective", () => {
+    const arm: StudySpec = { ...spec, id: "arm-study", benchmark: { problem: "planar-manipulator", payload_kg: 2, reach_m: 0.8 }, seeds: [1, 2], budget: 300, methods: [{ id: "ea", optimizer: "evolutionary", params: { populationSize: 12 } }, { id: "cma", optimizer: "cmaes", params: {} }], reference: "ea", targetFraction: 0.98 };
+    const result = runStudy(arm);
+    expect(result.objective.metric).toBe("peakTorque_Nm");
+    expect(result.objective.unit).toBe("N m");
+    expect(result.targetObjective).toBeCloseTo(result.baselineObjective * 0.98, 9);
+    for (const r of result.runs) expect(r.bestObjective).toBe(r.record.best!.evaluation!.objectives.torque);
+    const analysis = analyzeStudy(result);
+    expect(analysis.objective.metric).toBe("peakTorque_Nm");
+    expect(analysis.methods.map((m) => m.id)).toEqual(["ea", "cma"]);
   });
 
   test("rejects a spec whose reference method is not among its methods", () => {

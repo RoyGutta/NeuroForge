@@ -22,15 +22,15 @@ const spec = JSON.parse(readFileSync(file, "utf8")) as StudySpec;
 console.log(`study ${spec.id}: ${spec.title}`);
 console.log(`hypothesis: ${spec.hypothesis}`);
 console.log(`${spec.methods.length} methods x ${spec.seeds.length} seeds at ${spec.budget} evaluations`);
-const result = runStudy(spec, (run, i, total) => console.log(`  [${i}/${total}] ${run.method} seed ${run.seed}: ${run.bestMass_kg?.toFixed(3) ?? "infeasible"} kg${run.evaluationsToTarget ? ` (target at ${run.evaluationsToTarget})` : ""}`));
+const result = runStudy(spec, (run, i, total) => console.log(`  [${i}/${total}] ${run.method} seed ${run.seed}: ${run.bestObjective?.toFixed(3) ?? "infeasible"}${run.evaluationsToTarget ? ` (target at ${run.evaluationsToTarget})` : ""}`));
 const analysis = analyzeStudy(result);
 console.log("");
-console.log(["method".padEnd(20), "median kg".padStart(10), "95% CI".padStart(16), "IQR".padStart(14), "to target".padStart(12), "A vs ref".padStart(9), "effect".padStart(11)].join(" "));
+console.log(["method".padEnd(20), `median ${result.objective.unit}`.padStart(10), "95% CI".padStart(16), "IQR".padStart(14), "to target".padStart(12), "A vs ref".padStart(9), "effect".padStart(11)].join(" "));
 for (const m of analysis.methods) {
   const c = analysis.comparisons.find((x) => x.method === m.id);
-  console.log([m.id.padEnd(20), m.bestMass.median.toFixed(3).padStart(10), `${m.bestMass.lower.toFixed(3)}–${m.bestMass.upper.toFixed(3)}`.padStart(16), `${m.q1Best.toFixed(3)}–${m.q3Best.toFixed(3)}`.padStart(14), (m.medianEvaluationsToTarget ? `${Math.round(m.medianEvaluationsToTarget)} (${m.runsReachingTarget}/${m.runs})` : "not reached").padStart(12), (c ? c.varghaDelaneyA.toFixed(2) : "ref").padStart(9), (c ? c.effectLabel : "").padStart(11)].join(" "));
+  console.log([m.id.padEnd(20), m.best.median.toFixed(3).padStart(10), `${m.best.lower.toFixed(3)}–${m.best.upper.toFixed(3)}`.padStart(16), `${m.q1Best.toFixed(3)}–${m.q3Best.toFixed(3)}`.padStart(14), (m.medianEvaluationsToTarget ? `${Math.round(m.medianEvaluationsToTarget)} (${m.runsReachingTarget}/${m.runs})` : "not reached").padStart(12), (c ? c.varghaDelaneyA.toFixed(2) : "ref").padStart(9), (c ? c.effectLabel : "").padStart(11)].join(" "));
 }
 mkdirSync("benchmarks/results", { recursive: true });
 const out = `benchmarks/results/${spec.id}-${new Date().toISOString().slice(0, 10)}.json`;
-writeFileSync(out, JSON.stringify({ kind: "study", spec, engineVersion: result.engineVersion, createdAt: new Date().toISOString(), baselineMass_kg: result.baselineMass_kg, targetMass_kg: result.targetMass_kg, runs: result.runs.map(({ record: _record, ...rest }) => rest), analysis }, null, 1));
+writeFileSync(out, JSON.stringify({ kind: "study", spec, engineVersion: result.engineVersion, createdAt: new Date().toISOString(), objective: result.objective, baselineObjective: result.baselineObjective, targetObjective: result.targetObjective, runs: result.runs.map(({ record: _record, ...rest }) => rest), analysis }, null, 1));
 console.log(`\nwrote ${out}`);

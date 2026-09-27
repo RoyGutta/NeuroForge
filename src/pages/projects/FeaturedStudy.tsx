@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { Link } from "react-router-dom";
 import { Arrow } from "../../components/Arrow";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
+import type { TrussModel } from "../../engine/domains/structural/truss/model";
 import { useHomeDemo } from "../home/useHomeDemo";
 import { formatMetric } from "../workspace/model";
 import { TrussSvg } from "../workspace/TrussSvg";
@@ -20,7 +22,7 @@ export function FeaturedStudy() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const design = view === "baseline" ? demo.baseline : demo.best ?? demo.baseline;
-  const model = useMemo(() => (demo.compiled && design ? demo.compiled.artifact(design.parameters) : null), [demo.compiled, design]);
+  const model = useMemo(() => (demo.compiled && design ? (demo.compiled.artifact(design.parameters) as TrussModel) : null), [demo.compiled, design]);
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
   const mass = design?.evaluation?.metrics.mass_kg;
   const base = demo.baseline?.evaluation?.metrics.mass_kg;
@@ -71,7 +73,7 @@ export function FeaturedStudy() {
               result={result}
               mode="utilization"
               safetyFactor={demo.problem.safetyFactor}
-              areaMax_m2={demo.problem.geometry.areaMax_m2}
+              areaMax_m2={trussGeometry(demo.problem).areaMax_m2}
               appliedLoad_N={500}
               compact
               ariaLabel={optimized ? "Optimized truss, utilisation colouring" : "Baseline truss, utilisation colouring"}

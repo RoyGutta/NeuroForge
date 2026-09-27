@@ -2,16 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getExperimentStore, takePendingProblem } from "../../app/store";
 import { startExperiment, type ExperimentHandle } from "../../app/experimentClient";
 import type { Design } from "../../engine/core/design";
-import type { EngineeringProblem, ValidationIssue } from "../../engine/core/problem";
+import type { DomainId, EngineeringProblem, ValidationIssue } from "../../engine/core/problem";
 import { compileProblem, validateProblem } from "../../engine/domains/registry";
 import type { CompiledProblem } from "../../engine/domains/domain";
-import type { TrussModel } from "../../engine/domains/structural/truss/model";
 import type { ExperimentRecord, ExperimentSummary, GenerationSummary } from "../../engine/experiments/experiment";
 import { createExperimentConfig } from "../../engine/experiments/runner";
 import { interpretBrief, type InterpretResult } from "../../engine/interpret";
 import { getOptimizerDescriptor } from "../../engine/optimization";
 import type { ViewMode } from "./TrussSvg";
-import { defaultForm, defaultSettings, formFromProblem, problemFromForm, type RunSettings, type SpecForm } from "./model";
+import { defaultForm, defaultSettings, formForDomain, formFromProblem, problemFromForm, type RunSettings, type SpecForm } from "./model";
 
 export type RunStatus = "idle" | "running" | "completed" | "cancelled" | "error";
 
@@ -39,10 +38,10 @@ export function useWorkspace() {
   const handleRef = useRef<ExperimentHandle | null>(null);
 
   const issues: ValidationIssue[] = useMemo(() => validateProblem(problem), [problem]);
-  const compiled: CompiledProblem<TrussModel> | null = useMemo(() => {
+  const compiled: CompiledProblem | null = useMemo(() => {
     if (issues.length > 0) return null;
     try {
-      return compileProblem(problem) as CompiledProblem<TrussModel>;
+      return compileProblem(problem);
     } catch {
       return null;
     }
@@ -84,6 +83,22 @@ export function useWorkspace() {
     setScrub(null);
     setShowing("best");
   }, [form]);
+
+  /** Switch engineering domain: canonical brief and objective for that domain, applied immediately. */
+  const switchDomain = useCallback((domain: DomainId) => {
+    setForm((f) => {
+      const next = formForDomain(f, domain);
+      setProblem(problemFromForm(next));
+      return next;
+    });
+    setInterpretation(null);
+    setRecord(null);
+    setGenerations([]);
+    setStatus("idle");
+    setScrub(null);
+    setShowing("best");
+    setSelectedDesign(null);
+  }, []);
 
   const interpret = useCallback(() => {
     const r = interpretBrief(form.brief);
@@ -241,6 +256,7 @@ export function useWorkspace() {
     form,
     updateForm,
     applyForm,
+    switchDomain,
     interpret,
     interpretation,
     problem,

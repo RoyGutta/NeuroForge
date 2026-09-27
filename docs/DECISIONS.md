@@ -2,6 +2,23 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-09-27 — A planar manipulator as the second domain
+**Decision.** The second engineering domain is a two-link planar manipulator
+sized for static payload holding: closed-form kinematics, rigid-body statics
+and beam bending, with joint torques and tip deflections as responses.
+**Why.** It exercises the `EngineeringDomain` contract with mathematics that
+share nothing with the truss (no stiffness matrix, no linear force map,
+reachability as a hard constraint), while staying small enough that every
+equation is checked against a closed form. Every layer above the domain
+(optimisers, runner, surrogates, study registry, autonomous lab) ran on it
+without modification; the only engine change was letting the hybrid
+predictor fall back to its response representation when a domain has no
+displacement field, and letting the lab choose the trade-off metric from the
+domain's metrics instead of assuming compliance.
+**Consequences.** The structural domain is unchanged. The interface renders
+each domain with its own drawing and specification form; the manipulator
+model is static and first-order, and the limitations file says so.
+
 ## 2026-09-22 — Learn forces, compute constraints
 **Decision.** Surrogates predict member axial forces; the domain's exact
 equations derive stress, buckling and feasibility. Utilisations are never

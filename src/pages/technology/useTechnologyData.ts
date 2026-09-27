@@ -8,9 +8,11 @@ import { startExperiment } from "../../app/experimentClient";
 import { compileProblem } from "../../engine/domains/registry";
 import type { CompiledProblem } from "../../engine/domains/domain";
 import type { TrussModel } from "../../engine/domains/structural/truss/model";
+import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { createTrussBridgeProblem } from "../../engine/domains/structural/truss/template";
 import type { ExperimentRecord, GenerationSummary } from "../../engine/experiments/experiment";
 import { createExperimentConfig } from "../../engine/experiments/runner";
+import { listMultiOutputSurrogates, listSurrogates } from "../../engine/ml/models";
 import { getOptimizerDescriptor } from "../../engine/optimization";
 
 export const TECH_SEED = 3;
@@ -50,7 +52,7 @@ export function useTechnologyData() {
   const evolutionary = getOptimizerDescriptor("evolutionary")!;
 
   const codePanels = useMemo(() => {
-    const g = problem.geometry;
+    const g = trussGeometry(problem);
     const spec = [
       `objective        ${problem.objectives[0].direction}(${problem.objectives[0].metric})`,
       `span             ${g.span_m} m`,
@@ -83,11 +85,13 @@ export function useTechnologyData() {
       `singular K       reported as "unstable", never silently patched`,
     ].join("\n");
     const learn = [
-      `status           ROADMAP - not implemented yet`,
-      `plan             train on (parameters -> metrics) pairs from real runs`,
-      `candidates       ridge / polynomial baseline, MLP, Gaussian process`,
-      `evaluation       hold-out MAE, RMSE, R^2 against the FEA solver`,
-      `use              propose candidates; the solver always has the last word`,
+      `dataset          every evaluated design: parameters -> responses + metrics`,
+      `split            70 / 15 / 15 train / validation / test, seeded`,
+      `scalar models    ${listSurrogates().map((s) => s.id).join(", ")}`,
+      `response models  ${listMultiOutputSurrogates().map((s) => s.id).join(", ")}  (per member force / joint torque, with std)`,
+      `derived metrics  exact domain equations applied to predicted responses`,
+      `screening        conservative bound mu + k sigma; false-feasible rate recorded`,
+      `evaluation       hold-out MAE, RMSE, R^2, 95 % coverage against the solver`,
     ].join("\n");
     const opt = [
       `algorithm        ${evolutionary.label}`,

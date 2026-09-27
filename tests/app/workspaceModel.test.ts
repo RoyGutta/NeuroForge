@@ -7,7 +7,8 @@ describe("workspace form <-> problem mapping", () => {
   test("default form produces a valid problem with the canonical values", () => {
     const p = problemFromForm(defaultForm());
     expect(validateProblem(p)).toEqual([]);
-    expect(p.geometry.span_m).toBe(2);
+    expect(p.geometry.kind).toBe("truss-bridge");
+    if (p.geometry.kind === "truss-bridge") expect(p.geometry.span_m).toBe(2);
     expect(p.loads[0].magnitude_N).toBe(500);
     expect(p.assumptions.map((a) => a.field)).toContain("safetyFactor");
   });
@@ -46,5 +47,25 @@ describe("workspace form <-> problem mapping", () => {
     const c = p.constraints.find((x) => x.id === "mass-budget");
     expect(c?.limit).toBe(1.2);
     expect(validateProblem(p)).toEqual([]);
+  });
+
+  test("robotics form round-trips a manipulator problem", () => {
+    const form = defaultForm();
+    form.domain = "robotics";
+    form.payload_kg = "2";
+    form.reach_m = "0.8";
+    form.objective = "peakTorque_Nm";
+    const p = problemFromForm(form);
+    expect(p.domain).toBe("robotics");
+    expect(validateProblem(p)).toEqual([]);
+    expect(p.loads[0].magnitude_N).toBeCloseTo(2 * 9.80665, 6);
+    const back = formFromProblem(p);
+    expect(back.domain).toBe("robotics");
+    expect(back.payload_kg).toBe("2");
+    expect(back.reach_m).toBe("0.8");
+    expect(back.objective).toBe("peakTorque_Nm");
+    const multi = problemFromForm({ ...back, objective: "multi" }, p);
+    expect(multi.objectives.map((o) => o.metric)).toEqual(["peakTorque_Nm", "mass_kg"]);
+    expect(multi.version).toBe(p.version + 1);
   });
 });

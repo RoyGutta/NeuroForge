@@ -31,9 +31,15 @@ export interface BridgeSpace extends DesignSpace {
   panelCount: number;
 }
 
-export function createBridgeSpace(problem: EngineeringProblem): BridgeSpace {
+/** The truss geometry of a structural problem; throws for any other geometry. */
+export function trussGeometry(problem: EngineeringProblem): TrussBridgeGeometry {
   const g = problem.geometry;
   if (g.kind !== "truss-bridge") throw new Error("bridge space needs truss-bridge geometry");
+  return g;
+}
+
+export function createBridgeSpace(problem: EngineeringProblem): BridgeSpace {
+  const g = trussGeometry(problem);
   const n = g.panels;
   const memberCount = 4 * n - 1;
 

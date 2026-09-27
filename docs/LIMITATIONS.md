@@ -13,6 +13,17 @@ Be explicit about these when presenting results.
 - Material properties are handbook values.
 - Planar (2D) only.
 
+## Robotics domain
+- Planar two-link arm, static holding only: no dynamics, inertia, joint
+  velocities or accelerations, so no motion-profile torque.
+- Joints are ideal pins with no friction, backlash, compliance or limits;
+  actuator, gearbox and wiring mass are not modelled.
+- Links are uniform hollow tubes treated as Euler-Bernoulli cantilevers; tip
+  deflection is a first-order superposition with rigid joints, and torsion,
+  out-of-plane loads and link buckling are not checked.
+- The task set is a fixed grid of static hold points; obstacle avoidance,
+  orientation of the end effector and path continuity are outside the model.
+
 ## Optimisation
 - Topology is fixed to the Warren ground structure; members can shrink but the
   connectivity does not change.

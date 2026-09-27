@@ -73,7 +73,7 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
       <div className="autonomous-head">
         <div>
           <h2>Autonomous search</h2>
-          <p>Pilot every strategy on an equal budget, run the winner until it stops improving, map the mass-versus-stiffness front, and report what was found. All in the worker; all from records.</p>
+          <p>Pilot every strategy on an equal budget, run the winner until it stops improving, map the trade-off front against a second metric, and report what was found. All in the worker; all from records.</p>
         </div>
         <div className="row">
           <label className="check">
@@ -150,7 +150,7 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
             <div>
               <span>baseline → best</span>
               <b>
-                {formatMetric("mass_kg", r.baselineMass_kg)} → {formatMetric("mass_kg", r.bestMass_kg)}
+                {formatMetric(r.objectiveMetric, r.baselineObjective)} → {formatMetric(r.objectiveMetric, r.bestObjective)}
               </b>
             </div>
             <div>

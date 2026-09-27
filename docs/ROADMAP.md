@@ -59,8 +59,21 @@ it is real, tested, and honest in the interface.
 - [x] Staged strategy comparison → convergence detection → trade-off stage → discovery report generated from measured data
 - [ ] Multi-seed pilots and a stored lab record type in the library
 
-## v0.7 · Domains and 3D
-- [ ] Second domain (thermal fin array or 2D frame with bending) behind `EngineeringDomain`
+## Done — v0.8.0 (2026-09-27) · Second engineering domain
+- [x] Robotics domain: planar two-link manipulator (kinematics, static torques, tubular-link bending) behind `EngineeringDomain`
+- [x] Baseline, evaluator, responses and response model; evolutionary, CMA-ES, member-surrogate and NSGA-II runs through the registry
+- [x] Interpreter routes manipulator briefs (payload, reach) to the new domain
+- [x] Autonomous lab chooses the trade-off metric from the domain's metrics
+- [x] Domain-aware workspace: specification form, manipulator drawing (task points, torque, utilisation, deflection), metrics, learning panels; home-page demo and project card
+- [x] Study registry accepts either domain; a registered manipulator study
+
+## v0.9 · Cross-domain autonomy and robustness
+- [ ] Multi-seed pilots and stored lab records; lab-report style discovery report
+- [ ] Engineering uncertainty taxonomy; tolerance and robustness studies
+- [ ] Cross-domain learning comparisons
+
+## Later domains and 3D
+- [ ] Thermal or aerospace domain behind `EngineeringDomain`
 - [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
 
 ## Later

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.8.0 — 2026-09-27 · Second engineering domain
+- Robotics domain: a planar two-link manipulator with closed-form inverse
+  kinematics, static gravity torques, tubular links checked for bending stress
+  and tip deflection, twelve task points across the working envelope, and a
+  baseline sized by bisection. Registered as `robotics` behind the unchanged
+  `EngineeringDomain` contract; the structural domain is untouched.
+- Responses `jointTorques_Nm` and `tipDeflections_m` with a response model
+  that derives peak torque, stress utilisation, mass and reachability exactly.
+- The hybrid predictor falls back to its response representation on domains
+  without a displacement-to-force map; the autonomous lab picks the trade-off
+  metric (compliance when minimising mass, otherwise mass) from the domain.
+- Rule-based interpreter routes manipulator briefs (payload in kg or N, reach)
+  to the robotics domain with explicit assumptions when values are missing.
+- Domain-aware interface: domain selector and manipulator specification form,
+  a manipulator drawing with task-point, torque, utilisation and deflection
+  modes, per-domain metrics and learning targets, home-page demo and project
+  card. Stale roadmap wording about surrogate learning on the technology page
+  corrected.
+- Study registry generalised to the problem's objective (`bestObjective`,
+  `baselineObjective`, `targetObjective` with the metric's label and unit;
+  the benchmark view reads the older mass-named records too); a registered
+  manipulator study records a domain-dependent ranking: CMA-ES first, the
+  member surrogates ahead of the evolutionary algorithm by a small margin,
+  the global surrogate and Bayesian optimisation behind it.
+
 ## 0.7.0 — 2026-09-27 · Response-aware learning and experimental rigor
 - Free-node displacement responses on evaluations; the truss response model
   derives forces kinematically, deflection and compliance exactly, and

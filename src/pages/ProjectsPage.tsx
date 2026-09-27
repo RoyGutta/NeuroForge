@@ -81,7 +81,7 @@ const PROJECTS: Project[] = [
     id: "robot",
     category: "robotics",
     drawingLabel: "03 / ROBOTICS",
-    drawingType: "LINK GEOMETRY / KINEMATICS",
+    drawingType: "LINK GEOMETRY / STATICS",
     drawingAriaLabel: "Articulated robot arm concept",
     drawing: (
       <>
@@ -97,14 +97,14 @@ const PROJECTS: Project[] = [
       </>
     ),
     title: "A more efficient robot arm",
-    body: "Lift a 2 kg payload with less motor torque. Find the balance between reach, link length, and moving mass.",
-    constraints: ["2 kg payload", "Minimize torque"],
+    body: "Lift a 2 kg payload anywhere within a 0.8 m reach with less motor torque. Find the balance between link length, tube radius and moving mass.",
+    constraints: ["2 kg payload", "0.8 m reach", "Minimize torque"],
     detailsText:
-      "Link lengths and cross-sections, evaluated across your working envelope. Set reach, joint limits, motion profile, and material before comparing candidates.",
+      "Two link lengths and two tube radii, evaluated statically at twelve task points across the working envelope: inverse kinematics, gravity torques, bending stress and tip deflection. Dynamics, joint limits and actuators are not modelled.",
     discipline: "Mechanical design",
     workspaceHref: "/workspace?project=robot",
-    runnable: false,
-    brief: "Design a robotic arm that can lift 2 kg while minimizing motor torque.",
+    runnable: true,
+    brief: "Design a robot arm that lifts a 2 kg payload anywhere within a 0.8 m reach while minimizing motor torque.",
   },
   {
     id: "airflow",
@@ -193,7 +193,7 @@ const FILTERS: { id: Filter; label: string }[] = [
 export function ProjectsPage() {
   usePageMeta(
     "Explore projects — NeuroForge",
-    "Explore engineering challenges in structures, robotics, airflow, and thermal design. Start with an editable brief and investigate the design space with NeuroForge."
+    "Explore engineering challenges in structures and robotics, with airflow and thermal design on the roadmap. Start with an editable brief and investigate the design space with NeuroForge."
   );
 
   const [term, setTerm] = useState("");

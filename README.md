@@ -44,18 +44,24 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.7.0) implements one problem family end to end, the
-planar truss bridge, deeply enough that every stage of the pipeline is real,
-tested, and inspectable, and adds a learning layer: surrogate models trained
+The current release (v0.8.0) implements two problem families end to end, the
+planar truss bridge and a planar two-link manipulator, deeply enough that
+every stage of the pipeline is real, tested, and inspectable, and adds a
+learning layer: surrogate models trained
 on simulation data with held-out evaluation, surrogate-assisted evolutionary
 search, and constrained Bayesian optimisation, all benchmarked against the
 plain optimisers at equal solver budget, multi-objective search with a Pareto
 front of mass against stiffness, and a per-member surrogate representation
 whose uncertainty-aware screen is measured against the solver on every run,
 and an autonomous search that pilots the strategies, runs the winner to a
-plateau, maps the trade-off front and reports what it found. The domain, optimiser, interpreter, and storage layers
-are contracts, so further physics domains, search algorithms, and learning
-components extend the platform without changing what already works.
+plateau, maps the trade-off front and reports what it found. The robotics
+domain (kinematics, static torques, beam bending) was added behind the same
+`EngineeringDomain` contract without changing the optimisers, runner,
+surrogates, study registry or autonomous lab, which is the test the
+architecture was built to pass. The domain, optimiser, interpreter, and
+storage layers are contracts, so further physics domains, search algorithms,
+and learning components extend the platform without changing what already
+works.
 
 ## Why NeuroForge exists
 
@@ -120,28 +126,30 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Area | What exists |
 |---|---|
 | Problem specification | `EngineeringProblem` schema with objectives, constraints (metric, operator, limit, source), assumptions (field, value, reason, confidence), provenance, versioning; per-domain validation |
-| Interpretation | Rule-based natural-language interpreter for span, load (N, kN, kg), safety factor, material, deflection ratio, and objective; declines non-structural briefs explicitly |
+| Interpretation | Rule-based natural-language interpreter for span, load (N, kN, kg), safety factor, material, deflection ratio, and objective on structural briefs, and payload, reach, material and objective on manipulator briefs; declines thermal, aerospace and fluids briefs explicitly |
 | Structural analysis | 2D pin-jointed truss finite-element solver: stiffness assembly, boundary conditions, Cholesky factorisation, member forces and stresses, reactions, compliance, mechanism detection |
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
-| Baseline | Conventional uniform-section Warren truss at span/8 depth, sized by bisection to just satisfy the same constraints |
+| Robotics analysis | Planar two-link manipulator: closed-form inverse kinematics with elbow choice, static gravity torques at every task point, hollow tubular links checked for root bending stress and superposed cantilever tip deflection, reachability as a hard constraint; joint torques and tip deflections exposed as responses with an exact response model |
+| Baseline | Conventional uniform-section Warren truss at span/8 depth, or an equal-link arm with a common tube radius, each sized by bisection to just satisfy the same constraints |
 | Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, member-surrogate uncertainty-aware search, constrained Bayesian optimisation (Gaussian processes, expected improvement), CMA-ES, NSGA-II multi-objective search with an external Pareto archive and hypervolume tracking, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
 | Learning | Dataset builder over reproducible runs with seeded splits, including per-member force and free-node displacement columns and log-linear encoding of log-scaled variables; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and the displacement field and applies the exact stress, buckling, deflection and compliance equations with uncertainty propagated through the linear force map; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
-| Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`): declared hypothesis, methods, seeds and budget; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
+| Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`) on either domain: declared hypothesis, methods, seeds and budget; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
 | Benchmarks | `npm run benchmark` and `npm run ablation`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR, evaluations-to-target and screening reliability; raw runs under `benchmarks/results/`, rendered on the `/benchmarks` page (tables, median convergence curves with interquartile bands, per-run inspection), tables in `docs/BENCHMARKS.md`, the research question in `docs/RESEARCH.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
-| Autonomous search | Staged lab: baseline analysis, equal-budget pilots of every strategy, the winner run until its best-so-far plateaus, NSGA-II trade-off stage, and a discovery report reconciled from the stage records; each stage opens in the workspace as a normal experiment |
+| Autonomous search | Staged lab on either domain: baseline analysis, equal-budget pilots of every strategy, the winner run until its best-so-far plateaus, an NSGA-II trade-off stage against a second metric the domain exposes, and a discovery report reconciled from the stage records; each stage opens in the workspace as a normal experiment |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
-| Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panel; evidence tables |
-| Testing | 172 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Interface | Domain selector; editable specification with assumption badges; truss viewport with structure, axial-force, utilisation and deformed-shape modes, manipulator viewport with task-point, torque, utilisation and deflection modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panels; evidence tables |
+| Testing | 191 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
-Per-node displacement responses, CMA-ES restarts and boundary handling,
-multi-seed pilots in the autonomous lab, additional engineering domains, and
-3D visualisation. None of these are
-implemented yet; the interface labels them as roadmap wherever they are
-mentioned. See [Roadmap](#roadmap).
+Multi-seed pilots and stored lab records, a lab-report style discovery
+report, an engineering uncertainty taxonomy with tolerance studies,
+cross-domain learning comparisons, further engineering domains (thermal,
+aerospace, fluids), and 3D visualisation. None of these are implemented yet;
+the interface labels them as roadmap wherever they are mentioned. See
+[Roadmap](#roadmap).
 
 ## Engineering engine
 
@@ -169,6 +177,17 @@ material, and small displacements.
   method, Dorn, Gomory and Greenberg, 1964).
 
 Full equations, assumptions, and the verification cases are in
+[docs/ENGINEERING_MODELS.md](docs/ENGINEERING_MODELS.md).
+
+The robotics domain models a planar two-link manipulator held still under
+gravity. Inverse kinematics is closed-form (two elbow solutions, one on the
+workspace boundary, none outside); static joint torques follow from link and
+payload moments; each link is a hollow tube treated as an Euler-Bernoulli
+cantilever for root bending stress and tip deflection, with the tip slope of
+link 1 rotating link 2. Twelve task points across the working envelope are
+evaluated per design; the peak joint torque, bending-stress utilisation, tip
+deflection and the fraction of unreachable points are the metrics. The
+derivations and their closed-form tests are in
 [docs/ENGINEERING_MODELS.md](docs/ENGINEERING_MODELS.md).
 
 ## Optimisation
@@ -424,12 +443,16 @@ commitments.
 7. **Done (v0.7):** displacement responses with exact derivation of every
    constraint, log-encoded learning features, CMA-ES diagnosis and restarts,
    and a study registry with bootstrap intervals and effect sizes.
-8. **Next (v0.8):** a second engineering domain with different mathematics
+8. **Done (v0.8):** a second engineering domain with different mathematics
    (planar manipulator: kinematics, static torques, beam bending) behind the
-   same domain contract, with its own baseline, optimisation and visualisation.
-9. Additional engineering domains behind the `EngineeringDomain` contract
-   (thermal, robotics, aerospace), tubular sections, 3D trusses.
-10. Advanced learning components where they earn their place: neural
+   same domain contract, with its own baseline, optimisation, interpretation,
+   study and visualisation; every layer above the domain ran unchanged.
+9. **Next (v0.9):** cross-domain autonomy: multi-seed pilots, stored lab
+   records, a lab-report style discovery report, an engineering uncertainty
+   taxonomy, tolerance and robustness studies.
+10. Additional engineering domains behind the `EngineeringDomain` contract
+   (thermal, aerospace, fluids), tubular truss sections, 3D trusses.
+11. Advanced learning components where they earn their place: neural
    surrogates with uncertainty, graph representations of structures,
    sketch-to-geometry.
 

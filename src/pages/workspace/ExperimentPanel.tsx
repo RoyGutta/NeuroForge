@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { bindingConstraints, explainDifference, parameterSensitivity } from "../../engine/explain/sensitivity";
 import { listOptimizers } from "../../engine/optimization";
-import { formatMetric, formatNumber } from "./model";
+import { formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
 export function ExperimentPanel({ ws }: { ws: Workspace }) {
@@ -117,7 +117,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           {generations.length} <small>generations</small>
         </div>
         <div className="tiny">
-          {progress.evaluations.toLocaleString()} FEA evaluations · {(progress.wallTimeMs / 1000).toFixed(1)} s
+          {progress.evaluations.toLocaleString()} solver evaluations · {(progress.wallTimeMs / 1000).toFixed(1)} s
           {last ? ` · ${last.feasibleCount}/${last.evaluations} feasible in last generation` : ""}
         </div>
         <div className="progress">
@@ -134,7 +134,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
             {desc.label} <small>seed {settings.seed} · budget {settings.maxEvaluations.toLocaleString()} evaluations</small>
           </li>
           <li>
-            Linear-static FEA per candidate <small>{compiled?.backendId ?? "—"}</small>
+            {problem.domain === "robotics" ? "Kinematics, statics and beam bending per candidate" : "Linear-static FEA per candidate"} <small>{compiled?.backendId ?? "—"}</small>
           </li>
         </ol>
 
@@ -182,9 +182,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
             ))}
             <div className="kv">
               <span>{objective.label}</span>
-              <b>
-                {formatNumber(diff.objectiveDelta[objective.metric] * (objective.metric === "mass_kg" ? 1000 : 1e3), 0)} {objective.metric === "mass_kg" ? "g" : "mJ"}
-              </b>
+              <b>{formatMetric(objective.metric, diff.objectiveDelta[objective.metric])}</b>
             </div>
           </div>
         )}
@@ -197,7 +195,9 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           </button>
         )}
         <p className="helper">
-          Linear-elastic pin-jointed truss model. Results are a preliminary study, not a validated or fabrication-ready design.
+          {problem.domain === "robotics"
+            ? "Static two-link model: closed-form kinematics, gravity torques and cantilever bending. No dynamics, joint limits or actuator model. A preliminary study, not a validated design."
+            : "Linear-elastic pin-jointed truss model. Results are a preliminary study, not a validated or fabrication-ready design."}
         </p>
       </div>
     </aside>

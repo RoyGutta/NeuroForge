@@ -62,6 +62,9 @@ export interface NormalizedReport {
   seeds: number;
   baselineMass: number;
   targetMass: number;
+  /** Objective shown in tables and curves ("mass" / "kg" for the truss records). */
+  objectiveLabel: string;
+  objectiveUnit: string;
   problemTitle: string;
   groups: NormalizedGroup[];
 }
@@ -89,14 +92,17 @@ type AblationFile = {
 
 type StudyFile = {
   kind: "study";
-  spec: { id: string; title: string; hypothesis: string; budget: number; seeds: number[]; reference: string; methods: { id: string; optimizer: string; params: Record<string, number>; budget?: number }[] };
+  objective?: { metric: string; label: string; unit: string; direction: string };
+  baselineObjective?: number;
+  targetObjective?: number;
+  spec: { id: string; title: string; hypothesis: string; budget: number; seeds: number[]; reference: string; benchmark: { problem: string; payload_kg?: number; reach_m?: number }; methods: { id: string; optimizer: string; params: Record<string, number>; budget?: number }[] };
   engineVersion: string;
   createdAt: string;
-  baselineMass_kg: number;
-  targetMass_kg: number;
-  runs: { method: string; seed: number; budget: number; bestMass_kg: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"] }[];
+  baselineMass_kg?: number;
+  targetMass_kg?: number;
+  runs: { method: string; seed: number; budget: number; bestObjective?: number | null; bestMass_kg?: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"] }[];
   analysis: {
-    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; bestMass: { median: number; lower: number; upper: number }; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
+    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; best?: { median: number; lower: number; upper: number }; bestMass?: { median: number; lower: number; upper: number }; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
     comparisons: { method: string; varghaDelaneyA: number; cliffsDelta: number; effectLabel: string }[];
   };
 };
@@ -115,9 +121,11 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
       createdAt: st.createdAt,
       budget: st.spec.budget,
       seeds: st.spec.seeds.length,
-      baselineMass: st.baselineMass_kg,
-      targetMass: st.targetMass_kg,
-      problemTitle: "Canonical truss bridge",
+      baselineMass: st.baselineObjective ?? st.baselineMass_kg ?? NaN,
+      targetMass: st.targetObjective ?? st.targetMass_kg ?? NaN,
+      objectiveLabel: st.objective?.label.toLowerCase() ?? "mass",
+      objectiveUnit: st.objective?.unit ?? "kg",
+      problemTitle: st.spec.benchmark.problem === "planar-manipulator" ? `Planar manipulator (${st.spec.benchmark.payload_kg} kg, ${st.spec.benchmark.reach_m} m)` : "Canonical truss bridge",
       groups: st.analysis.methods.map((m) => {
         const cmp = st.analysis.comparisons.find((c) => c.method === m.id);
         return {
@@ -125,11 +133,11 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
           optimizer: m.optimizer,
           budget: m.budget,
           params: st.spec.methods.find((x) => x.id === m.id)?.params ?? {},
-          runs: st.runs.filter((run) => run.method === m.id).map((run) => ({ seed: run.seed, best: run.bestMass_kg, feasible: run.feasible, evaluationsToTarget: run.evaluationsToTarget, wallTimeMs: run.wallTimeMs, curve: run.curve, reliability: run.reliability })),
+          runs: st.runs.filter((run) => run.method === m.id).map((run) => ({ seed: run.seed, best: run.bestObjective ?? run.bestMass_kg ?? null, feasible: run.feasible, evaluationsToTarget: run.evaluationsToTarget, wallTimeMs: run.wallTimeMs, curve: run.curve, reliability: run.reliability })),
           summary: {
-            medianBest: Number.isFinite(m.bestMass.median) ? m.bestMass.median : null,
-            ciLower: m.bestMass.lower,
-            ciUpper: m.bestMass.upper,
+            medianBest: Number.isFinite((m.best ?? m.bestMass)?.median ?? NaN) ? (m.best ?? m.bestMass)!.median : null,
+            ciLower: (m.best ?? m.bestMass)?.lower ?? NaN,
+            ciUpper: (m.best ?? m.bestMass)?.upper ?? NaN,
             q1Best: Number.isFinite(m.q1Best) ? m.q1Best : null,
             q3Best: Number.isFinite(m.q3Best) ? m.q3Best : null,
             medianEvaluationsToTarget: m.medianEvaluationsToTarget,
@@ -158,6 +166,8 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
       seeds: a.seeds,
       baselineMass: a.baselineMass_kg,
       targetMass: a.targetMass_kg,
+      objectiveLabel: "mass",
+      objectiveUnit: "kg",
       problemTitle: "Canonical truss bridge",
       groups: a.rows.map((row) => ({
         label: row.label,
@@ -198,6 +208,8 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
     seeds: b.seeds.length,
     baselineMass: b.problem.baselineMass_kg,
     targetMass: b.problem.targetMass_kg,
+    objectiveLabel: "mass",
+    objectiveUnit: "kg",
     problemTitle: b.problem.title,
     groups: b.summaries.map((s) => ({
       label: s.optimizer,

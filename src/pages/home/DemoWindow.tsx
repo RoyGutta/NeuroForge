@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
+import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
+import type { TrussModel } from "../../engine/domains/structural/truss/model";
+import { ManipulatorSvg } from "../workspace/ManipulatorSvg";
 import { formatMetric } from "../workspace/model";
 import { TrussSvg, type ViewMode } from "../workspace/TrussSvg";
 import { DEMO_BUDGET, type useHomeDemo } from "./useHomeDemo";
@@ -13,14 +17,19 @@ export function DemoWindow({ demo }: { demo: Demo }) {
   const [showBaseline, setShowBaseline] = useState(false);
   const { compiled, problem, status, best, baseline, generations, progress } = demo;
   const design = showBaseline ? baseline : best ?? baseline;
-  const model = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
+  const isArm = problem.domain === "robotics";
+  const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
+  const model = !isArm && artifact ? (artifact as TrussModel) : null;
+  const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
   const objective = problem.objectives[0];
   const b = baseline?.evaluation?.objectives[objective.id];
   const o = design?.evaluation?.objectives[objective.id];
   const reduction = b && o !== undefined && Number.isFinite(o) ? (1 - o / b) * 100 : null;
   const ev = design?.evaluation;
-  const util = ev ? Math.max(ev.metrics.stressUtilization ?? 0, ev.metrics.bucklingUtilization ?? 0) : null;
+  const deflLimit = problem.constraints.find((c) => c.id === "deflection")?.limit;
+  const deflUtil = ev && deflLimit ? (ev.metrics.maxTipDeflection_m ?? ev.metrics.maxDisplacement_m ?? 0) / deflLimit : 0;
+  const util = ev ? Math.max(ev.metrics.stressUtilization ?? 0, ev.metrics.bucklingUtilization ?? 0, deflUtil) : null;
 
   const statusLabel =
     status === "running" ? "SEARCHING" : status === "done" ? "CONVERGED" : status === "error" ? "ERROR" : status === "unsupported" ? "UNSUPPORTED" : "BASELINE";
@@ -41,13 +50,13 @@ export function DemoWindow({ demo }: { demo: Demo }) {
           </span>
         </div>
         <div className="viewport">
-          <span className="view-label">{showBaseline ? "BASELINE · CONVENTIONAL TRUSS" : generations.length ? `BEST OF GENERATION ${generations.length}` : "BASELINE · CONVENTIONAL TRUSS"}</span>
+          <span className="view-label">{showBaseline || !generations.length ? `BASELINE · ${(compiled?.baseline.label ?? "").toUpperCase()}` : `BEST OF GENERATION ${generations.length}`}</span>
           <div className="view-tools" aria-label="Visualization mode">
             {(
               [
                 ["utilization", "Utilisation"],
-                ["force", "Force"],
-                ["deformed", "Deformed"],
+                ["force", isArm ? "Torque" : "Force"],
+                ["deformed", isArm ? "Deflection" : "Deformed"],
               ] as [ViewMode, string][]
             ).map(([m, l]) => (
               <button key={m} className={mode === m ? "active" : undefined} aria-pressed={mode === m} onClick={() => setMode(m)}>
@@ -64,10 +73,22 @@ export function DemoWindow({ demo }: { demo: Demo }) {
               result={result}
               mode={mode}
               safetyFactor={problem.safetyFactor}
-              areaMax_m2={problem.geometry.areaMax_m2}
+              areaMax_m2={trussGeometry(problem).areaMax_m2}
               appliedLoad_N={problem.loads[0]?.magnitude_N}
               compact
               ariaLabel="Live truss design from the finite-element optimization"
+            />
+          )}
+          {arm && problem.geometry.kind === "planar-manipulator" && (
+            <ManipulatorSvg
+              artifact={arm}
+              geometry={problem.geometry}
+              mode={mode}
+              safetyFactor={problem.safetyFactor}
+              yieldStrength_Pa={problem.material.yieldStrength_Pa}
+              deflectionLimit_m={problem.constraints.find((c) => c.id === "deflection")?.limit ?? Infinity}
+              compact
+              ariaLabel="Live manipulator design from the static optimization"
             />
           )}
           <div className="legend">
@@ -78,9 +99,9 @@ export function DemoWindow({ demo }: { demo: Demo }) {
                 <span>100 % of allowable</span>
               </>
             ) : mode === "force" ? (
-              <span>blue compression · green tension · width ∝ diameter</span>
+              <span>{isArm ? "colour ∝ joint torque · width ∝ tube radius" : "blue compression · green tension · width ∝ diameter"}</span>
             ) : (
-              <span>dashed = deformed shape (scaled)</span>
+              <span>{isArm ? "colour = tip deflection / limit" : "dashed = deformed shape (scaled)"}</span>
             )}
           </div>
           <span className="axis">{problem.material.name}</span>
@@ -125,7 +146,7 @@ export function DemoWindow({ demo }: { demo: Demo }) {
         <button className="text-link" onClick={open}>
           Open this study in the workspace →
         </button>
-        <span> · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design</span>
+        <span>{isArm ? " · Static kinematics · gravity torques · tube bending · preliminary analysis, not a validated design" : " · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design"}</span>
       </p>
     </div>
   );
