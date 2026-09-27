@@ -3,7 +3,7 @@
  */
 import { checkConstraints, FAILED_DESIGN_VIOLATION, type Evaluation } from "../../../core/design";
 import type { EngineeringProblem, MetricDescriptor } from "../../../core/problem";
-import type { ResponseDescriptor, ResponseModel } from "../../domain";
+import type { ResponseDescriptor } from "../../domain";
 import type { BridgeSpace } from "./bridgeSpace";
 import type { TrussSolution } from "./fea";
 import { solveTruss } from "./fea";
@@ -32,8 +32,23 @@ export const TRUSS_METRICS: MetricDescriptor[] = [
   { id: "compliance_J", label: "Compliance", unit: "J", description: "Strain energy 0.5 F.u; lower is stiffer." },
 ];
 
-export function trussResponses(memberCount: number): ResponseDescriptor[] {
-  return [{ id: "memberForces_N", label: "Member axial force", unit: "N", size: memberCount }];
+export function trussResponses(memberCount: number, freeDofCount: number): ResponseDescriptor[] {
+  return [
+    { id: "memberForces_N", label: "Member axial force", unit: "N", size: memberCount },
+    { id: "nodeDisplacements_m", label: "Free-node displacement", unit: "m", size: freeDofCount },
+  ];
+}
+
+/** Global DOF indices left free by the supports, in ascending order. */
+export function freeDofsOf(model: TrussModel): number[] {
+  const fixed = new Set<number>();
+  for (const s of model.supports) {
+    if (s.fixX) fixed.add(2 * s.node);
+    if (s.fixY) fixed.add(2 * s.node + 1);
+  }
+  const out: number[] = [];
+  for (let d = 0; d < 2 * model.nodes.length; d++) if (!fixed.has(d)) out.push(d);
+  return out;
 }
 
 /**
@@ -62,33 +77,6 @@ export function memberUtilizationsFromForces(
     buckling.push(N < 0 ? (-N * sf) / eulerCriticalLoad_N(E, A, lengths[m]) : 0);
   }
   return { stress, buckling, maxStress_Pa: maxStress };
-}
-
-export function createTrussResponseModel(problem: EngineeringProblem, space: BridgeSpace): ResponseModel {
-  const lengthsOf = (model: TrussModel) => model.members.map((mem) => Math.hypot(model.nodes[mem.j].x - model.nodes[mem.i].x, model.nodes[mem.j].y - model.nodes[mem.i].y));
-  return {
-    responseIds: ["memberForces_N"],
-    derivableMetrics: ["mass_kg", "maxStress_Pa", "stressUtilization", "bucklingUtilization"],
-    derive(params, responses) {
-      const forces = responses.memberForces_N;
-      if (!forces) throw new Error("response model needs memberForces_N");
-      const model = space.buildModel(params);
-      const u = memberUtilizationsFromForces(problem, model, forces, lengthsOf(model));
-      return {
-        mass_kg: trussMass_kg(model),
-        maxStress_Pa: u.maxStress_Pa,
-        stressUtilization: Math.max(0, ...u.stress),
-        bucklingUtilization: Math.max(0, ...u.buckling),
-      };
-    },
-    componentUtilizations(params, responses) {
-      const forces = responses.memberForces_N;
-      if (!forces) throw new Error("response model needs memberForces_N");
-      const model = space.buildModel(params);
-      const u = memberUtilizationsFromForces(problem, model, forces, lengthsOf(model));
-      return { stressUtilization: u.stress, bucklingUtilization: u.buckling };
-    },
-  };
 }
 
 export function computeTrussMetrics(
@@ -148,6 +136,9 @@ export function evaluateTrussDesign(
     diagnostics: [],
     fidelity: TRUSS_FIDELITY,
     backend: TRUSS_BACKEND_ID,
-    responses: { memberForces_N: Array.from(sol.memberForces_N) },
+    responses: {
+      memberForces_N: Array.from(sol.memberForces_N),
+      nodeDisplacements_m: freeDofsOf(model).map((d) => sol.displacements_m[d]),
+    },
   };
 }

@@ -70,6 +70,19 @@ derivations, derived-metric R², 95 % coverage, mean std, error–std
 correlation and calibration bins by std quintile. The uncertainty is a
 statistical statement about surrogate error, not an engineering margin.
 
+## Input encoding and the displacement field (v0.7)
+Design variables that span orders of magnitude declare `scale: "log"`;
+`DesignSpace.encode` maps them log-linearly to [0, 1] for learning while
+optimisers keep the linear cube (`normalize`). This single change made the
+free-node displacement field learnable (per-component R² from negative to
+0.97) and improved every other surrogate. The truss response model derives
+forces from a displacement field kinematically and propagates per-component
+uncertainty exactly through that linear map, but differencing a learned field
+is ill-conditioned for forces (R² −233), so the default `both`
+representation learns forces and displacements separately: forces give
+stress and buckling, the field gives deflection and compliance, and no
+metric is regressed.
+
 ## Use in search
 - Surrogate-assisted evolutionary search: ridge models pre-screen children;
   the solver evaluates the survivors and the online prediction accuracy is

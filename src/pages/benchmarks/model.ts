@@ -20,6 +20,12 @@ export interface NormalizedRun {
 }
 
 export interface GroupSummary {
+  /** Seeded bootstrap interval of the median best, when the record carries one. */
+  ciLower?: number;
+  ciUpper?: number;
+  /** Vargha–Delaney A versus the reference method (P(method < reference)). */
+  varghaDelaneyA?: number;
+  effectLabel?: string;
   medianBest: number | null;
   q1Best: number | null;
   q3Best: number | null;
@@ -45,7 +51,11 @@ export interface NormalizedGroup {
 
 export interface NormalizedReport {
   file: string;
-  kind: "benchmark" | "ablation";
+  kind: "benchmark" | "ablation" | "study";
+  /** Study records carry a declared hypothesis and a reference method. */
+  title?: string;
+  hypothesis?: string;
+  reference?: string;
   engineVersion: string;
   createdAt: string;
   budget: number;
@@ -77,8 +87,66 @@ type AblationFile = {
   rows: { label: string; optimizer: string; params: Record<string, number>; medianBest: number; q1: number; q3: number; medianToTarget: number | null; reached: number; medianFalseFeasible: number | null; medianFalseInfeasible: number | null; medianForceR2: number | null; medianCoverage: number | null; runs: { seed: number; best: number; toTarget: number | null; falseFeasible?: number; falseInfeasible?: number; forceR2?: number; coverage95?: number; precision?: number; recall?: number }[] }[];
 };
 
+type StudyFile = {
+  kind: "study";
+  spec: { id: string; title: string; hypothesis: string; budget: number; seeds: number[]; reference: string; methods: { id: string; optimizer: string; params: Record<string, number>; budget?: number }[] };
+  engineVersion: string;
+  createdAt: string;
+  baselineMass_kg: number;
+  targetMass_kg: number;
+  runs: { method: string; seed: number; budget: number; bestMass_kg: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"] }[];
+  analysis: {
+    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; bestMass: { median: number; lower: number; upper: number }; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
+    comparisons: { method: string; varghaDelaneyA: number; cliffsDelta: number; effectLabel: string }[];
+  };
+};
+
 export function normalizeReport(file: string, raw: unknown): NormalizedReport {
-  const r = raw as Partial<BenchmarkFile & AblationFile>;
+  const r = raw as Partial<BenchmarkFile & AblationFile & StudyFile>;
+  if (r.kind === "study") {
+    const st = raw as StudyFile;
+    return {
+      file,
+      kind: "study",
+      title: st.spec.title,
+      hypothesis: st.spec.hypothesis,
+      reference: st.spec.reference,
+      engineVersion: st.engineVersion,
+      createdAt: st.createdAt,
+      budget: st.spec.budget,
+      seeds: st.spec.seeds.length,
+      baselineMass: st.baselineMass_kg,
+      targetMass: st.targetMass_kg,
+      problemTitle: "Canonical truss bridge",
+      groups: st.analysis.methods.map((m) => {
+        const cmp = st.analysis.comparisons.find((c) => c.method === m.id);
+        return {
+          label: m.id,
+          optimizer: m.optimizer,
+          budget: m.budget,
+          params: st.spec.methods.find((x) => x.id === m.id)?.params ?? {},
+          runs: st.runs.filter((run) => run.method === m.id).map((run) => ({ seed: run.seed, best: run.bestMass_kg, feasible: run.feasible, evaluationsToTarget: run.evaluationsToTarget, wallTimeMs: run.wallTimeMs, curve: run.curve, reliability: run.reliability })),
+          summary: {
+            medianBest: Number.isFinite(m.bestMass.median) ? m.bestMass.median : null,
+            ciLower: m.bestMass.lower,
+            ciUpper: m.bestMass.upper,
+            q1Best: Number.isFinite(m.q1Best) ? m.q1Best : null,
+            q3Best: Number.isFinite(m.q3Best) ? m.q3Best : null,
+            medianEvaluationsToTarget: m.medianEvaluationsToTarget,
+            runsReachingTarget: m.runsReachingTarget,
+            runs: m.runs,
+            feasibleRuns: m.feasibleRuns,
+            meanWallTimeS: m.meanWallTimeS,
+            medianFalseFeasible: m.medianFalseFeasible,
+            medianFalseInfeasible: m.medianFalseInfeasible,
+            medianForceR2: m.medianForceR2,
+            varghaDelaneyA: cmp?.varghaDelaneyA,
+            effectLabel: cmp?.effectLabel,
+          },
+        };
+      }),
+    };
+  }
   if (Array.isArray(r.rows)) {
     const a = raw as AblationFile;
     return {

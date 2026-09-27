@@ -14,6 +14,7 @@ import type { Workspace } from "./useWorkspace";
 export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   const { record, compiled, latestBest, problem, status } = ws;
   const [model, setModel] = useState("ridge");
+  const [representation, setRepresentation] = useState<"forces" | "both" | "displacements">("both");
   const [riskK, setRiskK] = useState(2);
   const [study, setStudy] = useState<MemberStudy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -25,7 +26,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
     setBusy(true);
     setError(null);
     try {
-      setStudy(await startMemberStudy(record.config, { memberModel: model, riskK, splitSeed: record.config.seed, maxTrainingPoints: 2000 }));
+      setStudy(await startMemberStudy(record.config, { memberModel: model, riskK, representation, splitSeed: record.config.seed, maxTrainingPoints: 2000 }));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -67,6 +68,14 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
             </select>
           </label>
           <label className="check">
+            learn
+            <select value={representation} onChange={(e) => setRepresentation(e.target.value as "forces" | "both" | "displacements")} disabled={busy} aria-label="Learned response">
+              <option value="both">forces + displacements (all metrics derived)</option>
+              <option value="forces">member forces (deflection regressed)</option>
+              <option value="displacements">displacements only (forces differenced)</option>
+            </select>
+          </label>
+          <label className="check">
             risk k
             <input type="number" min={0} max={5} step={0.5} value={riskK} onChange={(e) => setRiskK(Number(e.target.value))} disabled={busy} style={{ width: 70 }} aria-label="Risk multiplier k" />
           </label>
@@ -82,7 +91,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         {study && f && fc && (
           <>
             <p className="fine">
-              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} members · train {study.split.train} / test {study.split.test} · {study.memberModel} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
+              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} members · train {study.split.train} / test {study.split.test} · {study.memberModel} · {study.representation} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
             </p>
             <table className="table">
               <thead>

@@ -23,8 +23,11 @@ Be explicit about these when presenting results.
 - Surrogate uncertainty (Bayesian ridge predictive variance, GP variance) is
   a statistical statement about the surrogate's error on data like its
   training set. It is not a structural safety margin and must not be read as one.
-- Deflection is still predicted by a global surrogate; only stress and
-  buckling are derived from predicted forces.
+- With the `forces` representation deflection is regressed; the default
+  `both` representation derives it from a learned displacement field, whose
+  derived-deflection accuracy (R² about 0.84 on 12,000 designs) is lower
+  than the force model's.
+- Statistical claims rest on 5–10 seeds per method and one problem family.
 - Benchmark conclusions hold for the canonical truss family and the budgets
   tested; they are not general claims about surrogate-assisted optimisation.
 

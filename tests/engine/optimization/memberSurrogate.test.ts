@@ -26,7 +26,9 @@ describe("member-surrogate, uncertainty-aware evolutionary optimizer", () => {
   test("records a screening funnel, feasibility confusion and force accuracy computed from actual pairs", () => {
     const rec = run({ populationSize: 30, screeningFactor: 4, warmupEvaluations: 200, riskK: 2, exploreFraction: 0.2 }, 2, 1500);
     const d = rec.optimizerDiagnostics as unknown as MemberSurrogateDiagnostics;
-    expect(d.surrogate).toBe("member-forces:ridge");
+    expect(d.surrogate).toBe("member-forces+displacements:ridge");
+    const forcesOnly = run({ populationSize: 20, screeningFactor: 3, warmupEvaluations: 120, representation: 0 }, 2, 400).optimizerDiagnostics as unknown as MemberSurrogateDiagnostics;
+    expect(forcesOnly.surrogate).toBe("member-forces:ridge");
     expect(d.funnel.candidatesGenerated).toBeGreaterThan(d.funnel.sentToSolver);
     expect(d.funnel.surrogatePredictions).toBe(d.funnel.candidatesGenerated);
     expect(d.funnel.sentToSolver + d.funnel.warmupEvaluations).toBe(rec.totalEvaluations);

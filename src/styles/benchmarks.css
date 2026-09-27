@@ -8,3 +8,5 @@
 .runs{padding:10px 0 40px}.runs h2{font:500 22px 'Space Grotesk';letter-spacing:-.5px;margin:0 0 6px}.runs p{font-size:12px;color:var(--muted);margin:0 0 12px}
 footer{padding:28px 0;display:flex;align-items:center;justify-content:space-between;gap:25px;color:var(--muted);font-size:11px;border-top:1px solid var(--line)}footer .brand{font-size:16px}footer div{display:flex;gap:25px}
 @media(max-width:700px){.wrap{padding:0 22px}.nav{flex-wrap:wrap;padding:20px 0;gap:18px}nav{width:100%;gap:18px;font-size:12px;justify-content:space-between}.intro{display:block;padding-top:36px}.picker{margin-top:16px}footer{flex-wrap:wrap}}
+
+.study-head{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:16px 18px;margin:0 0 14px}.study-head h2{font:500 20px 'Space Grotesk';letter-spacing:-.5px;margin:0 0 6px}.study-head p{font-size:12px;color:#adbab4;margin:0;line-height:1.6}.study-head b{color:var(--text);font-weight:500}

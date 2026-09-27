@@ -11,6 +11,8 @@ export interface VariableSpec {
   lower: number;
   upper: number;
   unit: string;
+  /** "log" for variables spanning orders of magnitude; affects `encode` (learning features), not `normalize`. */
+  scale?: "linear" | "log";
 }
 
 export interface DesignSpace {
@@ -18,9 +20,11 @@ export interface DesignSpace {
   dimension: number;
   clamp(params: number[]): number[];
   sample(rng: Rng): number[];
-  /** Map raw parameters to [0,1]^d for scale-free optimisers and models. */
+  /** Map raw parameters to [0,1]^d linearly, for optimisers. */
   normalize(params: number[]): number[];
   denormalize(unit: number[]): number[];
+  /** Learning features in [0,1]^d: linear for linear variables, log-linear for log-scaled ones. */
+  encode(params: number[]): number[];
 }
 
 export function createDesignSpace(variables: VariableSpec[]): DesignSpace {
@@ -49,6 +53,18 @@ export function createDesignSpace(variables: VariableSpec[]): DesignSpace {
       return unit.map((u, i) => {
         const { lower, upper } = variables[i];
         return lower + u * (upper - lower);
+      });
+    },
+    encode(params) {
+      assertLength(params, dimension);
+      return params.map((v, i) => {
+        const { lower, upper, scale } = variables[i];
+        if (scale === "log" && lower > 0) {
+          const lo = Math.log(lower);
+          const hi = Math.log(upper);
+          return (Math.log(Math.max(v, lower)) - lo) / (hi - lo);
+        }
+        return (v - lower) / (upper - lower);
       });
     },
   };

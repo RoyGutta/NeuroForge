@@ -5,7 +5,8 @@
 import type { EngineeringProblem, ValidationIssue } from "../../core/problem";
 import type { CompiledProblem, EngineeringDomain } from "../domain";
 import { createBridgeSpace } from "./truss/bridgeSpace";
-import { createTrussResponseModel, evaluateTrussDesign, TRUSS_BACKEND_ID, TRUSS_METRICS, trussResponses } from "./truss/evaluate";
+import { evaluateTrussDesign, freeDofsOf, TRUSS_BACKEND_ID, TRUSS_METRICS, trussResponses } from "./truss/evaluate";
+import { createTrussResponseModel } from "./truss/responseModel";
 import type { TrussModel } from "./truss/model";
 
 const METRIC_IDS = new Set(TRUSS_METRICS.map((m) => m.id));
@@ -64,7 +65,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<TrussModel> {
     problem,
     space,
     metrics: TRUSS_METRICS,
-    responses: trussResponses(space.memberCount),
+    responses: trussResponses(space.memberCount, freeDofsOf(space.buildModel(space.baselineParameters())).length),
     responseModel: createTrussResponseModel(problem, space),
     baseline: {
       label: "Conventional Warren truss",

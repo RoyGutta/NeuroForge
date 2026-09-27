@@ -11,7 +11,7 @@ import type { ExperimentConfig } from "../experiments/experiment";
 import { runExperiment } from "../experiments/runner";
 
 export interface Dataset {
-  /** Inputs normalised to the unit cube, one row per design. */
+  /** Learning features (space.encode: log-linear for log-scaled variables), one row per design. */
   inputs: number[][];
   /** Target values keyed by metric id. */
   targets: Record<string, number[]>;
@@ -66,7 +66,7 @@ export function buildDataset(space: DesignSpace, designs: Design[], metricIds: s
       skipped++;
       continue;
     }
-    inputs.push(space.normalize(d.parameters));
+    inputs.push(space.encode(d.parameters));
     for (const m of metricIds) targets[m].push(ev.metrics[m]);
     for (const r of responseIds) {
       const vec = ev.responses![r];

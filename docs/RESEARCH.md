@@ -118,6 +118,31 @@ weaker force models, not as defaults that help here.
   engineering safety margin; the solver still decides feasibility.
 - Five to ten seeds resolve orderings, not small differences.
 
+## Follow-up (2026-09-27, engine 0.7.0): displacement responses and a registered study
+
+New question: can the displacement field replace the global deflection
+regressor, so that every constraint is derived from learned responses?
+
+- Learning the free-node displacement field directly in the linear unit cube
+  failed (per-component R² negative). Cause: displacements scale like L/(EA)
+  and areas span a 500-fold range. Encoding log-scaled variables log-linearly
+  for learning fixed it (R² 0.97 on 12,000 designs) and also improved the
+  force model (0.992 → 0.998) and the global surrogate (0.621 → 0.586 kg).
+- Deriving forces from a learned displacement field is ill-conditioned: the
+  linear map multiplies field errors by member stiffnesses (10⁶–10⁸ N/m), so
+  force R² collapsed to −233 even with a well-fitted field. Forces must be
+  learned directly; the field is good for deflection (derived R² 0.84) and
+  compliance.
+- The combined representation (forces from the force model, deflection and
+  compliance from the displacement model) matched forces-only (0.543 vs
+  0.547 kg) and removed the last regressed metric. Uncertainty propagates
+  exactly through the linear force map, sigma_N = sqrt(sum (B sigma_u)^2).
+- The registered study (10 seeds, bootstrap CIs, Vargha–Delaney A) confirms
+  the v0.4 conclusion with non-overlapping intervals; see `docs/BENCHMARKS.md`.
+- CMA-ES: boundary handling exonerated; population and step size were the
+  cause; with λ = 24, σ₀ = 0.1 and IPOP restarts it beats the plain EA
+  (0.672 vs 0.686 kg, A = 0.63, small effect) but not the surrogates.
+
 ## Next experiments
 
 - Repeat with an artificially expensive or noisy evaluator (or a larger

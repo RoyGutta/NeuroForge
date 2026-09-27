@@ -44,7 +44,7 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.6.0) implements one problem family end to end, the
+The current release (v0.7.0) implements one problem family end to end, the
 planar truss bridge, deeply enough that every stage of the pipeline is real,
 tested, and inspectable, and adds a learning layer: surrogate models trained
 on simulation data with held-out evaluation, surrogate-assisted evolutionary
@@ -125,14 +125,15 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
 | Baseline | Conventional uniform-section Warren truss at span/8 depth, sized by bisection to just satisfy the same constraints |
 | Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, member-surrogate uncertainty-aware search, constrained Bayesian optimisation (Gaussian processes, expected improvement), CMA-ES, NSGA-II multi-objective search with an external Pareto archive and hypervolume tracking, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
-| Learning | Dataset builder over reproducible runs with seeded splits, including per-member force columns; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and applies the exact stress and buckling equations; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
+| Learning | Dataset builder over reproducible runs with seeded splits, including per-member force and free-node displacement columns and log-linear encoding of log-scaled variables; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and the displacement field and applies the exact stress, buckling, deflection and compliance equations with uncertainty propagated through the linear force map; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
+| Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`): declared hypothesis, methods, seeds and budget; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
 | Benchmarks | `npm run benchmark` and `npm run ablation`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR, evaluations-to-target and screening reliability; raw runs under `benchmarks/results/`, rendered on the `/benchmarks` page (tables, median convergence curves with interquartile bands, per-run inspection), tables in `docs/BENCHMARKS.md`, the research question in `docs/RESEARCH.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
 | Autonomous search | Staged lab: baseline analysis, equal-budget pilots of every strategy, the winner run until its best-so-far plateaus, NSGA-II trade-off stage, and a discovery report reconciled from the stage records; each stage opens in the workspace as a normal experiment |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Editable specification with assumption badges; viewport with structure, axial-force, utilisation, and deformed-shape modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panel; evidence tables |
-| Testing | 156 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Testing | 172 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
@@ -205,9 +206,11 @@ comparator drives selection, annealing acceptance, and reporting.
   force error and calibration are measured on the designs it gated and
   stored in the record.
 - **CMA-ES.** Covariance matrix adaptation with cumulative step-size
-  adaptation, rank-based so constraints use Deb's rules. Measured worse than
-  the evolutionary algorithm on the canonical truss at 1,500 evaluations
-  (median 0.732 kg, wide spread); kept as a benchmarked alternative.
+  adaptation and IPOP restarts, rank-based so constraints use Deb's rules.
+  A first version was measured worse than the evolutionary algorithm; the
+  diagnosis pointed at population and step size rather than bounds, and the
+  retuned defaults now beat the plain EA (0.672 vs 0.686 kg, small effect)
+  while staying behind the surrogate methods.
 - **NSGA-II.** Multi-objective search (mass against compliance) with
   constrained domination and crowding distance. The runner keeps an external
   archive of all feasible non-dominated designs and reports its hypervolume
@@ -215,14 +218,15 @@ comparator drives selection, annealing acceptance, and reporting.
 - **Random search.** Uniform sampling; the baseline every other method is
   measured against.
 
-Measured at equal budget (1,500 solver evaluations): the plain evolutionary
-algorithm reached a median best mass of 0.684 kg, the global surrogate
-0.620 kg, and the member-surrogate method 0.536 to 0.555 kg depending on the
-risk setting, reaching half the baseline mass in 630 to 660 evaluations
-against 1,080. An ablation shows the gain comes from the per-member
-representation; the conservative bound lowers the false-feasible rate from
-1.2 % to 0.2 % at a small cost in mass, and exploration did not help on this
-problem. Tables and caveats in [docs/BENCHMARKS.md](docs/BENCHMARKS.md), the
+Measured in a registered study (10 seeds, 1,500 solver evaluations, seeded
+bootstrap intervals): the plain evolutionary algorithm reached a median best
+mass of 0.686 kg (95 % CI 0.673–0.707), the global surrogate 0.576 kg, the
+member-surrogate method 0.543 kg (0.540–0.550) reaching half the baseline
+mass in 660 evaluations against 1,080, and CMA-ES 0.672 kg. The effect of the
+member method over the reference is large (Vargha–Delaney A = 1.00); an
+ablation attributes it to the per-member representation, the conservative
+bound lowers the false-feasible rate from about 1.5 % to 0.2 % at a small
+cost in mass, and exploration did not help on this problem. Tables and caveats in [docs/BENCHMARKS.md](docs/BENCHMARKS.md), the
 research framing in [docs/RESEARCH.md](docs/RESEARCH.md), and algorithm
 details in [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md).
 
@@ -363,6 +367,7 @@ npm run typecheck    # application and test sources
 npm run reproduce    # canonical experiment from the command line
 npm run benchmark    # optimisers at equal budget across seeds (--out writes JSON)
 npm run ablation     # member-surrogate ablation (--out writes JSON)
+npm run study -- benchmarks/studies/representation-and-screening.json   # registered study
 ```
 
 The project has no backend. Experiments persist in the browser's local storage.
@@ -416,11 +421,15 @@ commitments.
 6. **Done (v0.6):** autonomous engineering loop: staged strategy comparison,
    convergence detection, trade-off mapping, and a discovery report generated
    from measured data.
-7. **Next:** per-node displacement responses; CMA-ES restarts and boundary
-   handling; multi-seed pilots; stronger multi-objective methods.
-8. Additional engineering domains behind the `EngineeringDomain` contract
+7. **Done (v0.7):** displacement responses with exact derivation of every
+   constraint, log-encoded learning features, CMA-ES diagnosis and restarts,
+   and a study registry with bootstrap intervals and effect sizes.
+8. **Next (v0.8):** a second engineering domain with different mathematics
+   (planar manipulator: kinematics, static torques, beam bending) behind the
+   same domain contract, with its own baseline, optimisation and visualisation.
+9. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, robotics, aerospace), tubular sections, 3D trusses.
-9. Advanced learning components where they earn their place: neural
+10. Advanced learning components where they earn their place: neural
    surrogates with uncertainty, graph representations of structures,
    sketch-to-geometry.
 

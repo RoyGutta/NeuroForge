@@ -18,8 +18,10 @@ import { resolveParams } from "./types";
 import { reflect } from "./variation";
 
 const PARAMS = [
-  { id: "populationSize", label: "Population size (lambda)", description: "Samples per generation; 0 = 4 + floor(3 ln d).", default: 0, min: 0, max: 500, step: 1 },
-  { id: "initialSigma", label: "Initial step size", description: "Initial standard deviation as a fraction of each variable's range.", default: 0.3, min: 0.01, max: 1, step: 0.05 },
+  { id: "populationSize", label: "Population size (lambda)", description: "Samples per generation; 0 = 2 (4 + floor(3 ln d)), the setting the truss diagnosis favoured.", default: 0, min: 0, max: 500, step: 1 },
+  { id: "initialSigma", label: "Initial step size", description: "Initial standard deviation as a fraction of each variable's range. Small values exploit a seeded baseline.", default: 0.1, min: 0.01, max: 1, step: 0.05 },
+  { id: "restartSigma", label: "Restart threshold", description: "Restart (IPOP: population doubled, step size reset) when the step size falls below this fraction of the range; 0 disables.", default: 1e-3, min: 0, max: 0.5 },
+  { id: "stagnationGenerations", label: "Stagnation restart", description: "Restart when the best has not improved for this many generations; 0 disables.", default: 40, min: 0, max: 1000, step: 1 },
 ];
 
 export const cmaesDescriptor: OptimizerDescriptor = {
@@ -37,14 +39,14 @@ class CmaEs implements Optimizer {
   readonly id = "cmaes";
   private readonly d: number;
   private readonly lambda: number;
-  private readonly mu: number;
-  private readonly weights: number[];
-  private readonly muEff: number;
-  private readonly cSigma: number;
-  private readonly dSigma: number;
-  private readonly cc: number;
-  private readonly c1: number;
-  private readonly cMu: number;
+  private mu: number;
+  private weights: number[];
+  private muEff: number;
+  private cSigma: number;
+  private dSigma: number;
+  private cc: number;
+  private c1: number;
+  private cMu: number;
   private readonly chiN: number;
   private mean: number[];
   private sigma: number;
@@ -58,6 +60,11 @@ class CmaEs implements Optimizer {
   private bestSoFar: Design | undefined;
   private pending: { design: Design; z: number[] }[] = [];
   private conditionNumber = 1;
+  private restarts = 0;
+  private sinceImprovement = 0;
+  private lambdaCurrent: number;
+  private readonly initialSigma: number;
+  private readonly p: Record<string, number>;
 
   constructor(
     private readonly ctx: OptimizerContext,
@@ -66,18 +73,20 @@ class CmaEs implements Optimizer {
   ) {
     const d = ctx.space.dimension;
     this.d = d;
-    this.lambda = p.populationSize > 0 ? Math.round(p.populationSize) : 4 + Math.floor(3 * Math.log(d));
-    this.mu = Math.floor(this.lambda / 2);
-    const raw = Array.from({ length: this.mu }, (_, i) => Math.log(this.mu + 0.5) - Math.log(i + 1));
-    const sum = raw.reduce((a, b) => a + b, 0);
-    this.weights = raw.map((w) => w / sum);
-    this.muEff = 1 / this.weights.reduce((a, w) => a + w * w, 0);
-    this.cSigma = (this.muEff + 2) / (d + this.muEff + 5);
-    this.dSigma = 1 + 2 * Math.max(0, Math.sqrt((this.muEff - 1) / (d + 1)) - 1) + this.cSigma;
-    this.cc = (4 + this.muEff / d) / (d + 4 + (2 * this.muEff) / d);
-    this.c1 = 2 / ((d + 1.3) ** 2 + this.muEff);
-    this.cMu = Math.min(1 - this.c1, (2 * (this.muEff - 2 + 1 / this.muEff)) / ((d + 2) ** 2 + this.muEff));
+    this.p = p;
+    this.lambda = p.populationSize > 0 ? Math.round(p.populationSize) : 2 * (4 + Math.floor(3 * Math.log(d)));
+    this.lambdaCurrent = this.lambda;
+    this.initialSigma = p.initialSigma;
     this.chiN = Math.sqrt(d) * (1 - 1 / (4 * d) + 1 / (21 * d * d));
+    this.weights = [];
+    this.mu = 0;
+    this.muEff = 0;
+    this.cSigma = 0;
+    this.dSigma = 0;
+    this.cc = 0;
+    this.c1 = 0;
+    this.cMu = 0;
+    this.configure(this.lambda);
     this.mean = seeds[0] ? ctx.space.normalize(ctx.space.clamp(seeds[0].parameters)) : Array.from({ length: d }, () => ctx.rng.next());
     this.sigma = p.initialSigma;
     this.C = new Float64Array(d * d);
@@ -87,6 +96,40 @@ class CmaEs implements Optimizer {
     this.B = Float64Array.from(this.C);
     this.D = new Float64Array(d).fill(1);
     this.eigenValid = true;
+  }
+
+  /** Strategy parameters for a population size (Hansen, 2016). */
+  private configure(lambda: number): void {
+    const d = this.d;
+    this.lambdaCurrent = lambda;
+    this.mu = Math.floor(lambda / 2);
+    const raw = Array.from({ length: this.mu }, (_, i) => Math.log(this.mu + 0.5) - Math.log(i + 1));
+    const sum = raw.reduce((a, b) => a + b, 0);
+    this.weights = raw.map((w) => w / sum);
+    this.muEff = 1 / this.weights.reduce((a, w) => a + w * w, 0);
+    this.cSigma = (this.muEff + 2) / (d + this.muEff + 5);
+    this.dSigma = 1 + 2 * Math.max(0, Math.sqrt((this.muEff - 1) / (d + 1)) - 1) + this.cSigma;
+    this.cc = (4 + this.muEff / d) / (d + 4 + (2 * this.muEff) / d);
+    this.c1 = 2 / ((d + 1.3) ** 2 + this.muEff);
+    this.cMu = Math.min(1 - this.c1, (2 * (this.muEff - 2 + 1 / this.muEff)) / ((d + 2) ** 2 + this.muEff));
+  }
+
+  /** IPOP restart: double the population, reset the distribution around the best design. */
+  private restart(): void {
+    const d = this.d;
+    this.restarts++;
+    this.configure(Math.min(this.lambdaCurrent * 2, 2048));
+    this.mean = this.bestSoFar ? this.ctx.space.normalize(this.bestSoFar.parameters) : this.mean;
+    this.sigma = this.initialSigma;
+    this.C = new Float64Array(d * d);
+    for (let i = 0; i < d; i++) this.C[i * d + i] = 1;
+    this.pSigma = new Array(d).fill(0);
+    this.pC = new Array(d).fill(0);
+    this.B = Float64Array.from(this.C);
+    this.D = new Float64Array(d).fill(1);
+    this.eigenValid = true;
+    this.generation = 0;
+    this.sinceImprovement = 0;
   }
 
   private updateEigen(): void {
@@ -103,7 +146,7 @@ class CmaEs implements Optimizer {
     const d = this.d;
     this.pending = [];
     const out: Design[] = [];
-    for (let k = 0; k < this.lambda; k++) {
+    for (let k = 0; k < this.lambdaCurrent; k++) {
       const z = Array.from({ length: d }, () => this.ctx.rng.gaussian());
       const x = new Array<number>(d);
       for (let i = 0; i < d; i++) {
@@ -127,9 +170,14 @@ class CmaEs implements Optimizer {
       .map((p) => ({ ...p, design: byId.get(p.design.id) ?? p.design }))
       .filter((p) => p.design.evaluation)
       .sort((a, b) => compareDesigns(a.design, b.design, objId, dir));
+    let improved = false;
     for (const r of ranked) {
-      if (!this.bestSoFar || compareDesigns(r.design, this.bestSoFar, objId, dir) < 0) this.bestSoFar = r.design;
+      if (!this.bestSoFar || compareDesigns(r.design, this.bestSoFar, objId, dir) < 0) {
+        this.bestSoFar = r.design;
+        improved = true;
+      }
     }
+    this.sinceImprovement = improved ? 0 : this.sinceImprovement + 1;
     if (ranked.length < this.mu) return;
     const oldMean = this.mean.slice();
     // Use repaired (reflected) points so the update is consistent with what was evaluated.
@@ -164,6 +212,9 @@ class CmaEs implements Optimizer {
     this.mean = newMean;
     this.eigenValid = false;
     this.pending = [];
+    const collapsed = this.p.restartSigma > 0 && this.sigma < this.p.restartSigma;
+    const stagnant = this.p.stagnationGenerations > 0 && this.sinceImprovement >= this.p.stagnationGenerations;
+    if (collapsed || stagnant) this.restart();
   }
 
   best(): Design | undefined {
@@ -176,6 +227,6 @@ class CmaEs implements Optimizer {
 
   diagnostics(): Record<string, unknown> {
     this.updateEigen();
-    return { sigma: this.sigma, conditionNumber: this.conditionNumber, generations: this.generation, lambda: this.lambda, mu: this.mu, muEff: this.muEff };
+    return { sigma: this.sigma, conditionNumber: this.conditionNumber, generations: this.generation, lambda: this.lambdaCurrent, initialLambda: this.lambda, mu: this.mu, muEff: this.muEff, restarts: this.restarts };
   }
 }

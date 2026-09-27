@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0 — 2026-09-27 · Response-aware learning and experimental rigor
+- Free-node displacement responses on evaluations; the truss response model
+  derives forces kinematically, deflection and compliance exactly, and
+  propagates uncertainty through the linear force map.
+- Log-scaled design variables and `DesignSpace.encode` for learning features;
+  combined `both` representation (forces + displacements) as the
+  member-surrogate default, with the ill-conditioning of displacement-derived
+  forces recorded.
+- CMA-ES diagnosed and improved: λ = 2(4 + ⌊3 ln d⌋), σ₀ = 0.1, IPOP restarts.
+- Study registry: JSON specs, `npm run study`, seeded bootstrap intervals,
+  Vargha–Delaney A and Cliff's delta; first registered study with 10 seeds.
+- Benchmarks page renders study records with hypothesis, intervals and effects.
+
 ## 0.6.0 — 2026-09-26 · Autonomous engineering loop
 - `runLab`: analysis (baseline, sensitivity, binding constraints), pilots of
   every strategy at equal solver budget on a derived seed, the winner run

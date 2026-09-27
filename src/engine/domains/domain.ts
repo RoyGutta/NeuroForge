@@ -35,11 +35,23 @@ export interface ResponseDescriptor {
  */
 export interface ResponseModel {
   responseIds: string[];
-  /** Metric ids that `derive` can compute from responses alone. */
+  /** Union of metric ids that `derive` can compute from some response. */
   derivableMetrics: string[];
+  /** Metric ids derivable from one specific response alone. */
+  derivableFrom(responseId: string): string[];
   derive(params: number[], responses: Record<string, number[]>): Record<string, number>;
   /** Per-component utilisation for each derivable constraint metric, keyed by metric id. */
   componentUtilizations(params: number[], responses: Record<string, number[]>): Record<string, number[]>;
+  /** Global DOF index of each free displacement component, when a displacement response exists. */
+  freeDofs?: number[];
+  /** Exact linear map from the free displacement field to member forces: forces = matrix . u. */
+  forcesFromDisplacements?(params: number[], displacements: number[]): { forces: number[]; matrix: number[][] };
+  /**
+   * Conservative metrics from a displacement field with per-component
+   * standard deviations: forces shifted by k times their propagated std,
+   * deflection and compliance shifted in the unfavourable direction.
+   */
+  conservativeFromDisplacements?(params: number[], mean: number[], std: number[], k: number): Record<string, number>;
 }
 
 export interface CompiledProblem<TArtifact = unknown> {

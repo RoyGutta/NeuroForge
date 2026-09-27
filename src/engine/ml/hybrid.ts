@@ -19,8 +19,17 @@ import { standardize, type Dataset } from "./dataset";
 import { mae, r2, rmse, coverage } from "./metrics";
 import { createMultiOutputSurrogate, createSurrogate, type MultiOutputSurrogate, type SurrogateModel } from "./models";
 
+export type HybridRepresentation = "forces" | "displacements" | "both";
+
 export interface HybridOptions {
-  /** Multi-output model id for member forces ("ridge" | "gp"). */
+  /**
+   * Which response is learned. "forces": stress and buckling derived, deflection
+   * regressed. "displacements": everything derived, but forces differenced from a
+   * learned field are ill-conditioned. "both": forces from the force model,
+   * deflection and compliance from the displacement model, nothing regressed.
+   */
+  representation?: HybridRepresentation;
+  /** Multi-output model id for the learned response ("ridge" | "gp"). */
   memberModel: string;
   /** Conservative bound multiplier k in mu + k*sigma. */
   riskK: number;
@@ -38,6 +47,8 @@ export interface PredictedEvaluation {
 
 export interface HybridPrediction {
   forces: { mean: number[]; std: number[] };
+  /** Present for the displacement representation. */
+  displacements?: { mean: number[]; std: number[] };
   nominal: PredictedEvaluation;
   conservative: PredictedEvaluation;
   /** Predictive std of non-derivable metrics in log space, keyed by metric id. */
@@ -56,10 +67,13 @@ export interface ForceAccuracy {
 
 export class HybridPredictor {
   private member: MultiOutputSurrogate | null = null;
+  private displacement: MultiOutputSurrogate | null = null;
   private globals = new Map<string, SurrogateModel>();
   /** Training log-range per global metric, widened by e^3, to clamp extrapolations. */
   private globalRange = new Map<string, [number, number]>();
   private readonly forceId: string;
+  private readonly responseId: string;
+  private readonly representation: HybridRepresentation;
   private readonly nonDerivable: string[];
   private trainedOn = 0;
 
@@ -71,8 +85,17 @@ export class HybridPredictor {
     const rm = compiled.responseModel;
     if (!rm) throw new Error("hybrid predictor needs a domain response model");
     this.forceId = rm.responseIds[0];
+    this.representation = opts.representation ?? "forces";
+    this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
+    if (this.representation !== "forces" && !rm.forcesFromDisplacements) throw new Error("domain has no displacement response");
+    const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);
     const needed = new Set([...compiled.problem.constraints.map((c) => c.metric), ...compiled.problem.objectives.map((o) => o.metric)]);
-    this.nonDerivable = Array.from(needed).filter((m) => !rm.derivableMetrics.includes(m));
+    this.nonDerivable = Array.from(needed).filter((m) => !derivable.includes(m));
+  }
+
+  /** Metrics that still need a global (non-derived) surrogate under this representation. */
+  get globalMetrics(): string[] {
+    return this.nonDerivable.slice();
   }
 
   get trainingSize(): number {
@@ -80,9 +103,15 @@ export class HybridPredictor {
   }
 
   fit(ds: Dataset): void {
-    if (!ds.responseIds.includes(this.forceId)) throw new Error(`dataset lacks response "${this.forceId}"`);
+    if (!ds.responseIds.includes(this.responseId)) throw new Error(`dataset lacks response "${this.responseId}"`);
     this.member = createMultiOutputSurrogate(this.opts.memberModel, this.opts.memberParams ?? {}, this.rng.fork("member"));
-    this.member.fit(ds.inputs, ds.responseMatrix(this.forceId));
+    this.member.fit(ds.inputs, ds.responseMatrix(this.responseId));
+    this.displacement = null;
+    if (this.representation === "both") {
+      if (!ds.responseIds.includes("nodeDisplacements_m")) throw new Error("dataset lacks response \"nodeDisplacements_m\"");
+      this.displacement = createMultiOutputSurrogate(this.opts.memberModel, this.opts.memberParams ?? {}, this.rng.fork("displacement"));
+      this.displacement.fit(ds.inputs, ds.responseMatrix("nodeDisplacements_m"));
+    }
     this.globals.clear();
     for (const m of this.nonDerivable) {
       const y = ds.targets[m];
@@ -109,18 +138,48 @@ export class HybridPredictor {
   predict(paramsList: number[][]): HybridPrediction[] {
     if (!this.member) throw new Error("hybrid predictor: fit before predict");
     const rm = this.compiled.responseModel!;
-    const X = paramsList.map((p) => this.compiled.space.normalize(p));
+    const X = paramsList.map((p) => this.compiled.space.encode(p));
     const f = this.member.predict(X);
+    const disp = this.displacement ? this.displacement.predict(X) : null;
     const globalPred = new Map<string, { mean: number[]; std: number[] }>();
     for (const [m, model] of this.globals) {
       const pr = model.predict(X);
       globalPred.set(m, { mean: pr.mean, std: pr.std ?? pr.mean.map(() => 0) });
     }
     const k = this.opts.riskK;
+    if (this.representation === "displacements") {
+      return paramsList.map((params, i) => {
+        const mu = f.mean[i];
+        const sd = f.std?.[i] ?? mu.map(() => 0);
+        const { forces, matrix } = rm.forcesFromDisplacements!(params, mu);
+        const sigmaN = matrix.map((row) => Math.sqrt(row.reduce((s, b, j) => s + (b * sd[j]) ** 2, 0)));
+        const nominalMetrics = rm.derive(params, { nodeDisplacements_m: mu });
+        const conservativeMetrics = rm.conservativeFromDisplacements!(params, mu, sd, k);
+        const globalStd: Record<string, number> = {};
+        for (const [m, pr] of globalPred) {
+          const [lo, hi] = this.globalRange.get(m) ?? [-Infinity, Infinity];
+          const gm = Math.min(hi, Math.max(lo, pr.mean[i]));
+          nominalMetrics[m] = Math.exp(gm);
+          conservativeMetrics[m] = Math.exp(Math.min(hi, gm + k * pr.std[i]));
+          globalStd[m] = pr.std[i];
+        }
+        return { forces: { mean: forces, std: sigmaN }, displacements: { mean: mu, std: sd }, nominal: this.finish(nominalMetrics), conservative: this.finish(conservativeMetrics), globalStd };
+      });
+    }
     return paramsList.map((params, i) => {
       const mu = f.mean[i];
       const sd = f.std?.[i] ?? mu.map(() => 0);
       const nominalMetrics = rm.derive(params, { [this.forceId]: mu });
+      let displacements: HybridPrediction["displacements"];
+      let dispConservative: Record<string, number> | null = null;
+      if (disp) {
+        const du = disp.mean[i];
+        const ds = disp.std?.[i] ?? du.map(() => 0);
+        displacements = { mean: du, std: ds };
+        const dNominal = rm.derive(params, { nodeDisplacements_m: du });
+        dispConservative = rm.conservativeFromDisplacements!(params, du, ds, k);
+        for (const m of ["maxDisplacement_m", "compliance_J"]) if (m in dNominal) nominalMetrics[m] = dNominal[m];
+      }
       // Stress: larger magnitude. Buckling: more compressive. Evaluate each with its own shifted vector.
       const stressForces = mu.map((v, j) => Math.sign(v || 1) * (Math.abs(v) + k * sd[j]));
       const bucklingForces = mu.map((v, j) => v - k * sd[j]);
@@ -130,6 +189,9 @@ export class HybridPredictor {
       if ("stressUtilization" in dStress) conservativeMetrics.stressUtilization = Math.max(nominalMetrics.stressUtilization, dStress.stressUtilization);
       if ("maxStress_Pa" in dStress) conservativeMetrics.maxStress_Pa = Math.max(nominalMetrics.maxStress_Pa, dStress.maxStress_Pa);
       if ("bucklingUtilization" in dBuck) conservativeMetrics.bucklingUtilization = Math.max(nominalMetrics.bucklingUtilization, dBuck.bucklingUtilization);
+      if (dispConservative) {
+        for (const m of ["maxDisplacement_m", "compliance_J"]) if (m in dispConservative) conservativeMetrics[m] = Math.max(nominalMetrics[m], dispConservative[m]);
+      }
       const globalStd: Record<string, number> = {};
       for (const [m, pr] of globalPred) {
         // Clamp log-space extrapolations to the training range (widened by
@@ -142,6 +204,7 @@ export class HybridPredictor {
       }
       return {
         forces: { mean: mu, std: sd },
+        displacements,
         nominal: this.finish(nominalMetrics),
         conservative: this.finish(conservativeMetrics),
         globalStd,

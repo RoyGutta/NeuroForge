@@ -5,6 +5,60 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-09-27 · engine 0.7.0 · registered study, 10 seeds, 1,500 evaluations
+
+Study `representation-and-screening` (`benchmarks/studies/representation-and-screening.json`,
+`npm run study -- <spec>`; raw runs and analysis in
+`benchmarks/results/representation-and-screening-2026-09-27.json`).
+Reference method: plain evolutionary. 95 % CI: seeded percentile bootstrap of
+the median across seeds (2,000 resamples). A: Vargha–Delaney, the probability
+that a run of the method beats a run of the reference; effect labels use
+Cliff's delta thresholds 0.147 / 0.33 / 0.474.
+
+| Method | Median best (kg) | 95 % CI | IQR | Evaluations to 0.828 kg | A vs reference | Effect |
+|---|---|---|---|---|---|---|
+| evolutionary (reference) | 0.686 | 0.673–0.707 | 0.674–0.703 | 1,080 (10/10) | | |
+| global surrogate (log-encoded inputs) | 0.576 | 0.564–0.588 | 0.566–0.583 | 765 (10/10) | 1.00 | large |
+| member, forces + displacements, k = 0 | **0.543** | 0.540–0.550 | 0.541–0.549 | **660** (10/10) | 1.00 | large |
+| member, forces + displacements, k = 2, explore 0.2 | 0.549 | 0.542–0.557 | 0.542–0.557 | 675 (10/10) | 1.00 | large |
+| CMA-ES (λ = 24, σ₀ = 0.1, IPOP restarts) | 0.672 | 0.624–0.699 | 0.628–0.697 | 936 (10/10) | 0.63 | small |
+
+The confidence intervals of the member methods and the reference do not
+overlap; the hypothesis is supported for the member methods and the global
+surrogate, and only weakly for CMA-ES.
+
+### Six-optimiser benchmark rerun (5 seeds, 1,500 evaluations, engine 0.7.0)
+`benchmarks/results/2026-09-27-truss-1500x5.json`.
+
+| Optimiser | Median best (kg) | IQR | Evaluations to target |
+|---|---|---|---|
+| evolutionary | 0.684 | 0.671–0.689 | 1,080 |
+| surrogate-evolutionary (global, log-encoded) | 0.586 | 0.577–0.599 | 750 |
+| member-surrogate-evolutionary (default: both, k = 2) | 0.545 | 0.542–0.554 | 660 |
+| cmaes (new defaults) | 0.656 | 0.624–0.688 | 936 |
+| bayesian (300) | 1.087 | 1.002–1.095 | not reached |
+| annealing | 1.125 | 0.817–1.423 | 1,440 (2/5) |
+| random-search | 1.656 | | not reached |
+
+### What changed the numbers between v0.4 and v0.7
+- **Log-encoded learning features.** Areas span a 500-fold range and responses
+  scale like 1/A; encoding log-scaled variables log-linearly for learning
+  (optimisers still use the linear cube) improved the global surrogate from
+  0.621 to 0.586 kg at 5 seeds and made the displacement field learnable
+  (per-component R² from negative to 0.97 on 12,000 designs).
+- **Combined representation.** Forces from the force model, deflection and
+  compliance from the displacement model: 0.543 vs 0.547 kg for forces-only
+  (inside the IQR), with no regressed metric left. Differencing a learned
+  displacement field to obtain forces is ill-conditioned (force R² −233 at
+  1,600 designs; the map multiplies field errors by stiffnesses near 10⁷ N/m),
+  so displacements-only is not used for stress and buckling.
+- **CMA-ES diagnosis.** Boundary handling was not the problem (1 of 19
+  optimal variables sits on a bound). Population and step size were: λ = 24,
+  σ₀ = 0.1 gave 0.656 kg versus 0.732 kg for λ = 12, σ₀ = 0.3, and λ = 48
+  starved the run of generations. IPOP restarts (double λ on step-size
+  collapse or stagnation) are enabled by default. CMA-ES is now better than
+  the plain EA on this problem but remains behind every surrogate method.
+
 ## 2026-09-22 · engine 0.4.0 · 5 seeds · 1,500 solver evaluations
 
 Adds the member-surrogate, uncertainty-aware optimiser (`member-surrogate-evolutionary`).

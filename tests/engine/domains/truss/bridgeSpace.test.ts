@@ -63,6 +63,19 @@ describe("bridge ground-structure design space", () => {
     c.forEach((v, i) => expect(v).toBe(space.variables[i].upper));
   });
 
+  test("encode() is log-linear for area variables and linear for depths; normalize() stays linear", () => {
+    const params = space.baselineParameters();
+    const depthIdx = space.variables.findIndex((v) => v.group === "depth");
+    const areaIdx = space.variables.findIndex((v) => v.group === "area");
+    const areaVar = space.variables[areaIdx];
+    expect(areaVar.scale).toBe("log");
+    const enc = space.encode(params);
+    const expectedArea = (Math.log(params[areaIdx]) - Math.log(areaVar.lower)) / (Math.log(areaVar.upper) - Math.log(areaVar.lower));
+    expect(enc[areaIdx]).toBeCloseTo(expectedArea, 12);
+    expect(enc[depthIdx]).toBeCloseTo(space.normalize(params)[depthIdx], 12);
+    expect(space.normalize(params)[areaIdx]).toBeCloseTo((params[areaIdx] - areaVar.lower) / (areaVar.upper - areaVar.lower), 12);
+  });
+
   test("baseline is a uniform-section truss at conventional depth", () => {
     const params = space.baselineParameters();
     const model = space.buildModel(params);

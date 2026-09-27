@@ -100,7 +100,7 @@ class SurrogateEvolutionary implements Optimizer {
 
   /** Add (or, with sign -1, remove) one design's contribution to the normal equations. */
   private accumulate(d: Design, sign: 1 | -1): void {
-    const phi = polynomialFeatures([this.ctx.space.normalize(d.parameters)], 2)[0];
+    const phi = polynomialFeatures([this.ctx.space.encode(d.parameters)], 2)[0];
     const k = this.k;
     for (let i = 0; i < k; i++) {
       const pi = phi[i] * sign;
@@ -122,7 +122,7 @@ class SurrogateEvolutionary implements Optimizer {
     const t0 = now();
     const models = this.fitModels();
     this.lastFitMs = now() - t0;
-    const Phi = polynomialFeatures(proposals.map((d) => this.ctx.space.normalize(d.parameters)), 2);
+    const Phi = polynomialFeatures(proposals.map((d) => this.ctx.space.encode(d.parameters)), 2);
     const predicted: Record<string, number[]> = {};
     for (const t of this.targets) {
       const w = models[t];

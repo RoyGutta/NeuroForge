@@ -56,8 +56,9 @@ describe("CMA-ES", () => {
     expect(listOptimizers().map((o) => o.id)).toContain("cmaes");
   });
 
-  test("converges to high precision on the sphere function", () => {
-    const best = drive("cmaes", 6, 1, 3000, evalSphere);
+  test("converges to high precision on the sphere function when restarts are disabled", () => {
+    // The restart threshold caps precision near restartSigma^2; disable it here.
+    const best = drive("cmaes", 6, 1, 3000, evalSphere, { restartSigma: 0, stagnationGenerations: 0 });
     expect(best.evaluation!.objectives.f).toBeLessThan(1e-8);
   });
 
@@ -94,5 +95,31 @@ describe("CMA-ES", () => {
     const d = rec.optimizerDiagnostics as { sigma: number; conditionNumber: number };
     expect(d.sigma).toBeGreaterThan(0);
     expect(d.conditionNumber).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("CMA-ES restarts (IPOP)", () => {
+  test("restarts with a doubled population when the step size collapses, and keeps the best design", () => {
+    let c = 0;
+    const ctx: OptimizerContext = { space: space(4), objective, rng: new Rng(11), nextId: () => `d${++c}` };
+    const opt = createOptimizer("cmaes", ctx, { populationSize: 8, initialSigma: 0.3, restartSigma: 1e-3 });
+    let gen = 0;
+    let evals = 0;
+    let best = Infinity;
+    while (evals < 4000) {
+      const batch = opt.ask(gen++);
+      for (const x of batch) {
+        x.evaluation = evalSphere(x.parameters);
+        evals++;
+      }
+      opt.tell(batch);
+      const b = opt.best()!.evaluation!.objectives.f;
+      expect(b).toBeLessThanOrEqual(best + 1e-15);
+      best = b;
+    }
+    const d = opt.diagnostics!() as { restarts: number; lambda: number };
+    expect(d.restarts).toBeGreaterThanOrEqual(1);
+    expect(d.lambda).toBeGreaterThanOrEqual(16);
+    expect(best).toBeLessThan(1e-6);
   });
 });

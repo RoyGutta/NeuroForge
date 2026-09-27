@@ -33,13 +33,14 @@ const PARAMS = [
   { id: "riskK", label: "Risk multiplier k", description: "Conservative bound mu + k*sigma on member forces for the feasibility screen.", default: 2, min: 0, max: 5, step: 0.5 },
   { id: "exploreFraction", label: "Exploration fraction", description: "Share of each solver batch spent on the most uncertain nominally-feasible candidates.", default: 0.2, min: 0, max: 0.9, step: 0.05 },
   { id: "refitEvery", label: "Refit interval", description: "Generations between model refits.", default: 2, min: 1, max: 50, step: 1 },
+  { id: "representation", label: "Learned response", description: "2 = both (default: forces from the force model, deflection and compliance from the displacement model, nothing regressed), 0 = member forces only (deflection regressed), 1 = displacements only (forces ill-conditioned).", default: 2, min: 0, max: 2, step: 1 },
 ];
 
 export const memberSurrogateEvolutionaryDescriptor: OptimizerDescriptor = {
   id: "member-surrogate-evolutionary",
   label: "Member-surrogate evolutionary (uncertainty-aware)",
   description:
-    "Predicts every member's axial force with a Bayesian ridge surrogate, derives stress and buckling exactly, screens with a k-sigma conservative bound and spends part of each batch on the most uncertain candidates. Reliability of the screen is measured and recorded.",
+    "Learns member forces and the free-node displacement field with Bayesian ridge surrogates, derives stress, buckling, deflection and compliance exactly, screens with a k-sigma conservative bound and spends part of each batch on the most uncertain candidates. Reliability of the screen is measured and recorded.",
   params: PARAMS,
   create(ctx, given, seeds = []) {
     return new MemberSurrogateEvolutionary(ctx, resolveParams(PARAMS, given), seeds);
@@ -94,6 +95,8 @@ class MemberSurrogateEvolutionary implements Optimizer {
   private lastFitMs = 0;
   private sinceFit = Infinity;
   private readonly forceId: string;
+  private readonly responseId: string;
+  private readonly representation: "forces" | "displacements" | "both";
   private readonly nonDerivable: string[];
 
   constructor(
@@ -106,8 +109,12 @@ class MemberSurrogateEvolutionary implements Optimizer {
     const compiled = ctx.compiled;
     if (!compiled?.responseModel) throw new Error("member-surrogate optimiser needs a compiled problem with a response model");
     this.forceId = compiled.responseModel.responseIds[0];
+    this.representation = p.representation >= 2 ? "both" : p.representation >= 1 ? "displacements" : "forces";
+    this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
+    const rm = compiled.responseModel;
+    const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);
     const needed = new Set([...compiled.problem.constraints.map((c) => c.metric), ...compiled.problem.objectives.map((o) => o.metric)]);
-    this.nonDerivable = Array.from(needed).filter((m) => !compiled.responseModel!.derivableMetrics.includes(m));
+    this.nonDerivable = Array.from(needed).filter((m) => !derivable.includes(m));
   }
 
   private get compiled(): CompiledProblem {
@@ -124,8 +131,9 @@ class MemberSurrogateEvolutionary implements Optimizer {
     }
     if (this.sinceFit >= this.p.refitEvery || !this.predictor) {
       const t0 = now();
-      this.predictor = new HybridPredictor(this.compiled, { memberModel: "ridge", riskK: this.p.riskK }, this.ctx.rng.fork("member-surrogate"));
-      this.predictor.fit(buildDataset(this.ctx.space, this.archive, this.nonDerivable, [this.forceId]));
+      this.predictor = new HybridPredictor(this.compiled, { memberModel: "ridge", riskK: this.p.riskK, representation: this.representation }, this.ctx.rng.fork("member-surrogate"));
+      const responses = this.representation === "forces" ? [this.forceId] : Array.from(new Set([this.forceId, "nodeDisplacements_m"]));
+      this.predictor.fit(buildDataset(this.ctx.space, this.archive, this.nonDerivable, responses));
       this.lastFitMs = now() - t0;
       this.refits++;
       this.sinceFit = 0;
@@ -234,7 +242,7 @@ class MemberSurrogateEvolutionary implements Optimizer {
       errorStdCorrelation: allA.length > 2 ? pearson(errors, allS) : NaN,
     };
     return {
-      surrogate: "member-forces:ridge",
+      surrogate: this.representation === "displacements" ? "node-displacements:ridge" : this.representation === "both" ? "member-forces+displacements:ridge" : "member-forces:ridge",
       policy: { riskK: this.p.riskK, exploreFraction: this.p.exploreFraction },
       funnel: { ...this.funnel },
       feasibility: confusionFromPairs(this.pairs),

@@ -155,6 +155,8 @@ function now(): number {
 export interface MemberStudyOptions {
   memberModel: string;
   riskK: number;
+  /** Learned response: member forces (default), free-node displacements, or both. */
+  representation?: "forces" | "displacements" | "both";
   splitSeed?: number;
   maxTrainingPoints?: number;
   sampleCap?: number;
@@ -171,6 +173,7 @@ export interface DerivedMetricResult {
 export interface MemberStudy {
   experimentId: string;
   memberModel: string;
+  representation: "forces" | "displacements" | "both";
   riskK: number;
   dataset: { size: number; skipped: number; dimension: number; members: number };
   split: { train: number; validation: number; test: number; seed: number };
@@ -197,7 +200,10 @@ export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOption
   if (!rm) throw new Error("member study needs a domain response model");
   const designs = collectDesigns(config);
   const constraintMetrics = config.problem.constraints.map((c) => c.metric);
-  const nonDerivable = constraintMetrics.filter((m) => !rm.derivableMetrics.includes(m));
+  const representation = opts.representation ?? "forces";
+  const responseId = representation === "displacements" ? "nodeDisplacements_m" : rm.responseIds[0];
+  const derivable = representation === "both" ? Array.from(new Set([...rm.derivableFrom(rm.responseIds[0]), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(responseId);
+  const nonDerivable = constraintMetrics.filter((m) => !derivable.includes(m));
   const ds = buildDataset(compiled.space, designs, Array.from(new Set([...constraintMetrics, ...config.problem.objectives.map((o) => o.metric)])), rm.responseIds);
   const splitSeed = opts.splitSeed ?? 1;
   const split = splitDataset(ds, splitSeed, { train: 0.7, validation: 0.15, test: 0.15 });
@@ -205,7 +211,7 @@ export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOption
   const trainTargets: Record<string, number[]> = {};
   for (const k of Object.keys(split.train.targets)) trainTargets[k] = split.train.targets[k].slice(0, cap);
   const train: Dataset = { ...ds, inputs: split.train.inputs.slice(0, cap), targets: trainTargets, size: cap, designIds: split.train.indices.slice(0, cap).map((i) => ds.designIds[i]), feasible: split.train.indices.slice(0, cap).map((i) => ds.feasible[i]) };
-  const predictor = new HybridPredictor(compiled, { memberModel: opts.memberModel, riskK: opts.riskK }, new Rng(splitSeed * 104729 + hash(opts.memberModel)));
+  const predictor = new HybridPredictor(compiled, { memberModel: opts.memberModel, riskK: opts.riskK, representation }, new Rng(splitSeed * 104729 + hash(opts.memberModel + representation)));
   const t0 = now();
   predictor.fit(train);
   const fitMs = now() - t0;
@@ -245,6 +251,7 @@ export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOption
   return {
     experimentId: config.id,
     memberModel: opts.memberModel,
+    representation,
     riskK: opts.riskK,
     dataset: { size: ds.size, skipped: ds.skipped, dimension: ds.variableIds.length, members },
     split: { train: split.train.size, validation: split.validation.size, test: split.test.size, seed: splitSeed },

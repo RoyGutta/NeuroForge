@@ -70,8 +70,10 @@ predictor in `src/engine/ml/hybrid.ts`: a multi-output Bayesian ridge maps
 the design vector to every member's axial force with a predictive standard
 deviation; the domain's response model then applies the exact stress and
 Euler equations to obtain utilisations, so only the forces are learned.
-Deflection, which cannot be derived from forces, keeps a single-output
-surrogate. Two derivations are made per candidate: nominal (mean forces) and
+With the default combined representation a second multi-output model learns
+the free-node displacement field, from which deflection and compliance are
+derived exactly; nothing is regressed. Learning features use `space.encode`
+(log-linear for log-scaled variables such as areas). Two derivations are made per candidate: nominal (mean forces) and
 conservative (|force| + k·σ for stress, force − k·σ for buckling, deflection
 × e^{kσ}). Ranking uses Deb's rules on the conservative metrics; a fraction
 of each batch is instead given to the most uncertain nominally-feasible
@@ -141,14 +143,18 @@ Rosenbrock valley (below 0.05 where the isotropic evolutionary algorithm is
 worse), on the constrained test problem (feasible, within 5 % of the optimum),
 determinism, bounds, and a 10 % improvement over the truss baseline.
 
-**Measured on the truss (5 seeds, 1,500 evaluations): median 0.732 kg, IQR
-0.640–0.804, 1,212 evaluations to target — worse than the plain evolutionary
-algorithm (0.684 kg) and far behind the surrogate methods.** A small
-population on a 19-variable box-constrained problem where many variables sit
-on their bounds is a poor fit for covariance adaptation; the reflection
-repair also distorts the update near the bounds. It is kept as a registered,
-benchmarked alternative rather than promoted; larger populations, restarts
-(IPOP) and a proper boundary-handling penalty are the obvious follow-ups.
+**First result (v0.5, λ = 12, σ₀ = 0.3): median 0.732 kg, worse than the
+plain evolutionary algorithm (0.684 kg).** Diagnosis (v0.7): the
+evolutionary optimum has only 1 of 19 variables on a bound, so boundary
+handling was not the cause; a probe over λ ∈ {12, 24, 48} and σ₀ ∈ {0.1, 0.3}
+showed λ = 24, σ₀ = 0.1 at 0.656 kg and λ = 48 starving the run of
+generations. Defaults are now λ = 2(4 + ⌊3 ln d⌋), σ₀ = 0.1, with IPOP
+restarts (population doubled, distribution reset around the best design)
+when the step size falls below 10⁻³ of the range or the best has not
+improved for 40 generations. Measured after the change: 0.656 kg at 5 seeds,
+0.672 kg (CI 0.624–0.699) at 10 seeds, a small effect over the plain EA and
+still behind every surrogate method. Restarts cap unconstrained precision
+near the restart threshold; disable them for high-precision use.
 
 ## Planned
 Restarts and boundary handling for CMA-ES; NSGA-III or reference-point

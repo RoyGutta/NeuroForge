@@ -34,6 +34,8 @@ const VARIANTS: { label: string; optimizer: string; params: Record<string, numbe
   { label: "member + exploration (k=0, explore=0.2)", optimizer: "member-surrogate-evolutionary", params: { ...base, riskK: 0, exploreFraction: 0.2 } },
   { label: "member full (k=2, explore=0.2)", optimizer: "member-surrogate-evolutionary", params: { ...base, riskK: 2, exploreFraction: 0.2 } },
   { label: "member aggressive k (k=4, explore=0.2)", optimizer: "member-surrogate-evolutionary", params: { ...base, riskK: 4, exploreFraction: 0.2 } },
+  { label: "both repr. (forces+displacements, k=0, explore=0)", optimizer: "member-surrogate-evolutionary", params: { ...base, riskK: 0, exploreFraction: 0, representation: 2 } },
+  { label: "both repr. (k=2, explore=0.2)", optimizer: "member-surrogate-evolutionary", params: { ...base, riskK: 2, exploreFraction: 0.2, representation: 2 } },
 ];
 
 function quantile(xs: number[], q: number): number {

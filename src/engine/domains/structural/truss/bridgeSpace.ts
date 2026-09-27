@@ -57,6 +57,9 @@ export function createBridgeSpace(problem: EngineeringProblem): BridgeSpace {
       lower: g.areaMin_m2,
       upper: g.areaMax_m2,
       unit: "m^2",
+      // Areas span a 500-fold range and responses scale like 1/A; learning
+      // features are log-linear (optimisers still use the linear cube).
+      scale: "log",
     });
   }
   const base = createDesignSpace(variables);

@@ -49,8 +49,16 @@ export function BenchmarksPage() {
             <p className="fine">No benchmark records are committed yet.</p>
           ) : (
             <>
+              {report.kind === "study" && (
+                <div className="study-head">
+                  <h2>{report.title}</h2>
+                  <p>
+                    <b>Hypothesis.</b> {report.hypothesis}
+                  </p>
+                </div>
+              )}
               <p className="meta">
-                {report.kind === "ablation" ? "Ablation" : "Optimiser comparison"} · engine {report.engineVersion} · {report.seeds} seeds · {report.budget.toLocaleString()} solver evaluations per run ·
+                {report.kind === "ablation" ? "Ablation" : report.kind === "study" ? `Registered study · reference method ${report.reference}` : "Optimiser comparison"} · engine {report.engineVersion} · {report.seeds} seeds · {report.budget.toLocaleString()} solver evaluations per run ·
                 baseline {report.baselineMass.toFixed(3)} kg · target {report.targetMass.toFixed(3)} kg · {new Date(report.createdAt).toISOString().slice(0, 10)}
               </p>
               <SummaryTable report={report} selected={selected} onSelect={(g) => setSelected({ group: g, seed: report.groups[g].runs[0]?.seed ?? 1 })} />
@@ -79,17 +87,21 @@ function pct(v?: number | null): string {
 
 function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport; selected: { group: number; seed: number } | null; onSelect: (g: number) => void }) {
   const hasRel = report.groups.some((g) => g.summary.medianFalseFeasible !== undefined);
+  const isStudy = report.kind === "study";
   return (
     <div className="table-wrap">
       <table className="table">
         <thead>
           <tr>
-            <th>{report.kind === "ablation" ? "Variant" : "Optimiser"}</th>
+            <th>{report.kind === "ablation" ? "Variant" : isStudy ? "Method" : "Optimiser"}</th>
             <th>Budget</th>
             <th>Median best (kg)</th>
+            {isStudy && <th>95 % bootstrap CI</th>}
             <th>IQR (kg)</th>
             <th>Feasible</th>
             <th>Evaluations to target</th>
+            {isStudy && <th>A vs reference</th>}
+            {isStudy && <th>Effect</th>}
             {report.kind === "benchmark" && <th>s / run</th>}
             {hasRel && <th>False-feasible</th>}
             {hasRel && <th>False-infeasible</th>}
@@ -107,11 +119,14 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
                 </td>
                 <td>{g.budget.toLocaleString()}</td>
                 <td className={s.medianBest !== null && s.medianBest === best ? "green" : undefined}>{s.medianBest?.toFixed(3) ?? "—"}</td>
+                {isStudy && <td>{s.ciLower !== undefined && Number.isFinite(s.ciLower) ? `${s.ciLower.toFixed(3)}–${s.ciUpper!.toFixed(3)}` : "—"}</td>}
                 <td>{s.q1Best !== null && s.q3Best !== null ? `${s.q1Best.toFixed(3)}–${s.q3Best.toFixed(3)}` : "—"}</td>
                 <td>
                   {s.feasibleRuns}/{s.runs}
                 </td>
                 <td>{s.medianEvaluationsToTarget !== null ? `${Math.round(s.medianEvaluationsToTarget).toLocaleString()} (${s.runsReachingTarget}/${s.runs})` : `not reached (0/${s.runs})`}</td>
+                {isStudy && <td>{s.varghaDelaneyA !== undefined ? s.varghaDelaneyA.toFixed(2) : g.label === report.reference ? "reference" : "—"}</td>}
+                {isStudy && <td>{s.effectLabel ?? (g.label === report.reference ? "" : "—")}</td>}
                 {report.kind === "benchmark" && <td>{s.meanWallTimeS?.toFixed(2) ?? "—"}</td>}
                 {hasRel && <td>{pct(s.medianFalseFeasible)}</td>}
                 {hasRel && <td>{pct(s.medianFalseInfeasible)}</td>}
@@ -124,6 +139,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
       <p className="fine">
         Lower median mass is better. Evaluations to target: median cumulative solver evaluations at which the best feasible design first reached the target mass (runs reaching it / runs).
         False-feasible and false-infeasible: screening error rates of surrogate methods, measured on the designs each model gated.
+        {isStudy && " 95 % CI: seeded percentile bootstrap of the median across seeds. A vs reference: Vargha–Delaney A, the probability that a run of the method beats a run of the reference (above 0.5 favours the method); effect labels follow Cliff's delta thresholds 0.147 / 0.33 / 0.474."}
       </p>
     </div>
   );

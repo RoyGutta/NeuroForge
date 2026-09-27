@@ -34,7 +34,7 @@ it is real, tested, and honest in the interface.
 - [x] Uncertainty-aware member-surrogate optimiser with recorded funnel, confusion, force error, calibration
 - [x] Member-level study and reliability panel in the workspace
 - [x] Ablation script; first measured results in `docs/BENCHMARKS.md` and `docs/RESEARCH.md`
-- [ ] Per-node displacement responses so deflection is derived rather than regressed
+
 
 ## Done — v0.3.0 (2026-09-15) · Trade-offs
 - [x] Multi-objective: mass vs compliance; NSGA-II with constrained domination; external Pareto archive with hypervolume history
@@ -46,8 +46,14 @@ it is real, tested, and honest in the interface.
 ## Done — v0.5.0 (2026-09-22) · CMA-ES and a benchmark view
 - [x] CMA-ES as an `OptimizerDescriptor`, benchmarked at equal budget (negative result on the truss; recorded)
 - [x] Benchmark view in the interface reading `benchmarks/results/*.json`: medians, IQR, evaluations-to-target, convergence curves, per-run inspection
-- [ ] CMA-ES restarts and boundary handling
+
 - [ ] Result checksums and engine-version pinning in records; experiment comparison view
+
+## Done — v0.7.0 (2026-09-27) · Response-aware learning and experimental rigor
+- [x] Displacement responses; combined representation; log-encoded learning features
+- [x] CMA-ES diagnosis, new defaults, IPOP restarts (measured: now better than the plain EA, behind surrogates)
+- [x] Study registry with bootstrap intervals and effect sizes; first registered 10-seed study
+- [x] Study records in the benchmark view
 
 ## Done — v0.6.0 (2026-09-26) · Autonomous engineering loop
 - [x] Staged strategy comparison → convergence detection → trade-off stage → discovery report generated from measured data

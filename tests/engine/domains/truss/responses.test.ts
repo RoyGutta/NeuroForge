@@ -39,10 +39,11 @@ describe("exact metrics derived from member forces (response model)", () => {
 
   test("declares which metrics are derivable from responses and which are not", () => {
     const rm = compiled.responseModel!;
-    expect(rm.derivableMetrics).toEqual(expect.arrayContaining(["mass_kg", "maxStress_Pa", "stressUtilization", "bucklingUtilization"]));
-    expect(rm.derivableMetrics).not.toContain("maxDisplacement_m");
-    expect(rm.derivableMetrics).not.toContain("compliance_J");
-    expect(rm.responseIds).toEqual(["memberForces_N"]);
+    const fromForces = rm.derivableFrom("memberForces_N");
+    expect(fromForces).toEqual(expect.arrayContaining(["mass_kg", "maxStress_Pa", "stressUtilization", "bucklingUtilization"]));
+    expect(fromForces).not.toContain("maxDisplacement_m");
+    expect(fromForces).not.toContain("compliance_J");
+    expect(rm.responseIds[0]).toBe("memberForces_N");
   });
 
   test("scaling every predicted force doubles stress utilisation and doubles buckling utilisation", () => {

@@ -1,0 +1,18 @@
+{
+  "id": "representation-and-screening",
+  "title": "Does learning member responses and screening with them reduce the solver evaluations needed to find a light feasible truss?",
+  "hypothesis": "At an equal solver budget, the member-response surrogate optimiser reaches a lower median best mass and the target mass in fewer evaluations than the plain evolutionary algorithm, the global surrogate, and CMA-ES.",
+  "benchmark": { "problem": "truss-bridge", "span_m": 2, "load_N": 500, "panels": 4, "safetyFactor": 2 },
+  "budget": 1500,
+  "seeds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "reference": "evolutionary",
+  "methods": [
+    { "id": "evolutionary", "optimizer": "evolutionary", "params": { "populationSize": 30 } },
+    { "id": "global-surrogate", "optimizer": "surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200 } },
+    { "id": "member-both-k0", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 0, "exploreFraction": 0, "representation": 2 } },
+    { "id": "member-both-k2", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 2, "exploreFraction": 0.2, "representation": 2 } },
+    { "id": "cmaes", "optimizer": "cmaes", "params": {} }
+  ],
+  "metrics": ["bestMass_kg", "evaluationsToTarget", "falseFeasibleRate", "falseInfeasibleRate", "forceR2"],
+  "targetFraction": 0.5
+}

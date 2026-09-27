@@ -39,3 +39,16 @@ and as a fallback. IndexedDB or a server store slots in behind the interface.
 `runExperiment` is a generator; the Web Worker pumps it and yields to the event
 loop every ~30 ms so cancellation is responsive. The main-thread fallback
 time-slices in 16 ms chunks.
+
+## Study registry
+A study is a JSON spec under `benchmarks/studies/` declaring a hypothesis, a
+benchmark problem, methods (optimiser + parameters, optional per-method
+budget), seeds, a solver budget, metrics, a reference method and a target
+fraction. `npm run study -- <spec>` runs every (method, seed) pair, then
+`analyzeStudy` produces medians with seeded percentile-bootstrap intervals,
+quartiles, evaluations-to-target, screening reliability, and Vargha–Delaney A
+and Cliff's delta against the reference. Raw runs (curves, reliability) and
+the analysis are written together to `benchmarks/results/<id>-<date>.json`;
+full experiment records are not stored because they are reproducible from the
+spec. The `/benchmarks` page renders study records with the hypothesis,
+intervals and effect sizes.
