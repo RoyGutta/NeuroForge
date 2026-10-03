@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { startLab, type ExperimentHandle } from "../../app/experimentClient";
+import { getLabStore } from "../../app/store";
 import { createLabConfig, type LabEvent, type LabRecord, type LabStage, type PilotResult } from "../../engine/autonomous/lab";
+import type { LabSummary } from "../../engine/experiments/labStore";
+import { LabReportView } from "./LabReportView";
 import { formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
@@ -16,6 +19,10 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
   const { problem, compiled, status, loadRecord } = ws;
   const [budget, setBudget] = useState(12000);
   const [seed, setSeed] = useState(7);
+  const [pilotSeeds, setPilotSeeds] = useState(1);
+  const [tolerancePct, setTolerancePct] = useState(2);
+  const [labs, setLabs] = useState<LabSummary[]>([]);
+  const [showReport, setShowReport] = useState(false);
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<Live>([]);
   const [pilots, setPilots] = useState<PilotResult[]>([]);
@@ -26,13 +33,32 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
   const handle = useRef<ExperimentHandle | null>(null);
   const objective = problem.objectives[0];
 
-  useEffect(() => () => handle.current?.cancel(), []);
+  const refreshLabs = useCallback(async () => setLabs(await getLabStore().list()), []);
+  useEffect(() => {
+    void refreshLabs();
+    return () => handle.current?.cancel();
+  }, [refreshLabs]);
+
+  const openLab = async (id: string) => {
+    const rec = await getLabStore().get(id);
+    if (!rec) return;
+    setRecord(rec);
+    setPilots(rec.pilots);
+    setLog([]);
+    setShowReport(true);
+  };
+  const deleteLab = async (id: string) => {
+    await getLabStore().delete(id);
+    if (record?.id === id) setRecord(null);
+    void refreshLabs();
+  };
 
   const start = () => {
     if (!compiled || running || problem.objectives.length !== 1) return;
     let config;
     try {
-      config = createLabConfig({ problem, seed, totalBudget: budget, pilotBudget: Math.max(300, Math.round(budget * 0.075)), tradeoffBudget: Math.max(300, Math.round(budget / 6)) });
+      const pilotBudget = Math.max(200, Math.round((budget * 0.075) / pilotSeeds));
+      config = createLabConfig({ problem, seed, totalBudget: budget, pilotSeeds, pilotBudget, tradeoffBudget: Math.max(300, Math.round(budget / 6)), robustness: { tolerance: tolerancePct / 100, samples: Math.min(400, Math.max(100, Math.round(budget / 40))) } });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       return;
@@ -52,10 +78,14 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
           setProgress({ stage: ev.stage, evaluations: ev.totalEvaluations, best: ev.stage === "main" ? best : null, frontSize: ev.summary.frontSize });
         }
       },
-      onFinished: (rec) => {
+      onFinished: async (rec) => {
         setRecord(rec);
         setRunning(false);
         handle.current = null;
+        if (rec.status === "completed") {
+          await getLabStore().save(rec);
+          void refreshLabs();
+        }
       },
       onError: (m) => {
         setError(m);
@@ -73,7 +103,7 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
       <div className="autonomous-head">
         <div>
           <h2>Autonomous search</h2>
-          <p>Pilot every strategy on an equal budget, run the winner until it stops improving, map the trade-off front against a second metric, and report what was found. All in the worker; all from records.</p>
+          <p>Pilot every strategy on an equal budget over one or more seeds, run the winner until it stops improving, map the trade-off front against a second metric, perturb the discovery within a manufacturing tolerance, and write a lab report. All in the worker; all from records.</p>
         </div>
         <div className="row">
           <label className="check">
@@ -83,6 +113,14 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
           <label className="check">
             seed
             <input type="number" min={0} step={1} value={seed} disabled={running} onChange={(e) => setSeed(Number(e.target.value))} style={{ width: 70 }} aria-label="Seed" />
+          </label>
+          <label className="check">
+            pilot seeds
+            <input type="number" min={1} max={5} step={1} value={pilotSeeds} disabled={running} onChange={(e) => setPilotSeeds(Math.max(1, Math.min(5, Number(e.target.value))))} style={{ width: 60 }} aria-label="Seeds per strategy in the pilot stage" />
+          </label>
+          <label className="check">
+            tolerance %
+            <input type="number" min={0} max={20} step={0.5} value={tolerancePct} disabled={running} onChange={(e) => setTolerancePct(Number(e.target.value))} style={{ width: 60 }} aria-label="Manufacturing tolerance for the robustness stage, percent" />
           </label>
           {running ? (
             <button onClick={() => handle.current?.cancel()}>Stop</button>
@@ -118,10 +156,15 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
               {l.stage === "pilot" && pilots.length > 0 && (
                 <ul>
                   {pilots.map((p) => (
-                    <li key={p.strategy}>
-                      {p.label}: {p.feasible ? formatMetric(objective.metric, p.bestObjective) : "no feasible design"} in {p.evaluations.toLocaleString()} evaluations ({(p.wallTimeMs / 1000).toFixed(1)} s)
+                    <li key={`${p.strategy}-${p.seed}`}>
+                      {p.label} · seed {p.seed}: {p.feasible ? formatMetric(objective.metric, p.bestObjective) : "no feasible design"} in {p.evaluations.toLocaleString()} evaluations ({(p.wallTimeMs / 1000).toFixed(1)} s)
                     </li>
                   ))}
+                  {record && record.ranking.length > 0 && (
+                    <li>
+                      Ranking by median: {record.ranking.map((r) => `${r.label} ${Number.isFinite(r.medianObjective) ? formatMetric(objective.metric, r.medianObjective) : "infeasible"}`).join(" · ")}
+                    </li>
+                  )}
                 </ul>
               )}
             </li>
@@ -183,6 +226,20 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
               <b>{r.topVariables.slice(0, 3).map((v) => `${v.label} ${(v.share * 100).toFixed(0)} %`).join(" · ")}</b>
             </div>
             <div>
+              <span>robustness · +/- {r.robustness ? (r.robustness.tolerance * 100).toFixed(1) : "—"} %</span>
+              <b>{r.robustness ? `${pct(r.robustness.feasibleFraction)} of ${r.robustness.samples} perturbed designs feasible · 95th pct ${formatMetric(r.objectiveMetric, r.robustness.objectiveQ95)}` : "not run"}</b>
+            </div>
+            <div>
+              <span>uncertainty sources</span>
+              <b>
+                {r.uncertainty.quantified} quantified · {r.uncertainty.documented} documented · {r.uncertainty.notModelled} not modelled
+              </b>
+            </div>
+            <div>
+              <span>pilot seeds</span>
+              <b>{r.pilotSeeds}</b>
+            </div>
+            <div>
               <span>wall time</span>
               <b>{(r.wallTimeMs / 1000).toFixed(1)} s</b>
             </div>
@@ -196,8 +253,42 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
                 View trade-off front
               </button>
             )}
+            <button className="secondary" onClick={() => setShowReport((v) => !v)} aria-expanded={showReport}>
+              {showReport ? "Hide lab report" : "Read lab report"}
+            </button>
             <span className="tiny">Opening a stage loads its full record (every generation) into the panels below and saves it to the library.</span>
           </div>
+          {showReport && <LabReportView record={record} />}
+        </div>
+      )}
+      {labs.length > 0 && (
+        <div className="lab-report">
+          <p className="section-label">Stored lab records ({labs.length})</p>
+          <table className="table">
+            <tbody>
+              {labs.slice(0, 6).map((s) => (
+                <tr key={s.id} className={record?.id === s.id ? "current" : undefined}>
+                  <td>
+                    <button className="link" onClick={() => openLab(s.id)}>
+                      {s.label}
+                    </button>
+                    <small>
+                      {new Date(s.startedAt).toLocaleString()} · {s.domain} · {s.chosenStrategyLabel} · {s.solverEvaluations.toLocaleString()} evals
+                    </small>
+                  </td>
+                  <td>
+                    <span className="green">−{Math.abs(s.improvementPercent).toFixed(1)} %</span>
+                    {s.robustFeasibleFraction !== null && <small> · {(s.robustFeasibleFraction * 100).toFixed(0)} % robust</small>}
+                  </td>
+                  <td>
+                    <button className="link muted" onClick={() => deleteLab(s.id)} aria-label={`Delete ${s.label}`}>
+                      delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>

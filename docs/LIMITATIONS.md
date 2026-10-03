@@ -24,6 +24,16 @@ Be explicit about these when presenting results.
 - The task set is a fixed grid of static hold points; obstacle avoidance,
   orientation of the end effector and path continuity are outside the model.
 
+## Robustness and uncertainty
+- The robustness study perturbs design parameters only (geometry and
+  sections); material scatter, load variability and model-form error are
+  documented in the taxonomy but not sampled.
+- Perturbations are independent per variable with a stated relative
+  tolerance; correlated manufacturing errors and systematic bias are not
+  modelled. Results are Monte Carlo estimates from a finite, seeded sample.
+- "Quantified" in the uncertainty taxonomy means a measurement from this
+  engine exists; it is not a validated uncertainty budget.
+
 ## Optimisation
 - Topology is fixed to the Warren ground structure; members can shrink but the
   connectivity does not change.

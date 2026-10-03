@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.0 — 2026-10-03 · Autonomous Search 2.0, robustness and uncertainty
+- Robustness study (`src/engine/robustness`): seeded tolerance perturbation
+  of a design through the real evaluator with feasible fraction, objective
+  quantiles, per-constraint violation probabilities, a tolerance sweep and a
+  bisection for the largest tolerance that keeps a target feasible fraction.
+- Engineering uncertainty taxonomy (`src/engine/uncertainty`): model-form,
+  parameter, numerical, manufacturing, surrogate and statistical sources,
+  each quantified only when a measurement exists, otherwise documented or
+  marked not modelled.
+- Autonomous lab: pilots on several seeds ranked by median best objective,
+  a robustness stage on the discovered design, the taxonomy and a lab-report
+  style discovery report (question, method, results, uncertainty,
+  limitations, reproducibility, conclusion) composed only from the record.
+- Lab records are stored (`labStore.ts`) and listed in the workspace library
+  with their report; a robustness panel runs tolerance studies on any design.
+- Research questions and their status recorded in `docs/RESEARCH.md`.
+
 ## 0.8.0 — 2026-09-27 · Second engineering domain
 - Robotics domain: a planar two-link manipulator with closed-form inverse
   kinematics, static gravity torques, tubular links checked for bending stress

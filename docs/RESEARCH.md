@@ -157,6 +157,19 @@ to the reference. Two conclusions: the representation result transfers
 rankings do not transfer between domains, which is what the autonomous
 lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 
+## Research questions and status (2026-10-03)
+
+| Question | Status | Evidence |
+|---|---|---|
+| Do per-member (response) surrogates screen feasibility more reliably than global regression? | Answered: yes | Ablation 2026-09-22; study `representation-and-screening` |
+| Can the displacement field replace the deflection regressor without losing force accuracy? | Answered: only with log-encoded features; differenced forces are ill-conditioned, so both are learned | v0.7 follow-up above |
+| Was CMA-ES's negative result on the truss a property of the algorithm or its defaults? | Answered: defaults (population, step size); bounds exonerated | v0.7 diagnosis |
+| Do optimiser rankings transfer between domains? | Answered: no; CMA-ES wins on the manipulator | study `manipulator-optimizers` |
+| Does the representation result transfer between domains? | Answered: yes, with a smaller margin where the objective has a hard floor | study `manipulator-optimizers` |
+| How sensitive are discovered designs to manufacturing tolerance? | Measurable now; measured per lab run | robustness stage, v0.9 |
+| Does optimising the robust margin rather than the nominal design change the optimum? | Open | planned for v1.0 |
+| Do multi-seed pilots pick a different strategy than single-seed pilots at equal budget? | Open; the lab now records both | lab records, v0.9 |
+
 ## Next experiments
 
 - Repeat with an artificially expensive or noisy evaluator (or a larger

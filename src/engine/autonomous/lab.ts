@@ -1,13 +1,17 @@
 /**
  * Autonomous engineering lab: a staged, measured search.
  *
- *   analysis  -> compile, size the baseline, sensitivity, binding constraints
- *   pilot     -> each strategy on an equal solver budget, same derived seed
- *   main      -> the strategy with the best pilot result, run until the
- *                best-so-far plateaus or the remaining budget is spent
- *   tradeoff  -> NSGA-II on the objective against a second metric the domain
- *                exposes (compliance when minimising mass, otherwise mass)
- *   report    -> every number computed from the stage records
+ *   analysis   -> compile, size the baseline, sensitivity, binding constraints
+ *   pilot      -> each strategy on an equal solver budget, one or more
+ *                 derived seeds; strategies ranked by median best objective
+ *   main       -> the winning strategy, run until the best-so-far plateaus
+ *                 or the remaining budget is spent
+ *   tradeoff   -> NSGA-II on the objective against a second metric the domain
+ *                 exposes (compliance when minimising mass, otherwise mass)
+ *   robustness -> the discovered design perturbed within a tolerance and
+ *                 re-evaluated by the solver
+ *   report     -> every number computed from the stage records; an
+ *                 uncertainty taxonomy and a lab-report style discovery note
  *
  * The lab composes the existing runner and optimisers; it introduces no new
  * physics, no new randomness beyond derived seeds, and no numbers of its own.
@@ -19,8 +23,11 @@ import type { ExperimentConfig, ExperimentRecord, GenerationSummary } from "../e
 import { createExperimentConfig, runExperiment } from "../experiments/runner";
 import { bindingConstraints, parameterSensitivity } from "../explain/sensitivity";
 import { getOptimizerDescriptor } from "../optimization";
+import { robustnessStudy, type RobustnessResult } from "../robustness/robustness";
+import { buildUncertaintyReport, type UncertaintyReport } from "../uncertainty/taxonomy";
 import { ENGINE_VERSION } from "../version";
 import { detectPlateau, type PlateauOptions } from "./convergence";
+import { buildDiscoveryReport, type DiscoveryReport } from "./report";
 
 export interface LabConfig {
   id: string;
@@ -28,9 +35,13 @@ export interface LabConfig {
   problem: EngineeringProblem;
   seed: number;
   strategies: string[];
+  /** Seeds per strategy in the pilot stage; strategies are ranked by median. */
+  pilotSeeds: number;
   pilotBudget: number;
   totalBudget: number;
   tradeoffBudget: number;
+  /** Tolerance study of the discovered design; null skips the stage. */
+  robustness: { tolerance: number; samples: number } | null;
   convergence: PlateauOptions;
   optimizerParams: Record<string, Record<string, number>>;
 }
@@ -41,9 +52,11 @@ export interface CreateLabOptions {
   problem: EngineeringProblem;
   seed: number;
   strategies?: string[];
+  pilotSeeds?: number;
   pilotBudget?: number;
   totalBudget?: number;
   tradeoffBudget?: number;
+  robustness?: { tolerance: number; samples: number } | null;
   convergence?: PlateauOptions;
   optimizerParams?: Record<string, Record<string, number>>;
 }
@@ -51,10 +64,13 @@ export interface CreateLabOptions {
 export function createLabConfig(opts: CreateLabOptions): LabConfig {
   const strategies = opts.strategies ?? ["evolutionary", "surrogate-evolutionary", "member-surrogate-evolutionary"];
   for (const s of strategies) if (!getOptimizerDescriptor(s)) throw new Error(`unknown strategy "${s}"`);
+  const pilotSeeds = Math.max(1, Math.floor(opts.pilotSeeds ?? 1));
   const pilotBudget = opts.pilotBudget ?? 900;
   const tradeoffBudget = opts.tradeoffBudget ?? 2000;
   const totalBudget = opts.totalBudget ?? 12000;
-  if (totalBudget <= strategies.length * pilotBudget + tradeoffBudget) throw new Error("total budget must exceed pilots plus trade-off budget");
+  const robustness = opts.robustness === undefined ? { tolerance: 0.02, samples: 200 } : opts.robustness;
+  if (robustness && (!(robustness.samples > 0) || !(robustness.tolerance >= 0))) throw new Error("robustness needs positive samples and a non-negative tolerance");
+  if (totalBudget <= strategies.length * pilotSeeds * pilotBudget + tradeoffBudget + (robustness?.samples ?? 0)) throw new Error("total budget must exceed pilots, trade-off and robustness budgets");
   // Population-based strategies need enough generations inside a pilot to
   // differentiate; size populations to the pilot budget unless overridden.
   const pilotPopulation = Math.max(10, Math.min(60, Math.floor(pilotBudget / 25)));
@@ -73,9 +89,11 @@ export function createLabConfig(opts: CreateLabOptions): LabConfig {
     problem: opts.problem,
     seed: opts.seed,
     strategies,
+    pilotSeeds,
     pilotBudget,
     totalBudget,
     tradeoffBudget,
+    robustness,
     convergence: opts.convergence ?? { window: 25, minRelativeImprovement: 0.002 },
     optimizerParams,
   };
@@ -84,6 +102,7 @@ export function createLabConfig(opts: CreateLabOptions): LabConfig {
 export interface PilotResult {
   strategy: string;
   label: string;
+  seed: number;
   record: ExperimentRecord;
   bestObjective: number;
   feasible: boolean;
@@ -98,6 +117,17 @@ export interface LabAnalysis {
   baselineBinding: { id: string; utilization: number }[];
   sensitivityGroups: { group: string; share: number }[];
   topVariables: { label: string; share: number }[];
+}
+
+export interface StrategyRanking {
+  strategy: string;
+  label: string;
+  seeds: number;
+  feasibleSeeds: number;
+  /** Median best objective over the feasible pilot seeds (Infinity when none). */
+  medianObjective: number;
+  bestObjective: number;
+  worstObjective: number;
 }
 
 export interface LabReport {
@@ -122,6 +152,10 @@ export interface LabReport {
   paretoFrontSize: number;
   hypervolume: number | null;
   screening?: { precision: number; recall: number; falseFeasibleRate: number; falseInfeasibleRate: number; forceR2?: number; coverage95?: number };
+  pilotSeeds: number;
+  robustness?: { tolerance: number; samples: number; feasibleFraction: number; objectiveMedian: number; objectiveQ95: number; worstConstraint: string | null };
+  uncertainty: UncertaintyReport;
+  discovery: DiscoveryReport;
   wallTimeMs: number;
 }
 
@@ -130,19 +164,25 @@ export interface LabRecord {
   label: string;
   config: LabConfig;
   engineVersion: string;
+  backendId: string;
+  baselineLabel: string;
+  /** Unit of every metric the domain exposes, for the report. */
+  metricUnits: Record<string, string>;
   status: "running" | "completed" | "cancelled";
   startedAt: string;
   finishedAt?: string;
   analysis: LabAnalysis | null;
   pilots: PilotResult[];
+  ranking: StrategyRanking[];
   chosenStrategy: string;
   main: ExperimentRecord;
   tradeoff: ExperimentRecord | null;
+  robustness: RobustnessResult | null;
   report: LabReport;
   wallTimeMs: number;
 }
 
-export type LabStage = "analysis" | "pilot" | "main" | "tradeoff" | "report";
+export type LabStage = "analysis" | "pilot" | "main" | "tradeoff" | "robustness" | "report";
 
 export type LabEvent =
   | { type: "started"; record: LabRecord }
@@ -206,13 +246,18 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     label: config.label,
     config,
     engineVersion: ENGINE_VERSION,
+    backendId: compiled.backendId,
+    baselineLabel: compiled.baseline.label,
+    metricUnits: Object.fromEntries(compiled.metrics.map((m) => [m.id, m.unit])),
     status: "running",
     startedAt: new Date().toISOString(),
     analysis: null,
     pilots: [],
+    ranking: [],
     chosenStrategy: "",
     main: emptyRecord(),
     tradeoff: null,
+    robustness: null,
     report: {
       solverEvaluations: 0,
       surrogatePredictions: 0,
@@ -233,6 +278,9 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       topVariables: [],
       paretoFrontSize: 0,
       hypervolume: null,
+      pilotSeeds: config.pilotSeeds,
+      uncertainty: { entries: [], quantified: 0, documented: 0, notModelled: 0 },
+      discovery: { title: "", question: "", method: [], results: [], uncertainty: [], limitations: [], reproducibility: [], conclusion: "" },
       wallTimeMs: 0,
     },
     wallTimeMs: 0,
@@ -253,33 +301,34 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       topVariables: sens.entries.slice(0, 5).map((e) => ({ label: e.label, share: e.share })),
     };
 
-    // Stage 2: pilots on equal budgets and the same derived seed.
-    yield { type: "stage", stage: "pilot", message: `Piloting ${config.strategies.length} strategies at ${config.pilotBudget} solver evaluations each.` };
-    for (let i = 0; i < config.strategies.length; i++) {
-      const strategy = config.strategies[i];
-      const cfg = createExperimentConfig({ id: `${config.id}-pilot-${strategy}`, label: `pilot ${strategy}`, problem, seed: config.seed * 1000 + 17, optimizer: { id: strategy, params: config.optimizerParams[strategy] ?? {} }, budget: { maxEvaluations: config.pilotBudget } });
-      const t = now();
-      const rec = runQuiet(cfg);
-      const result: PilotResult = {
-        strategy,
-        label: getOptimizerDescriptor(strategy)?.label ?? strategy,
-        record: rec,
-        bestObjective: objectiveOf(rec.best, objective),
-        feasible: !!rec.best?.evaluation?.feasible,
-        evaluations: rec.totalEvaluations,
-        wallTimeMs: now() - t,
-      };
-      record.pilots.push(result);
-      yield { type: "pilot", result };
+    // Stage 2: pilots on equal budgets; the same derived seeds for every strategy.
+    yield { type: "stage", stage: "pilot", message: `Piloting ${config.strategies.length} strategies at ${config.pilotBudget} solver evaluations each on ${config.pilotSeeds} seed${config.pilotSeeds === 1 ? "" : "s"}.` };
+    for (let k = 0; k < config.pilotSeeds; k++) {
+      const seed = config.seed * 1000 + 17 + k * 101;
+      for (const strategy of config.strategies) {
+        const cfg = createExperimentConfig({ id: `${config.id}-pilot-${strategy}-${k}`, label: `pilot ${strategy} seed ${seed}`, problem, seed, optimizer: { id: strategy, params: config.optimizerParams[strategy] ?? {} }, budget: { maxEvaluations: config.pilotBudget } });
+        const t = now();
+        const rec = runQuiet(cfg);
+        const result: PilotResult = {
+          strategy,
+          label: getOptimizerDescriptor(strategy)?.label ?? strategy,
+          seed,
+          record: rec,
+          bestObjective: objectiveOf(rec.best, objective),
+          feasible: !!rec.best?.evaluation?.feasible,
+          evaluations: rec.totalEvaluations,
+          wallTimeMs: now() - t,
+        };
+        record.pilots.push(result);
+        yield { type: "pilot", result };
+      }
     }
-    const ranked = record.pilots.slice().sort((a, b) => {
-      if (a.feasible !== b.feasible) return a.feasible ? -1 : 1;
-      return objective.direction === "minimize" ? a.bestObjective - b.bestObjective : b.bestObjective - a.bestObjective;
-    });
+    record.ranking = rankStrategies(record.pilots, config.strategies, objective);
+    const ranked = record.ranking;
     record.chosenStrategy = ranked[0].strategy;
 
     // Stage 3: main run with convergence detection.
-    const mainBudget = config.totalBudget - config.strategies.length * config.pilotBudget - config.tradeoffBudget;
+    const mainBudget = config.totalBudget - config.strategies.length * config.pilotSeeds * config.pilotBudget - config.tradeoffBudget - (config.robustness?.samples ?? 0);
     yield { type: "stage", stage: "main", message: `Running ${ranked[0].label} with up to ${mainBudget.toLocaleString()} evaluations; stopping on a plateau of ${config.convergence.window} generations.` };
     const bests: number[] = [];
     let stopReason: "converged" | "budget" = "budget";
@@ -307,10 +356,18 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       yield { type: "stage", stage: "tradeoff", message: "Trade-off stage skipped: the problem does not expose a second objective." };
     }
 
-    // Stage 5: report, every number from the records.
-    yield { type: "stage", stage: "report", message: "Compiling the discovery report." };
+    // Stage 5: robustness of the discovered design, through the solver.
     const best = record.main.best;
     const bestEval = best?.evaluation;
+    if (config.robustness && best) {
+      yield { type: "stage", stage: "robustness", message: `Perturbing the discovered design within +/- ${(config.robustness.tolerance * 100).toFixed(1)} % (${config.robustness.samples} solver evaluations).` };
+      record.robustness = robustnessStudy(compiled, best.parameters, { samples: config.robustness.samples, seed: config.seed * 13 + 5, tolerance: config.robustness.tolerance });
+    } else {
+      yield { type: "stage", stage: "robustness", message: config.robustness ? "Robustness stage skipped: no design to perturb." : "Robustness stage skipped by configuration." };
+    }
+
+    // Stage 6: report, every number from the records.
+    yield { type: "stage", stage: "report", message: "Compiling the discovery report." };
     const diag = record.main.optimizerDiagnostics as Record<string, unknown> | undefined;
     const funnel = diag?.funnel as { candidatesGenerated: number; surrogatePredictions: number } | undefined;
     const feas = diag?.feasibility as LabReport["screening"] | undefined;
@@ -320,8 +377,11 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     const baselineObjective = baselineEval.objectives[objective.id];
     const bestObjective = bestEval?.objectives[objective.id] ?? NaN;
     const improvementPercent = objective.direction === "minimize" ? (1 - bestObjective / baselineObjective) * 100 : (bestObjective / baselineObjective - 1) * 100;
+    const rb = record.robustness;
+    const worstConstraint = rb ? rb.constraints.slice().sort((a, b) => b.violationProbability - a.violationProbability || b.maxUtilization - a.maxUtilization)[0] : null;
+    const screening = feas ? { precision: feas.precision, recall: feas.recall, falseFeasibleRate: feas.falseFeasibleRate, falseInfeasibleRate: feas.falseInfeasibleRate, forceR2: forces?.overallR2, coverage95: forces?.coverage95 } : undefined;
     record.report = {
-      solverEvaluations: record.pilots.reduce((s, p) => s + p.evaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0),
+      solverEvaluations: record.pilots.reduce((s, p) => s + p.evaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0) + (rb?.evaluations ?? 0),
       surrogatePredictions,
       candidatesGenerated: funnel?.candidatesGenerated ?? 0,
       strategiesCompared: record.pilots.length,
@@ -340,9 +400,14 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
       topVariables: best ? parameterSensitivity(compiled, best.parameters, objective.metric).entries.slice(0, 5).map((e) => ({ label: e.label, share: e.share })) : [],
       paretoFrontSize: record.tradeoff?.paretoFront?.length ?? 0,
       hypervolume: lastTrade?.hypervolume ?? null,
-      screening: feas ? { precision: feas.precision, recall: feas.recall, falseFeasibleRate: feas.falseFeasibleRate, falseInfeasibleRate: feas.falseInfeasibleRate, forceR2: forces?.overallR2, coverage95: forces?.coverage95 } : undefined,
+      screening,
+      pilotSeeds: config.pilotSeeds,
+      robustness: rb ? { tolerance: rb.tolerance, samples: rb.samples, feasibleFraction: rb.feasibleFraction, objectiveMedian: rb.objective.median, objectiveQ95: rb.objective.q95, worstConstraint: worstConstraint?.id ?? null } : undefined,
+      uncertainty: buildUncertaintyReport({ problem, evaluation: bestEval, robustness: rb ?? undefined, screening, pilots: record.pilots.map((p) => ({ strategy: p.strategy, seed: p.seed, bestObjective: p.bestObjective, feasible: p.feasible })), chosenStrategy: record.chosenStrategy }),
+      discovery: { title: "", question: "", method: [], results: [], uncertainty: [], limitations: [], reproducibility: [], conclusion: "" },
       wallTimeMs: now() - t0,
     };
+    record.report.discovery = buildDiscoveryReport(record);
     record.status = "completed";
     yield { type: "report", record };
   } finally {
@@ -351,6 +416,29 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     record.wallTimeMs = now() - t0;
   }
   return record;
+}
+
+/** Rank strategies by the median best objective over their feasible pilot seeds; infeasible-only strategies last. */
+export function rankStrategies(pilots: PilotResult[], strategies: string[], objective: Objective): StrategyRanking[] {
+  const sign = objective.direction === "minimize" ? 1 : -1;
+  const rows = strategies.map((strategy) => {
+    const mine = pilots.filter((p) => p.strategy === strategy);
+    const feasible = mine.filter((p) => p.feasible && Number.isFinite(p.bestObjective)).map((p) => p.bestObjective).sort((a, b) => sign * (a - b));
+    const med = feasible.length ? feasible[Math.floor((feasible.length - 1) / 2)] : Infinity;
+    return {
+      strategy,
+      label: mine[0]?.label ?? getOptimizerDescriptor(strategy)?.label ?? strategy,
+      seeds: mine.length,
+      feasibleSeeds: feasible.length,
+      medianObjective: med,
+      bestObjective: feasible.length ? feasible[0] : Infinity,
+      worstObjective: feasible.length ? feasible[feasible.length - 1] : Infinity,
+    };
+  });
+  return rows.sort((a, b) => {
+    if (a.feasibleSeeds === 0 || b.feasibleSeeds === 0) return b.feasibleSeeds - a.feasibleSeeds;
+    return sign * (a.medianObjective - b.medianObjective);
+  });
 }
 
 export function runLabToCompletion(config: LabConfig): LabRecord {

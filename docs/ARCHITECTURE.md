@@ -118,13 +118,29 @@ engineering equations, and it is domain-agnostic: a thermal domain could
 expose per-fin temperatures the same way.
 
 ### `src/engine/autonomous`
-`convergence.ts` (plateau detection on a best-so-far history) and `lab.ts`
-(the staged search: analysis, equal-budget pilots on a derived seed, the
-winning strategy run with a `shouldStop` hook until it plateaus, an NSGA-II
-trade-off stage, and a report reconciled from the stage records). The lab is
-a generator like the runner, so the worker streams its events and cancels it
-the same way, and every stage record is an ordinary `ExperimentRecord` that
-the workspace can open. It adds no physics and no numbers of its own.
+`runLab` is a generator over the existing runner: analysis (baseline,
+sensitivity, binding constraints), equal-budget pilots of every strategy on
+one or more derived seeds ranked by median best objective, the winner run
+until `detectPlateau` fires or the budget is spent, an NSGA-II trade-off
+stage against a second metric the domain exposes, a robustness stage that
+perturbs the discovered design through the solver, and a report whose every
+number is reconciled from the stage records. `report.ts` renders that record
+as a short lab report (question, method, results, uncertainty, limitations,
+reproducibility, conclusion) and `experiments/labStore.ts` persists lab
+records next to experiments. The lab introduces no physics and no randomness
+beyond derived seeds.
+
+### `src/engine/robustness` and `src/engine/uncertainty`
+`robustnessStudy` perturbs a design's parameters within a relative tolerance
+(uniform or gaussian, seeded, clamped to the design space) and re-runs the
+real evaluator for every sample: feasible fraction, objective quantiles and
+per-constraint violation probabilities. `toleranceSweep` and `robustMargin`
+(bisection for the largest tolerance that keeps a target feasible fraction)
+build on it. `buildUncertaintyReport` classifies the sources of uncertainty
+in a result (model form, parameter, numerical, manufacturing, surrogate,
+statistical) and marks each quantified only when a measurement exists:
+robustness for manufacturing, screening reliability for surrogates, the
+seed-to-seed range of the pilots for statistical.
 
 ### `src/engine/interpret`
 `ProblemInterpreter` contract. The rule-based implementation extracts span,

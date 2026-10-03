@@ -44,7 +44,7 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v0.8.0) implements two problem families end to end, the
+The current release (v0.9.0) implements two problem families end to end, the
 planar truss bridge and a planar two-link manipulator, deeply enough that
 every stage of the pipeline is real, tested, and inspectable, and adds a
 learning layer: surrogate models trained
@@ -136,19 +136,20 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`) on either domain: declared hypothesis, methods, seeds and budget; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
 | Benchmarks | `npm run benchmark` and `npm run ablation`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR, evaluations-to-target and screening reliability; raw runs under `benchmarks/results/`, rendered on the `/benchmarks` page (tables, median convergence curves with interquartile bands, per-run inspection), tables in `docs/BENCHMARKS.md`, the research question in `docs/RESEARCH.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment library, JSON export, command-line reproduction |
-| Autonomous search | Staged lab on either domain: baseline analysis, equal-budget pilots of every strategy, the winner run until its best-so-far plateaus, an NSGA-II trade-off stage against a second metric the domain exposes, and a discovery report reconciled from the stage records; each stage opens in the workspace as a normal experiment |
+| Autonomous search | Staged lab on either domain: baseline analysis, equal-budget pilots of every strategy on one or more seeds ranked by median, the winner run until its best-so-far plateaus, an NSGA-II trade-off stage against a second metric the domain exposes, a robustness stage that perturbs the discovery through the solver, an uncertainty taxonomy, and a lab-report style discovery report composed only from the stage records; lab records are stored in the browser library and each stage opens in the workspace as a normal experiment |
+| Robustness and uncertainty | Seeded tolerance perturbation of any design through the real evaluator (feasible fraction, objective quantiles, per-constraint violation probabilities, tolerance sweep, robust margin by bisection); an engineering uncertainty taxonomy (model form, parameter, numerical, manufacturing, surrogate, statistical) that marks a source quantified only when a measurement exists |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Domain selector; editable specification with assumption badges; truss viewport with structure, axial-force, utilisation and deformed-shape modes, manipulator viewport with task-point, torque, utilisation and deflection modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panels; evidence tables |
-| Testing | 191 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Testing | 203 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
-Multi-seed pilots and stored lab records, a lab-report style discovery
-report, an engineering uncertainty taxonomy with tolerance studies,
-cross-domain learning comparisons, further engineering domains (thermal,
-aerospace, fluids), and 3D visualisation. None of these are implemented yet;
-the interface labels them as roadmap wherever they are mentioned. See
+Robustness-aware optimisation (optimising the robust margin rather than the
+nominal design), a cross-domain learning comparison as a registered study,
+exportable lab bundles, further engineering domains (thermal, aerospace,
+fluids), and 3D visualisation. None of these are implemented yet; the
+interface labels them as roadmap wherever they are mentioned. See
 [Roadmap](#roadmap).
 
 ## Engineering engine
@@ -447,12 +448,16 @@ commitments.
    (planar manipulator: kinematics, static torques, beam bending) behind the
    same domain contract, with its own baseline, optimisation, interpretation,
    study and visualisation; every layer above the domain ran unchanged.
-9. **Next (v0.9):** cross-domain autonomy: multi-seed pilots, stored lab
-   records, a lab-report style discovery report, an engineering uncertainty
-   taxonomy, tolerance and robustness studies.
-10. Additional engineering domains behind the `EngineeringDomain` contract
+9. **Done (v0.9):** Autonomous Search 2.0: multi-seed pilots ranked by
+   median, a robustness stage and robustness panel (tolerance perturbation
+   through the solver), an engineering uncertainty taxonomy quantified only
+   from measurements, stored lab records, and a lab-report style discovery
+   report composed from the record.
+10. **Next (v1.0):** robustness-aware optimisation, a cross-domain learning
+   study, exportable reproducible lab bundles.
+11. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, aerospace, fluids), tubular truss sections, 3D trusses.
-11. Advanced learning components where they earn their place: neural
+12. Advanced learning components where they earn their place: neural
    surrogates with uncertainty, graph representations of structures,
    sketch-to-geometry.
 
@@ -463,11 +468,13 @@ The detailed list is in [docs/ROADMAP.md](docs/ROADMAP.md).
 The platform is being built so that claims can be tested rather than
 demonstrated: fixed benchmark problems, multiple seeds, equal evaluation
 budgets, objective-versus-evaluations curves with confidence bands, and
-surrogate accuracy reported against held-out solver results. Candidate
-questions include how much a surrogate reduces the solver budget needed to
-reach a target mass on truss ground structures, how the optimisers compare at
-equal budget, and how sensitive optimised designs are to manufacturing
-tolerances. Nothing in this section has been measured yet.
+surrogate accuracy reported against held-out solver results. The questions
+answered so far (surrogate representation, CMA-ES defaults, transfer of
+optimiser rankings between domains) and the open ones (robust-margin
+optimisation, multi-seed versus single-seed strategy choice) are tabulated
+with their evidence in [docs/RESEARCH.md](docs/RESEARCH.md). Manufacturing
+tolerance is now measured per lab run by perturbing the discovered design
+through the solver.
 
 ## License
 

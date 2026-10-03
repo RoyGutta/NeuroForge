@@ -67,10 +67,18 @@ it is real, tested, and honest in the interface.
 - [x] Domain-aware workspace: specification form, manipulator drawing (task points, torque, utilisation, deflection), metrics, learning panels; home-page demo and project card
 - [x] Study registry accepts either domain; a registered manipulator study
 
-## v0.9 · Cross-domain autonomy and robustness
-- [ ] Multi-seed pilots and stored lab records; lab-report style discovery report
-- [ ] Engineering uncertainty taxonomy; tolerance and robustness studies
-- [ ] Cross-domain learning comparisons
+## Done — v0.9.0 (2026-10-03) · Autonomous Search 2.0 and robustness
+- [x] Multi-seed pilots ranked by median; strategy ranking in the lab record
+- [x] Robustness study: tolerance perturbation through the solver, feasible fraction, objective quantiles, per-constraint violation probabilities, tolerance sweep and robust margin
+- [x] Engineering uncertainty taxonomy (model form, parameter, numerical, manufacturing, surrogate, statistical), quantified only from measurements
+- [x] Discovery report as a lab report (question, method, results, uncertainty, limitations, reproducibility, conclusion), every sentence from the record
+- [x] Lab records stored and listed in the workspace library; robustness panel for any design
+- [x] Research questions with status in docs/RESEARCH.md
+
+## v1.0 · Research-grade platform
+- [ ] Cross-domain learning comparison as a registered study
+- [ ] Robustness-aware optimisation (optimise the robust margin, not the nominal design)
+- [ ] Lab records exportable as a reproducible bundle
 
 ## Later domains and 3D
 - [ ] Thermal or aerospace domain behind `EngineeringDomain`

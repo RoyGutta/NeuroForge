@@ -37,7 +37,7 @@ describe("autonomous lab", () => {
     }
     const record = step.value;
     const stages = events.filter((e) => e.type === "stage").map((e) => (e as { stage: string }).stage);
-    expect(stages).toEqual(["analysis", "pilot", "main", "tradeoff", "report"]);
+    expect(stages).toEqual(["analysis", "pilot", "main", "tradeoff", "robustness", "report"]);
     expect(record.status).toBe("completed");
     expect(record.pilots).toHaveLength(3);
     for (const p of record.pilots) expect(p.record.totalEvaluations).toBeGreaterThanOrEqual(600);
@@ -46,7 +46,7 @@ describe("autonomous lab", () => {
     const bestPilot = record.pilots.slice().sort((a, b) => a.bestObjective - b.bestObjective)[0];
     expect(record.chosenStrategy).toBe(bestPilot.strategy);
     expect(record.main.config.optimizer.id).toBe(record.chosenStrategy);
-    const solverTotal = record.pilots.reduce((s, p) => s + p.record.totalEvaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0);
+    const solverTotal = record.pilots.reduce((s, p) => s + p.record.totalEvaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0) + (record.robustness?.evaluations ?? 0);
     expect(record.report.solverEvaluations).toBe(solverTotal);
     expect(record.report.strategiesCompared).toBe(3);
     expect(record.report.bestMass_kg).toBe(record.main.best!.evaluation!.metrics.mass_kg);
@@ -96,5 +96,45 @@ describe("autonomous lab", () => {
     expect(record.tradeoff).not.toBeNull();
     expect(record.tradeoff!.config.problem.objectives.map((o) => o.metric)).toEqual(["peakTorque_Nm", "mass_kg"]);
     expect(record.report.paretoFrontSize).toBeGreaterThan(0);
+  });
+
+  test("pilots every strategy on several seeds, ranks by median, measures robustness and writes a lab report from the records", () => {
+    const arm = createManipulatorProblem({ payload_kg: 2, reach_m: 0.8 });
+    const cfg = createLabConfig({ problem: arm, seed: 11, strategies: ["evolutionary", "cmaes"], pilotSeeds: 3, pilotBudget: 200, totalBudget: 3000, tradeoffBudget: 400, robustness: { tolerance: 0.02, samples: 100 }, convergence: { window: 10, minRelativeImprovement: 0.002 } });
+    expect(cfg.pilotSeeds).toBe(3);
+    const record = runLabToCompletion(cfg);
+    expect(record.status).toBe("completed");
+    expect(record.pilots).toHaveLength(6);
+    expect(new Set(record.pilots.map((p) => `${p.strategy}:${p.seed}`)).size).toBe(6);
+    expect(record.ranking.map((r) => r.strategy).sort()).toEqual(["cmaes", "evolutionary"]);
+    for (const r of record.ranking) {
+      const bests = record.pilots.filter((p) => p.strategy === r.strategy && p.feasible).map((p) => p.bestObjective).sort((a, b) => a - b);
+      expect(r.seeds).toBe(3);
+      expect(r.medianObjective).toBe(bests[1]);
+    }
+    expect(record.chosenStrategy).toBe(record.ranking[0].strategy);
+    expect(record.robustness).not.toBeNull();
+    expect(record.robustness!.samples).toBe(100);
+    expect(record.robustness!.parameters).toEqual(record.main.best!.parameters);
+    expect(record.report.robustness?.feasibleFraction).toBe(record.robustness!.feasibleFraction);
+    expect(record.report.solverEvaluations).toBe(record.pilots.reduce((s, p) => s + p.evaluations, 0) + record.main.totalEvaluations + (record.tradeoff?.totalEvaluations ?? 0) + 100);
+    const u = record.report.uncertainty;
+    expect(u.entries.find((e) => e.kind === "statistical")?.status).toBe("quantified");
+    expect(u.entries.find((e) => e.kind === "manufacturing")?.status).toBe("quantified");
+    const d = record.report.discovery;
+    for (const section of [d.method, d.results, d.uncertainty, d.limitations, d.reproducibility]) expect(section.length).toBeGreaterThan(0);
+    const text = [d.question, ...d.method, ...d.results, ...d.uncertainty, ...d.reproducibility, d.conclusion].join("\n");
+    expect(text).toContain(record.report.chosenStrategyLabel);
+    expect(text).toContain(Math.abs(record.report.improvementPercent).toFixed(1));
+    expect(text).toContain(String(cfg.seed));
+    expect(text).toContain(record.engineVersion);
+  });
+
+  test("a single-seed lab still reports, with seed variation documented rather than quantified", () => {
+    const record = runLabToCompletion(createLabConfig({ ...config, id: "single", robustness: null }));
+    expect(record.pilots).toHaveLength(3);
+    expect(record.robustness).toBeNull();
+    expect(record.report.uncertainty.entries.find((e) => e.kind === "statistical")?.status).toBe("documented");
+    expect(record.report.uncertainty.entries.find((e) => e.kind === "manufacturing")?.status).toBe("not-modelled");
   });
 });

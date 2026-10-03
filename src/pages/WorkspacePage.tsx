@@ -9,6 +9,7 @@ import { ExperimentPanel } from "./workspace/ExperimentPanel";
 import { LearningSection } from "./workspace/LearningSection";
 import { MemberLearningPanel } from "./workspace/MemberLearningPanel";
 import { ParetoSection } from "./workspace/ParetoSection";
+import { RobustnessPanel } from "./workspace/RobustnessPanel";
 import { SpecPanel } from "./workspace/SpecPanel";
 import { Viewport } from "./workspace/Viewport";
 import { DOMAIN_LABELS } from "./workspace/model";
@@ -58,6 +59,7 @@ export function WorkspacePage() {
             <ExperimentPanel ws={ws} />
           </div>
           <ParetoSection ws={ws} />
+          <RobustnessPanel ws={ws} />
           <EvidenceSection ws={ws} />
           <LearningSection ws={ws} />
           <MemberLearningPanel ws={ws} />
