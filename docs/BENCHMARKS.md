@@ -5,6 +5,39 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-10-03 · engine 1.0.0 · robust versus nominal, 10 seeds, 1,500 design evaluations
+
+Registered study `benchmarks/studies/robust-versus-nominal.json`, raw runs and
+analysis in `benchmarks/results/robust-versus-nominal-2026-10-03.json`.
+Canonical truss, baseline 1.656 kg. Robust methods evaluate 12 perturbed
+copies (+/- 2 %) inside every design evaluation and require 95 % of them
+feasible; with 12 copies that means all 12 (11/12 = 91.7 %). Every run's best
+design was then checked independently: 300 fresh perturbations at +/- 2 %
+through the nominal evaluator. The budget counts design evaluations, so the
+robust methods spent 13 x more solver calls.
+
+| Method | Median best kg | 95 % CI | Robust feasible (independent, median) | Range | A vs nominal EA |
+|---|---|---|---|---|---|
+| nominal-ea (reference) | 0.686 | 0.673–0.707 | 100 % | 100–100 % | – |
+| nominal-member | 0.543 | 0.540–0.550 | 70.7 % | 54–89 % | 1.00 (lighter) |
+| robust-ea | 0.854 | 0.765–0.912 | 100 % | 88–100 % | 0.05 (heavier) |
+| robust-member | 0.774 | 0.766–0.879 | 100 % | 100–100 % | 0.00 (heavier) |
+
+Reading. The hypothesis is rejected at this budget and formulation. Robust
+mode does what it says, every robust optimum passes the independent check,
+but it costs 24 % (EA) to 43 % (member method) more mass than the same
+method run nominally, not a few per cent. Two effects are visible. First,
+the nominal evolutionary algorithm at 1,500 evaluations has not converged
+onto the constraint limits, so its 0.686 kg designs are already fully robust;
+only the member method, which reaches the limits (0.543 kg), pays for it with
+a 71 % independent feasible fraction, in line with the 12 % measured on the
+converged 0.524 kg lab design. Second, the in-loop sample is small, so the
+95 % target behaves as "all copies feasible", a stricter requirement than
+the 95 % measured afterwards. The structural question (does the robust
+optimum redistribute material or thicken uniformly?) was not measured here
+because the committed study record strips per-run designs. Follow-ups are
+listed in `docs/RESEARCH.md`.
+
 ## 2026-09-27 · engine 0.8.0 · manipulator study, 10 seeds, 1,500 evaluations
 
 Registered study `benchmarks/studies/manipulator-optimizers.json`, raw runs

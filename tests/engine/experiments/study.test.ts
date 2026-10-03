@@ -67,4 +67,27 @@ describe("study registry", () => {
   test("rejects a spec whose reference method is not among its methods", () => {
     expect(() => runStudy({ ...spec, reference: "missing" })).toThrow(/reference/);
   });
+
+  test("records an independent robustness check per run and lets a method optimise in robust mode", () => {
+    const sp: StudySpec = {
+      ...spec,
+      id: "robust-check",
+      seeds: [1, 2],
+      budget: 300,
+      methods: [
+        { id: "nominal", optimizer: "evolutionary", params: { populationSize: 12 } },
+        { id: "robust", optimizer: "evolutionary", params: { populationSize: 12 }, robust: { tolerance: 0.02, samples: 8, targetFraction: 0.9 } },
+      ],
+      reference: "nominal",
+      robustCheck: { tolerance: 0.02, samples: 60 },
+    };
+    const result = runStudy(sp);
+    for (const r of result.runs) {
+      expect(r.robustFeasibleFraction).toBeGreaterThanOrEqual(0);
+      expect(r.robustFeasibleFraction).toBeLessThanOrEqual(1);
+      expect(r.record.config.robust ?? null).toEqual(r.method === "robust" ? { tolerance: 0.02, samples: 8, targetFraction: 0.9 } : null);
+    }
+    const analysis = analyzeStudy(result);
+    for (const m of analysis.methods) expect(typeof m.medianRobustFeasible).toBe("number");
+  });
 });

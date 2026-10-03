@@ -33,6 +33,10 @@ Be explicit about these when presenting results.
   modelled. Results are Monte Carlo estimates from a finite, seeded sample.
 - "Quantified" in the uncertainty taxonomy means a measurement from this
   engine exists; it is not a validated uncertainty budget.
+- Robust mode estimates the feasible fraction from a small in-loop sample
+  (12 copies by default), so its constraint is noisy; the independent check
+  with a fresh seed and a larger sample is the number to report. Robust mode
+  multiplies solver cost by 1 + samples.
 
 ## Optimisation
 - Topology is fixed to the Warren ground structure; members can shrink but the

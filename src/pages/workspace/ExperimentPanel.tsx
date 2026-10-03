@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { bindingConstraints, explainDifference, parameterSensitivity } from "../../engine/explain/sensitivity";
 import { listOptimizers } from "../../engine/optimization";
-import { formatMetric } from "./model";
+import { DEFAULT_ROBUST, formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
 export function ExperimentPanel({ ws }: { ws: Workspace }) {
@@ -97,6 +97,33 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           <input type="checkbox" checked={settings.seedBaseline} disabled={running} onChange={(e) => setSettings({ ...settings, seedBaseline: e.target.checked })} />
           Seed the search with the baseline design
         </label>
+        <label className="check">
+          <input type="checkbox" checked={!!settings.robust} disabled={running} onChange={(e) => setSettings({ ...settings, robust: e.target.checked ? { ...DEFAULT_ROBUST } : undefined })} />
+          Robust mode: require feasibility under manufacturing tolerance
+        </label>
+        {settings.robust && (
+          <div className="two">
+            <div className="field">
+              <label htmlFor="rob-tol" title="Relative tolerance applied to every design variable">
+                Tolerance %
+              </label>
+              <input id="rob-tol" type="number" min={0} max={20} step={0.5} disabled={running} value={settings.robust.tolerance * 100} onChange={(e) => setSettings({ ...settings, robust: { ...settings.robust!, tolerance: Number(e.target.value) / 100 } })} />
+            </div>
+            <div className="field">
+              <label htmlFor="rob-k" title="Perturbed copies evaluated per design; each is a solver call">
+                Copies per design
+              </label>
+              <input id="rob-k" type="number" min={4} max={64} step={1} disabled={running} value={settings.robust.samples} onChange={(e) => setSettings({ ...settings, robust: { ...settings.robust!, samples: Math.max(1, Math.round(Number(e.target.value))) } })} />
+            </div>
+            <div className="field">
+              <label htmlFor="rob-p" title="Fraction of the copies that must be feasible">
+                Required feasible %
+              </label>
+              <input id="rob-p" type="number" min={50} max={100} step={5} disabled={running} value={settings.robust.targetFraction * 100} onChange={(e) => setSettings({ ...settings, robust: { ...settings.robust!, targetFraction: Number(e.target.value) / 100 } })} />
+            </div>
+            <p className="helper">Each design costs {1 + settings.robust.samples} solver calls; the budget counts designs. Verify the best design independently in the robustness panel below.</p>
+          </div>
+        )}
 
         {running ? (
           <button className="wide" onClick={cancel}>
@@ -117,7 +144,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           {generations.length} <small>generations</small>
         </div>
         <div className="tiny">
-          {progress.evaluations.toLocaleString()} solver evaluations · {(progress.wallTimeMs / 1000).toFixed(1)} s
+          {progress.evaluations.toLocaleString()} design evaluations{settings.robust ? ` (${(progress.evaluations * (1 + settings.robust.samples)).toLocaleString()} solver calls)` : ""} · {(progress.wallTimeMs / 1000).toFixed(1)} s
           {last ? ` · ${last.feasibleCount}/${last.evaluations} feasible in last generation` : ""}
         </div>
         <div className="progress">

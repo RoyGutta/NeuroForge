@@ -87,6 +87,7 @@ function pct(v?: number | null): string {
 
 function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport; selected: { group: number; seed: number } | null; onSelect: (g: number) => void }) {
   const hasRel = report.groups.some((g) => g.summary.medianFalseFeasible !== undefined);
+  const hasRobust = report.groups.some((g) => g.summary.medianRobustFeasible !== undefined);
   const isStudy = report.kind === "study";
   return (
     <div className="table-wrap">
@@ -106,6 +107,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
             {hasRel && <th>False-feasible</th>}
             {hasRel && <th>False-infeasible</th>}
             {hasRel && <th>Response R²</th>}
+            {hasRobust && <th>Robust feasible (independent check)</th>}
           </tr>
         </thead>
         <tbody>
@@ -131,6 +133,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
                 {hasRel && <td>{pct(s.medianFalseFeasible)}</td>}
                 {hasRel && <td>{pct(s.medianFalseInfeasible)}</td>}
                 {hasRel && <td>{s.medianForceR2?.toFixed(3) ?? "—"}</td>}
+                {hasRobust && <td className={s.medianRobustFeasible !== undefined && s.medianRobustFeasible >= 0.95 ? "green" : undefined}>{pct(s.medianRobustFeasible)}</td>}
               </tr>
             );
           })}

@@ -1,6 +1,7 @@
 /**
  * Experiment records: everything needed to reproduce and re-render a run.
  */
+import type { RobustSpec } from "../robustness/robustProblem";
 import type { Design } from "../core/design";
 import type { EngineeringProblem } from "../core/problem";
 
@@ -23,6 +24,8 @@ export interface ExperimentConfig {
   budget: ExperimentBudget;
   /** Start the search from the domain baseline as well as random designs. */
   seedBaseline: boolean;
+  /** Robust mode: every design also evaluated at perturbed copies (see robustness/robustProblem). */
+  robust?: RobustSpec;
 }
 
 export interface GenerationSummary {

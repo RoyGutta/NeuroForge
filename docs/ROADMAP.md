@@ -75,10 +75,17 @@ it is real, tested, and honest in the interface.
 - [x] Lab records stored and listed in the workspace library; robustness panel for any design
 - [x] Research questions with status in docs/RESEARCH.md
 
-## v1.0 · Research-grade platform
-- [ ] Cross-domain learning comparison as a registered study
-- [ ] Robustness-aware optimisation (optimise the robust margin, not the nominal design)
-- [ ] Lab records exportable as a reproducible bundle
+## Done — v1.0.0 (2026-10-03) · Research-grade platform
+- [x] Robust mode for any optimiser and the lab: perturbed copies inside every evaluation, a robustness constraint, independent verification
+- [x] Registered study `robust-versus-nominal`: the mass cost of robustness and whether the structure changes
+- [x] Lab records exportable as JSON and re-runnable with `npm run reproduce:lab`
+- [x] Independent robustness check column in registered studies and the Benchmarks page
+
+## Beyond 1.0
+- [ ] Thermal or aerospace domain behind `EngineeringDomain`
+- [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
+- [ ] LLM-backed interpreter implementing `ProblemInterpreter`, validated against the rule-based one
+- [ ] Server-side job runner and shared experiment store
 
 ## Later domains and 3D
 - [ ] Thermal or aerospace domain behind `EngineeringDomain`

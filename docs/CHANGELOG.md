@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0 — 2026-10-03 · Research-grade platform
+- Robust mode (`robustify`): any compiled problem evaluated with perturbed
+  copies inside each design evaluation and a `robustness` constraint on the
+  feasible fraction; available for every optimiser from the experiment
+  panel, in the autonomous lab, and in registered studies (`robust` per
+  method, `robustCheck` for an independent verification of every run's best
+  design with a fresh seed).
+- Registered study `robust-versus-nominal` on the truss: a recorded negative
+  result (robust optima pass the independent check at 100 % but cost 24 to
+  43 % more mass at 1,500 evaluations; the formulation over-constrains);
+  the Benchmarks page shows the independent robust feasible fraction per
+  method and the study script prints it.
+- Lab records export as JSON; `npm run reproduce:lab` re-runs a lab (default
+  or exported) twice and verifies the identical chosen strategy, design and
+  evaluation count, printing the lab report.
+
 ## 0.9.0 — 2026-10-03 · Autonomous Search 2.0, robustness and uncertainty
 - Robustness study (`src/engine/robustness`): seeded tolerance perturbation
   of a design through the real evaluator with feasible fraction, objective

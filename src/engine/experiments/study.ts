@@ -8,6 +8,8 @@
  */
 import { createManipulatorProblem } from "../domains/robotics/manipulator/template";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
+import { robustnessStudy } from "../robustness/robustness";
+import type { RobustSpec } from "../robustness/robustProblem";
 import { compileProblem } from "../domains/registry";
 import { getOptimizerDescriptor } from "../optimization";
 import { bootstrapMedianCI, cliffsDelta, median, quantile, varghaDelaneyA, type BootstrapCI } from "../ml/statistics";
@@ -22,6 +24,8 @@ export interface StudyMethod {
   params: Record<string, number>;
   /** Budget override for expensive methods; must be stated in the spec. */
   budget?: number;
+  /** Optimise in robust mode (perturbed copies inside every evaluation). */
+  robust?: RobustSpec;
 }
 
 export interface StudySpec {
@@ -36,6 +40,8 @@ export interface StudySpec {
   metrics: string[];
   /** Target objective as a fraction of the baseline objective, for evaluations-to-target. */
   targetFraction: number;
+  /** Independent robustness check of every run's best design (fresh seed, nominal evaluator). */
+  robustCheck?: { tolerance: number; samples: number };
 }
 
 export type StudyBenchmark =
@@ -58,6 +64,8 @@ export interface StudyRun {
   /** Best feasible objective value at the end of the run (null when no feasible design was found). */
   bestObjective: number | null;
   feasible: boolean;
+  /** Feasible fraction of the best design under the spec's robustCheck, measured with the nominal evaluator. */
+  robustFeasibleFraction?: number;
   evaluationsToTarget: number | null;
   wallTimeMs: number;
   curve: { evaluations: number; best: number }[];
@@ -96,6 +104,8 @@ export interface MethodAnalysis {
   medianFalseFeasible?: number;
   medianFalseInfeasible?: number;
   medianForceR2?: number;
+  /** Median independent robust feasible fraction of the best designs (when the spec has robustCheck). */
+  medianRobustFeasible?: number;
 }
 
 export interface MethodComparison {
@@ -144,7 +154,7 @@ export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number,
   for (const m of spec.methods) {
     const budget = m.budget ?? spec.budget;
     for (const seed of spec.seeds) {
-      const cfg = createExperimentConfig({ id: `${spec.id}-${m.id}-${seed}`, label: `${spec.id} ${m.id} seed ${seed}`, problem, seed, optimizer: { id: m.optimizer, params: m.params }, budget: { maxEvaluations: budget } });
+      const cfg = createExperimentConfig({ id: `${spec.id}-${m.id}-${seed}`, label: `${spec.id} ${m.id} seed ${seed}`, problem, seed, optimizer: { id: m.optimizer, params: m.params }, budget: { maxEvaluations: budget }, robust: m.robust });
       const t0 = now();
       const rec = runExperimentToCompletion(cfg);
       const ev = rec.best?.evaluation;
@@ -161,6 +171,9 @@ export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number,
         reliability: reliabilityOf(rec),
         record: rec,
       };
+      if (spec.robustCheck && rec.best) {
+        run.robustFeasibleFraction = robustnessStudy(compiled, rec.best.parameters, { samples: spec.robustCheck.samples, seed: 7919 + seed, tolerance: spec.robustCheck.tolerance }).feasibleFraction;
+      }
       runs.push(run);
       onRun?.(run, runs.length, total);
     }
@@ -186,6 +199,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
     const ff = runs.map((r) => r.reliability?.falseFeasibleRate).filter((v): v is number => v !== undefined);
     const fi = runs.map((r) => r.reliability?.falseInfeasibleRate).filter((v): v is number => v !== undefined);
     const fr = runs.map((r) => r.reliability?.forceR2).filter((v): v is number => v !== undefined);
+    const rf = runs.map((r) => r.robustFeasibleFraction).filter((v): v is number => v !== undefined);
     return {
       id: m.id,
       optimizer: m.optimizer,
@@ -201,6 +215,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
       medianFalseFeasible: ff.length ? median(ff) : undefined,
       medianFalseInfeasible: fi.length ? median(fi) : undefined,
       medianForceR2: fr.length ? median(fr) : undefined,
+      medianRobustFeasible: rf.length ? median(rf) : undefined,
     };
   });
   const refBests = (byMethod.get(result.spec.reference) ?? []).map((r) => r.bestObjective).filter((v): v is number => v !== null);

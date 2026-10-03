@@ -35,6 +35,7 @@ export interface GroupSummary {
   feasibleRuns: number;
   meanWallTimeS?: number;
   medianFalseFeasible?: number;
+    medianRobustFeasible?: number;
   medianFalseInfeasible?: number;
   medianForceR2?: number;
   medianCoverage?: number;
@@ -102,7 +103,7 @@ type StudyFile = {
   targetMass_kg?: number;
   runs: { method: string; seed: number; budget: number; bestObjective?: number | null; bestMass_kg?: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"] }[];
   analysis: {
-    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; best?: { median: number; lower: number; upper: number }; bestMass?: { median: number; lower: number; upper: number }; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
+    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; best?: { median: number; lower: number; upper: number }; bestMass?: { median: number; lower: number; upper: number }; medianRobustFeasible?: number; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
     comparisons: { method: string; varghaDelaneyA: number; cliffsDelta: number; effectLabel: string }[];
   };
 };
@@ -146,6 +147,7 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
             feasibleRuns: m.feasibleRuns,
             meanWallTimeS: m.meanWallTimeS,
             medianFalseFeasible: m.medianFalseFeasible,
+            medianRobustFeasible: m.medianRobustFeasible,
             medianFalseInfeasible: m.medianFalseInfeasible,
             medianForceR2: m.medianForceR2,
             varghaDelaneyA: cmp?.varghaDelaneyA,

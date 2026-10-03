@@ -11,6 +11,7 @@ import { compareDesigns, type Design } from "../core/design";
 import type { EngineeringProblem } from "../core/problem";
 import { Rng } from "../core/rng";
 import { compileProblem } from "../domains/registry";
+import { robustify, type RobustSpec } from "../robustness/robustProblem";
 import type { CompiledProblem } from "../domains/domain";
 import { createOptimizer, getOptimizerDescriptor, resolveParams } from "../optimization";
 import { hypervolume2d, paretoFront } from "../optimization/pareto";
@@ -31,6 +32,7 @@ export interface CreateExperimentOptions {
   optimizer: OptimizerSelection;
   budget: ExperimentBudget;
   seedBaseline?: boolean;
+  robust?: RobustSpec;
 }
 
 export function createExperimentConfig(opts: CreateExperimentOptions): ExperimentConfig {
@@ -44,6 +46,7 @@ export function createExperimentConfig(opts: CreateExperimentOptions): Experimen
     optimizer: { id: desc.id, params: resolveParams(desc.params, opts.optimizer.params) },
     budget: { ...opts.budget },
     seedBaseline: opts.seedBaseline ?? true,
+    ...(opts.robust ? { robust: { ...opts.robust } } : {}),
   };
 }
 
@@ -62,7 +65,7 @@ export function* runExperiment(
   config: ExperimentConfig,
   hooks: RunHooks = {}
 ): Generator<ExperimentEvent, ExperimentRecord, void> {
-  const compiled = compileProblem(config.problem);
+  const compiled = config.robust ? robustify(compileProblem(config.problem), config.robust) : compileProblem(config.problem);
   const objective = config.problem.objectives[0];
   const rng = new Rng(config.seed);
   let counter = 0;

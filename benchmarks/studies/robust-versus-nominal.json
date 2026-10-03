@@ -1,0 +1,18 @@
+{
+  "id": "robust-versus-nominal",
+  "title": "What does robustness to manufacturing tolerance cost, and does optimising for it change the structure?",
+  "hypothesis": "Optimising the truss in robust mode (every design must stay feasible in at least 95 % of +/- 2 % perturbations, 12 perturbed copies per evaluation) yields designs whose independently measured feasible fraction is far higher than the nominal optimum's, at a mass cost of a few per cent rather than the uniform thickening the baseline would need; the member-surrogate method keeps its advantage in robust mode.",
+  "benchmark": { "problem": "truss-bridge", "span_m": 2, "load_N": 500, "panels": 4, "safetyFactor": 2 },
+  "budget": 1500,
+  "seeds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "reference": "nominal-ea",
+  "methods": [
+    { "id": "nominal-ea", "optimizer": "evolutionary", "params": { "populationSize": 30 } },
+    { "id": "nominal-member", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 0, "exploreFraction": 0, "representation": 2 } },
+    { "id": "robust-ea", "optimizer": "evolutionary", "params": { "populationSize": 30 }, "robust": { "tolerance": 0.02, "samples": 12, "targetFraction": 0.95 } },
+    { "id": "robust-member", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 0, "exploreFraction": 0, "representation": 2 }, "robust": { "tolerance": 0.02, "samples": 12, "targetFraction": 0.95 } }
+  ],
+  "metrics": ["bestObjective", "evaluationsToTarget", "robustFeasibleFraction", "falseFeasibleRate", "forceR2"],
+  "targetFraction": 0.5,
+  "robustCheck": { "tolerance": 0.02, "samples": 300 }
+}

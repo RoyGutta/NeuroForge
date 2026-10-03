@@ -143,6 +143,23 @@ regressor, so that every constraint is derived from learned responses?
   cause; with λ = 24, σ₀ = 0.1 and IPOP restarts it beats the plain EA
   (0.672 vs 0.686 kg, A = 0.63, small effect) but not the surrogates.
 
+## Robust versus nominal (2026-10-03, engine 1.0.0)
+
+Robust mode (perturbed copies inside every evaluation, a constraint on the
+in-loop feasible fraction, independent verification afterwards) was run
+against nominal optimisation on the truss at 1,500 design evaluations and
+10 seeds. Every robust optimum is 100 % feasible under 300 independent
++/- 2 % perturbations; the nominal member-surrogate optimum, which sits on
+its buckling limits, is 71 % feasible (54 to 89 % across seeds). The price
+is 24 to 43 % more mass, and the nominal evolutionary algorithm at this
+budget is lighter than either robust method while also fully robust, because
+it had not yet converged to the limits. The conclusion is that the result
+exposed by the v0.9 lab (a converged optimum keeps feasibility in 12 % of
+perturbations) is real and that the first robust formulation is too
+expensive: 12 copies make the 95 % target an all-copies requirement and
+multiply solver cost by 13. The cheaper formulations are the next study.
+Table in `docs/BENCHMARKS.md`.
+
 ## Cross-domain check (2026-09-27, engine 0.8.0): the manipulator
 
 The same six optimisers were run on the planar manipulator (registered study
@@ -167,7 +184,8 @@ lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 | Do optimiser rankings transfer between domains? | Answered: no; CMA-ES wins on the manipulator | study `manipulator-optimizers` |
 | Does the representation result transfer between domains? | Answered: yes, with a smaller margin where the objective has a hard floor | study `manipulator-optimizers` |
 | How sensitive are discovered designs to manufacturing tolerance? | Measurable now; measured per lab run | robustness stage, v0.9 |
-| Does optimising the robust margin rather than the nominal design change the optimum? | Open | planned for v1.0 |
+| Does optimising the robust margin rather than the nominal design change the optimum? | Answered in part (negative at 1,500 evaluations): robust mode gives 100 % independently robust designs at +24 % to +43 % mass; the formulation (12 copies, 95 % target) over-constrains and the structural redistribution was not measured | study `robust-versus-nominal` |
+| What is the cheapest formulation of robustness: more in-loop copies with a lower target, constraint tightening by a margin, or a robust-margin objective? | Open | needs a study at convergence budgets with per-run designs kept |
 | Do multi-seed pilots pick a different strategy than single-seed pilots at equal budget? | Open; the lab now records both | lab records, v0.9 |
 
 ## Next experiments

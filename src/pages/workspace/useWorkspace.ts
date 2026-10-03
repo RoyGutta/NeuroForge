@@ -121,6 +121,7 @@ export function useWorkspace() {
       optimizer: { id: settings.optimizerId, params: settings.params },
       budget: { maxEvaluations: settings.maxEvaluations },
       seedBaseline: settings.seedBaseline,
+      robust: settings.robust,
     });
     setStatus("running");
     setError(null);
@@ -177,6 +178,7 @@ export function useWorkspace() {
         maxEvaluations: rec.config.budget.maxEvaluations,
         seed: rec.config.seed,
         seedBaseline: rec.config.seedBaseline,
+        robust: rec.config.robust,
       });
       setRecord(rec);
       setGenerations(rec.generations);
@@ -202,6 +204,7 @@ export function useWorkspace() {
       maxEvaluations: rec.config.budget.maxEvaluations,
       seed: rec.config.seed,
       seedBaseline: rec.config.seedBaseline,
+      robust: rec.config.robust,
     });
     setRecord(rec);
     setGenerations(rec.generations);

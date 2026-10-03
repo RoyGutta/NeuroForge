@@ -4,7 +4,7 @@ import { getLabStore } from "../../app/store";
 import { createLabConfig, type LabEvent, type LabRecord, type LabStage, type PilotResult } from "../../engine/autonomous/lab";
 import type { LabSummary } from "../../engine/experiments/labStore";
 import { LabReportView } from "./LabReportView";
-import { formatMetric } from "./model";
+import { DEFAULT_ROBUST, formatMetric } from "./model";
 import type { Workspace } from "./useWorkspace";
 
 type Live = { stage: LabStage; message: string }[];
@@ -21,6 +21,7 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
   const [seed, setSeed] = useState(7);
   const [pilotSeeds, setPilotSeeds] = useState(1);
   const [tolerancePct, setTolerancePct] = useState(2);
+  const [robustMode, setRobustMode] = useState(false);
   const [labs, setLabs] = useState<LabSummary[]>([]);
   const [showReport, setShowReport] = useState(false);
   const [running, setRunning] = useState(false);
@@ -58,7 +59,7 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
     let config;
     try {
       const pilotBudget = Math.max(200, Math.round((budget * 0.075) / pilotSeeds));
-      config = createLabConfig({ problem, seed, totalBudget: budget, pilotSeeds, pilotBudget, tradeoffBudget: Math.max(300, Math.round(budget / 6)), robustness: { tolerance: tolerancePct / 100, samples: Math.min(400, Math.max(100, Math.round(budget / 40))) } });
+      config = createLabConfig({ problem, seed, totalBudget: budget, pilotSeeds, pilotBudget, tradeoffBudget: Math.max(300, Math.round(budget / 6)), robustness: { tolerance: tolerancePct / 100, samples: Math.min(400, Math.max(100, Math.round(budget / 40))) }, robust: robustMode ? { ...DEFAULT_ROBUST, tolerance: tolerancePct / 100 } : undefined });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       return;
@@ -121,6 +122,10 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
           <label className="check">
             tolerance %
             <input type="number" min={0} max={20} step={0.5} value={tolerancePct} disabled={running} onChange={(e) => setTolerancePct(Number(e.target.value))} style={{ width: 60 }} aria-label="Manufacturing tolerance for the robustness stage, percent" />
+          </label>
+          <label className="check" title="Every stage optimises with perturbed copies inside each evaluation; the robustness stage then checks the result independently">
+            <input type="checkbox" checked={robustMode} disabled={running} onChange={(e) => setRobustMode(e.target.checked)} aria-label="Optimise in robust mode" />
+            robust mode
           </label>
           {running ? (
             <button onClick={() => handle.current?.cancel()}>Stop</button>
@@ -255,6 +260,20 @@ export function AutonomousPanel({ ws }: { ws: Workspace }) {
             )}
             <button className="secondary" onClick={() => setShowReport((v) => !v)} aria-expanded={showReport}>
               {showReport ? "Hide lab report" : "Read lab report"}
+            </button>
+            <button
+              className="secondary"
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(record, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${record.id}.json`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }}
+            >
+              Export lab · JSON
             </button>
             <span className="tiny">Opening a stage loads its full record (every generation) into the panels below and saves it to the library.</span>
           </div>

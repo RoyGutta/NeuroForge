@@ -7,6 +7,7 @@ import { GRAVITY_M_S2 } from "../../engine/domains/robotics/manipulator/statics"
 import { DEFAULT_MATERIAL_ID } from "../../engine/domains/structural/truss/materials";
 import { createTrussBridgeProblem } from "../../engine/domains/structural/truss/template";
 import type { ExtractedValue } from "../../engine/interpret";
+import type { RobustSpec } from "../../engine/robustness/robustProblem";
 
 export type FieldSource = "user" | "brief" | "assumed";
 
@@ -37,7 +38,11 @@ export interface RunSettings {
   maxEvaluations: number;
   seed: number;
   seedBaseline: boolean;
+  /** Robust mode: perturbed copies evaluated inside every design evaluation. */
+  robust?: RobustSpec;
 }
+
+export const DEFAULT_ROBUST: RobustSpec = { tolerance: 0.02, samples: 12, targetFraction: 0.95 };
 
 export const DEFAULT_BRIEF = "Design a lightweight bridge spanning 2 meters that supports 500 N.";
 export const DEFAULT_ROBOTICS_BRIEF = "Design a two-link arm that lifts a 2 kg payload anywhere within a 0.8 m reach with minimum motor torque.";
@@ -222,6 +227,8 @@ export function formatMetric(id: string, v: number | undefined): string {
     case "bucklingUtilization":
     case "unreachableFraction":
       return `${formatNumber(v * 100, 0)} %`;
+    case "robustFeasibleFraction":
+      return `${formatNumber(v * 100, 1)} %`;
     case "peakTorque_Nm":
       return `${formatNumber(v, 2)} N m`;
     case "maxTipDeflection_m":

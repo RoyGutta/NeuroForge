@@ -136,7 +136,11 @@ beyond derived seeds.
 real evaluator for every sample: feasible fraction, objective quantiles and
 per-constraint violation probabilities. `toleranceSweep` and `robustMargin`
 (bisection for the largest tolerance that keeps a target feasible fraction)
-build on it. `buildUncertaintyReport` classifies the sources of uncertainty
+build on it. `robustify` wraps any compiled problem in robust mode: each evaluation also
+runs `samples` perturbed copies (seeded from a hash of the parameter vector,
+so neighbouring designs see different samples) and a synthetic
+`robustness` constraint requires a target feasible fraction; the runner
+applies it when an experiment config carries `robust`. `buildUncertaintyReport` classifies the sources of uncertainty
 in a result (model form, parameter, numerical, manufacturing, surrogate,
 statistical) and marks each quantified only when a measurement exists:
 robustness for manufacturing, screening reliability for surrogates, the

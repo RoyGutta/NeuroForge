@@ -24,6 +24,7 @@ import { createExperimentConfig, runExperiment } from "../experiments/runner";
 import { bindingConstraints, parameterSensitivity } from "../explain/sensitivity";
 import { getOptimizerDescriptor } from "../optimization";
 import { robustnessStudy, type RobustnessResult } from "../robustness/robustness";
+import type { RobustSpec } from "../robustness/robustProblem";
 import { buildUncertaintyReport, type UncertaintyReport } from "../uncertainty/taxonomy";
 import { ENGINE_VERSION } from "../version";
 import { detectPlateau, type PlateauOptions } from "./convergence";
@@ -42,6 +43,8 @@ export interface LabConfig {
   tradeoffBudget: number;
   /** Tolerance study of the discovered design; null skips the stage. */
   robustness: { tolerance: number; samples: number } | null;
+  /** Optimise every stage in robust mode (perturbed copies inside each evaluation). */
+  robust?: RobustSpec;
   convergence: PlateauOptions;
   optimizerParams: Record<string, Record<string, number>>;
 }
@@ -57,6 +60,7 @@ export interface CreateLabOptions {
   totalBudget?: number;
   tradeoffBudget?: number;
   robustness?: { tolerance: number; samples: number } | null;
+  robust?: RobustSpec;
   convergence?: PlateauOptions;
   optimizerParams?: Record<string, Record<string, number>>;
 }
@@ -94,6 +98,7 @@ export function createLabConfig(opts: CreateLabOptions): LabConfig {
     totalBudget,
     tradeoffBudget,
     robustness,
+    ...(opts.robust ? { robust: { ...opts.robust } } : {}),
     convergence: opts.convergence ?? { window: 25, minRelativeImprovement: 0.002 },
     optimizerParams,
   };
@@ -306,7 +311,7 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     for (let k = 0; k < config.pilotSeeds; k++) {
       const seed = config.seed * 1000 + 17 + k * 101;
       for (const strategy of config.strategies) {
-        const cfg = createExperimentConfig({ id: `${config.id}-pilot-${strategy}-${k}`, label: `pilot ${strategy} seed ${seed}`, problem, seed, optimizer: { id: strategy, params: config.optimizerParams[strategy] ?? {} }, budget: { maxEvaluations: config.pilotBudget } });
+        const cfg = createExperimentConfig({ id: `${config.id}-pilot-${strategy}-${k}`, label: `pilot ${strategy} seed ${seed}`, problem, seed, optimizer: { id: strategy, params: config.optimizerParams[strategy] ?? {} }, budget: { maxEvaluations: config.pilotBudget }, robust: config.robust });
         const t = now();
         const rec = runQuiet(cfg);
         const result: PilotResult = {
@@ -332,7 +337,7 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     yield { type: "stage", stage: "main", message: `Running ${ranked[0].label} with up to ${mainBudget.toLocaleString()} evaluations; stopping on a plateau of ${config.convergence.window} generations.` };
     const bests: number[] = [];
     let stopReason: "converged" | "budget" = "budget";
-    const mainCfg = createExperimentConfig({ id: `${config.id}-main`, label: `autonomous ${ranked[0].label}`, problem, seed: config.seed, optimizer: { id: record.chosenStrategy, params: config.optimizerParams[record.chosenStrategy] ?? {} }, budget: { maxEvaluations: mainBudget } });
+    const mainCfg = createExperimentConfig({ id: `${config.id}-main`, label: `autonomous ${ranked[0].label}`, problem, seed: config.seed, optimizer: { id: record.chosenStrategy, params: config.optimizerParams[record.chosenStrategy] ?? {} }, budget: { maxEvaluations: mainBudget }, robust: config.robust });
     record.main = yield* runStage(mainCfg, "main", (rec) => {
       const last = rec.generations[rec.generations.length - 1];
       const v = last?.bestSoFar.evaluation?.feasible ? objectiveOf(last.bestSoFar, objective) : Infinity;
@@ -350,7 +355,7 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     if (second && problem.objectives.length === 1) {
       yield { type: "stage", stage: "tradeoff", message: `Mapping the ${objective.label.toLowerCase()}-versus-${second.label.toLowerCase()} trade-off with NSGA-II (${config.tradeoffBudget.toLocaleString()} evaluations).` };
       const moProblem: EngineeringProblem = { ...problem, objectives: [objective, { id: second.id, metric: second.id, direction: "minimize", label: second.label }] };
-      const moCfg = createExperimentConfig({ id: `${config.id}-tradeoff`, label: "autonomous trade-off", problem: moProblem, seed: config.seed * 7 + 3, optimizer: { id: "nsga2", params: config.optimizerParams.nsga2 ?? {} }, budget: { maxEvaluations: config.tradeoffBudget } });
+      const moCfg = createExperimentConfig({ id: `${config.id}-tradeoff`, label: "autonomous trade-off", problem: moProblem, seed: config.seed * 7 + 3, optimizer: { id: "nsga2", params: config.optimizerParams.nsga2 ?? {} }, budget: { maxEvaluations: config.tradeoffBudget }, robust: config.robust });
       record.tradeoff = yield* runStage(moCfg, "tradeoff");
     } else {
       yield { type: "stage", stage: "tradeoff", message: "Trade-off stage skipped: the problem does not expose a second objective." };

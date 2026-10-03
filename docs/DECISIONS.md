@@ -2,6 +2,22 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-03 — Robustness as a measured constraint, verified independently
+**Decision.** Robust mode evaluates perturbed copies of every design through
+the real solver inside the evaluation and adds a constraint on their feasible
+fraction; the perturbation sample is seeded from a hash of the parameter
+vector. Every robust result is then re-checked with a fresh seed and a
+larger sample, and that independent number is the one reported.
+**Why.** It reuses every optimiser unchanged, keeps the "no predicted
+numbers" rule (each copy is a solver call), and cannot be gamed by a fixed
+sample. Constraint tightening by a margin would be cheaper but assumes the
+constraints' sensitivity to tolerance is known; this formulation measures it.
+**Consequences.** Solver cost multiplies by 1 + copies, and a small in-loop
+sample makes a 95 % target behave like an all-copies requirement. The first
+study records this honestly: robust optima pass the independent check but
+cost 24 to 43 % more mass at 1,500 evaluations. Cheaper formulations are an
+open research question, not a claim.
+
 ## 2026-09-27 — A planar manipulator as the second domain
 **Decision.** The second engineering domain is a two-link planar manipulator
 sized for static payload holding: closed-form kinematics, rigid-body statics
