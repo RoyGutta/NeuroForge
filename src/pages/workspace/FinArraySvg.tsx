@@ -80,11 +80,11 @@ export function FinArraySvg({ artifact, mode, temperatureLimit_C, compact, ariaL
           {(d.finHeight_m * 1000).toFixed(1)} mm
         </text>
       </g>
-      <g fill="#94a29e" fontSize={font} fontFamily="IBM Plex Sans, sans-serif">
-        <text x={12} y={16}>
+      <g fill="#94a29e" fontSize={font} fontFamily="IBM Plex Sans, sans-serif" textAnchor="end">
+        <text x={W - 12} y={16}>
           {ok ? `base ${artifact.baseTemperature_C.toFixed(1)} C · tip ${artifact.tipTemperature_C.toFixed(1)} C · ambient ${artifact.ambient_C} C` : "no steady state"}
         </text>
-        <text x={12} y={30}>
+        <text x={W - 12} y={30}>
           {ok ? `h ${artifact.heatTransferCoefficient_W_m2K.toFixed(2)} W/m2K · fin efficiency ${(artifact.finEfficiency * 100).toFixed(0)} % · ${artifact.result.thermalResistance_K_W.toFixed(3)} K/W` : ""}
         </text>
       </g>
