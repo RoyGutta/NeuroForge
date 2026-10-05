@@ -26,6 +26,11 @@ export interface ExperimentConfig {
   seedBaseline: boolean;
   /** Robust mode: every design also evaluated at perturbed copies (see robustness/robustProblem). */
   robust?: RobustSpec;
+  /** Constraint tightening: every limit scaled by this margin (see robustness/formulations). */
+  margin?: number;
+  margins?: Record<string, number>;
+  /** Extra designs injected into the first generation (warm start), besides the baseline. */
+  seedDesigns?: number[][];
 }
 
 export interface GenerationSummary {

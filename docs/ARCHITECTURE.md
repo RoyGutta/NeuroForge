@@ -140,7 +140,14 @@ build on it. `robustify` wraps any compiled problem in robust mode: each evaluat
 runs `samples` perturbed copies (seeded from a hash of the parameter vector,
 so neighbouring designs see different samples) and a synthetic
 `robustness` constraint requires a target feasible fraction; the runner
-applies it when an experiment config carries `robust`. `buildUncertaintyReport` classifies the sources of uncertainty
+applies it when an experiment config carries `robust`. `formulations.ts` holds the cheaper alternatives: `tightenConstraints`
+(every limit scaled by a margin, per-constraint overrides, one solver call
+per design) and `postHocRobustSelection` (a nominal run's best-so-far
+trajectory walked back, linearly or by anchored bisection, to the lightest
+design that passes an independent check). The study registry can budget
+methods in solver calls rather than design evaluations, run a nominal phase
+before a robust phase, and keeps every run's best design and its
+per-constraint violation probabilities. `buildUncertaintyReport` classifies the sources of uncertainty
 in a result (model form, parameter, numerical, manufacturing, surrogate,
 statistical) and marks each quantified only when a measurement exists:
 robustness for manufacturing, screening reliability for surrogates, the

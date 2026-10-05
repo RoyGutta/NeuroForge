@@ -44,7 +44,7 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v1.0.0) implements two problem families end to end, the
+The current release (v1.1.0) implements two problem families end to end, the
 planar truss bridge and a planar two-link manipulator, deeply enough that
 every stage of the pipeline is real, tested, and inspectable, and adds a
 learning layer: surrogate models trained
@@ -133,15 +133,15 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Baseline | Conventional uniform-section Warren truss at span/8 depth, or an equal-link arm with a common tube radius, each sized by bisection to just satisfy the same constraints |
 | Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, member-surrogate uncertainty-aware search, constrained Bayesian optimisation (Gaussian processes, expected improvement), CMA-ES, NSGA-II multi-objective search with an external Pareto archive and hypervolume tracking, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
 | Learning | Dataset builder over reproducible runs with seeded splits, including per-member force and free-node displacement columns and log-linear encoding of log-scaled variables; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and the displacement field and applies the exact stress, buckling, deflection and compliance equations with uncertainty propagated through the linear force map; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
-| Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`) on either domain: declared hypothesis, methods, seeds and budget; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
+| Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`) on either domain: declared hypothesis, methods, seeds and budget in design evaluations or solver calls; every run's best design, metrics and independent robustness check kept in the record; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
 | Benchmarks | `npm run benchmark` and `npm run ablation`: every optimiser on the canonical problem at equal budget across seeds, with median, IQR, evaluations-to-target and screening reliability; raw runs under `benchmarks/results/`, rendered on the `/benchmarks` page (tables, median convergence curves with interquartile bands, per-run inspection), tables in `docs/BENCHMARKS.md`, the research question in `docs/RESEARCH.md` |
 | Experiments | Generator-based runner, reproducible records, per-generation snapshots, browser-local experiment and lab libraries, JSON export of experiments and lab records, command-line reproduction of both (`npm run reproduce`, `npm run reproduce:lab`) |
 | Autonomous search | Staged lab on either domain: baseline analysis, equal-budget pilots of every strategy on one or more seeds ranked by median, the winner run until its best-so-far plateaus, an NSGA-II trade-off stage against a second metric the domain exposes, a robustness stage that perturbs the discovery through the solver, an uncertainty taxonomy, and a lab-report style discovery report composed only from the stage records; lab records are stored in the browser library and each stage opens in the workspace as a normal experiment |
-| Robustness and uncertainty | Seeded tolerance perturbation of any design through the real evaluator (feasible fraction, objective quantiles, per-constraint violation probabilities, tolerance sweep, robust margin by bisection); robust mode for any optimiser, the lab and registered studies (perturbed copies inside every evaluation plus a robustness constraint, verified afterwards with an independent sample); an engineering uncertainty taxonomy (model form, parameter, numerical, manufacturing, surrogate, statistical) that marks a source quantified only when a measurement exists |
+| Robustness and uncertainty | Seeded tolerance perturbation of any design through the real evaluator (feasible fraction, objective quantiles, per-constraint violation probabilities, tolerance sweep, robust margin by bisection); robust mode for any optimiser, the lab and registered studies (perturbed copies inside every evaluation plus a robustness constraint); cheaper formulations (constraint tightening by uniform or per-constraint margins, post-hoc selection along a run's trajectory), all verified afterwards with an independent sample; an engineering uncertainty taxonomy (model form, parameter, numerical, manufacturing, surrogate, statistical) that marks a source quantified only when a measurement exists |
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Domain selector; editable specification with assumption badges; truss viewport with structure, axial-force, utilisation and deformed-shape modes, manipulator viewport with task-point, torque, utilisation and deflection modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panels; evidence tables |
-| Testing | 208 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Testing | 215 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
@@ -454,10 +454,15 @@ commitments.
    report composed from the record.
 10. **Done (v1.0):** robust mode for optimisers, lab and studies with
    independent verification, the `robust-versus-nominal` study, exportable
-   and re-runnable lab records.
-11. Additional engineering domains behind the `EngineeringDomain` contract
+   and re-runnable lab records. v1.0 completed the original roadmap.
+11. **v1.1 (in progress):** research expansion. Done: robustness
+   formulations at equal solver calls with per-run design retention
+   (`robust-formulations` study). Next: a third engineering domain, 3D
+   trusses with a bound viewport, an LLM interpreter validated against the
+   rule-based one, server-side execution.
+12. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, aerospace, fluids), tubular truss sections, 3D trusses.
-12. Advanced learning components where they earn their place: neural
+13. Advanced learning components where they earn their place: neural
    surrogates with uncertainty, graph representations of structures,
    sketch-to-geometry.
 

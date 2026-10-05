@@ -1,3 +1,4 @@
+import { studyProblemTitle, type StudyBenchmark } from "../../engine/experiments/study";
 /**
  * View model for committed benchmark records (`benchmarks/results/*.json`).
  * Two producers exist, `scripts/benchmark.ts` and `scripts/ablation.ts`;
@@ -17,6 +18,14 @@ export interface NormalizedRun {
   wallTimeMs?: number;
   curve: CurvePoint[];
   reliability?: { precision?: number; recall?: number; falseFeasibleRate?: number; falseInfeasibleRate?: number; forceR2?: number; coverage95?: number };
+  /** Study runs since v1.1: the design behind the number and its independent robustness check. */
+  solverCalls?: number;
+  robustFeasibleFraction?: number;
+  robustDetail?: { tolerance: number; samples: number; constraints: { id: string; violationProbability: number; maxUtilization: number }[] };
+  bestParameters?: number[];
+  bestMetrics?: Record<string, number>;
+  phases?: { kind: string; evaluations: number; solverCalls: number; bestObjective: number | null }[];
+  postHoc?: { checks: number; selectedFromTrajectory: boolean };
 }
 
 export interface GroupSummary {
@@ -36,6 +45,7 @@ export interface GroupSummary {
   meanWallTimeS?: number;
   medianFalseFeasible?: number;
     medianRobustFeasible?: number;
+    medianSolverCalls?: number;
   medianFalseInfeasible?: number;
   medianForceR2?: number;
   medianCoverage?: number;
@@ -66,6 +76,8 @@ export interface NormalizedReport {
   /** Objective shown in tables and curves ("mass" / "kg" for the truss records). */
   objectiveLabel: string;
   objectiveUnit: string;
+  /** Study benchmark, so a run's design can be rebuilt and opened in the workspace. */
+  benchmark?: StudyBenchmark;
   problemTitle: string;
   groups: NormalizedGroup[];
 }
@@ -96,14 +108,14 @@ type StudyFile = {
   objective?: { metric: string; label: string; unit: string; direction: string };
   baselineObjective?: number;
   targetObjective?: number;
-  spec: { id: string; title: string; hypothesis: string; budget: number; seeds: number[]; reference: string; benchmark: { problem: string; payload_kg?: number; reach_m?: number }; methods: { id: string; optimizer: string; params: Record<string, number>; budget?: number }[] };
+  spec: { id: string; title: string; hypothesis: string; budget: number; seeds: number[]; reference: string; benchmark: StudyBenchmark; methods: { id: string; optimizer: string; params: Record<string, number>; budget?: number }[] };
   engineVersion: string;
   createdAt: string;
   baselineMass_kg?: number;
   targetMass_kg?: number;
-  runs: { method: string; seed: number; budget: number; bestObjective?: number | null; bestMass_kg?: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"] }[];
+  runs: { method: string; seed: number; budget: number; bestObjective?: number | null; bestMass_kg?: number | null; feasible: boolean; evaluationsToTarget: number | null; wallTimeMs: number; curve: CurvePoint[]; reliability?: NormalizedRun["reliability"]; solverCalls?: number; robustFeasibleFraction?: number; robustDetail?: NormalizedRun["robustDetail"]; bestParameters?: number[]; bestEvaluation?: { metrics: Record<string, number> }; phases?: NormalizedRun["phases"]; postHoc?: NormalizedRun["postHoc"] }[];
   analysis: {
-    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; best?: { median: number; lower: number; upper: number }; bestMass?: { median: number; lower: number; upper: number }; medianRobustFeasible?: number; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
+    methods: { id: string; optimizer: string; budget: number; runs: number; feasibleRuns: number; best?: { median: number; lower: number; upper: number }; bestMass?: { median: number; lower: number; upper: number }; medianRobustFeasible?: number; medianSolverCalls?: number; q1Best: number; q3Best: number; medianEvaluationsToTarget: number | null; runsReachingTarget: number; meanWallTimeS: number; medianFalseFeasible?: number; medianFalseInfeasible?: number; medianForceR2?: number }[];
     comparisons: { method: string; varghaDelaneyA: number; cliffsDelta: number; effectLabel: string }[];
   };
 };
@@ -126,7 +138,8 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
       targetMass: st.targetObjective ?? st.targetMass_kg ?? NaN,
       objectiveLabel: st.objective?.label.toLowerCase() ?? "mass",
       objectiveUnit: st.objective?.unit ?? "kg",
-      problemTitle: st.spec.benchmark.problem === "planar-manipulator" ? `Planar manipulator (${st.spec.benchmark.payload_kg} kg, ${st.spec.benchmark.reach_m} m)` : "Canonical truss bridge",
+      benchmark: st.spec.benchmark,
+      problemTitle: studyProblemTitle(st.spec.benchmark),
       groups: st.analysis.methods.map((m) => {
         const cmp = st.analysis.comparisons.find((c) => c.method === m.id);
         return {
@@ -134,7 +147,7 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
           optimizer: m.optimizer,
           budget: m.budget,
           params: st.spec.methods.find((x) => x.id === m.id)?.params ?? {},
-          runs: st.runs.filter((run) => run.method === m.id).map((run) => ({ seed: run.seed, best: run.bestObjective ?? run.bestMass_kg ?? null, feasible: run.feasible, evaluationsToTarget: run.evaluationsToTarget, wallTimeMs: run.wallTimeMs, curve: run.curve, reliability: run.reliability })),
+          runs: st.runs.filter((run) => run.method === m.id).map((run) => ({ seed: run.seed, best: run.bestObjective ?? run.bestMass_kg ?? null, feasible: run.feasible, evaluationsToTarget: run.evaluationsToTarget, wallTimeMs: run.wallTimeMs, curve: run.curve, reliability: run.reliability, solverCalls: run.solverCalls, robustFeasibleFraction: run.robustFeasibleFraction, robustDetail: run.robustDetail, bestParameters: run.bestParameters, bestMetrics: run.bestEvaluation?.metrics, phases: run.phases, postHoc: run.postHoc })),
           summary: {
             medianBest: Number.isFinite((m.best ?? m.bestMass)?.median ?? NaN) ? (m.best ?? m.bestMass)!.median : null,
             ciLower: (m.best ?? m.bestMass)?.lower ?? NaN,
@@ -148,6 +161,7 @@ export function normalizeReport(file: string, raw: unknown): NormalizedReport {
             meanWallTimeS: m.meanWallTimeS,
             medianFalseFeasible: m.medianFalseFeasible,
             medianRobustFeasible: m.medianRobustFeasible,
+            medianSolverCalls: m.medianSolverCalls,
             medianFalseInfeasible: m.medianFalseInfeasible,
             medianForceR2: m.medianForceR2,
             varghaDelaneyA: cmp?.varghaDelaneyA,

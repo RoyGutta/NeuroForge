@@ -25,10 +25,10 @@ console.log(`${spec.methods.length} methods x ${spec.seeds.length} seeds at ${sp
 const result = runStudy(spec, (run, i, total) => console.log(`  [${i}/${total}] ${run.method} seed ${run.seed}: ${run.bestObjective?.toFixed(3) ?? "infeasible"}${run.evaluationsToTarget ? ` (target at ${run.evaluationsToTarget})` : ""}`));
 const analysis = analyzeStudy(result);
 console.log("");
-console.log(["method".padEnd(20), `median ${result.objective.unit}`.padStart(10), "95% CI".padStart(16), "IQR".padStart(14), "to target".padStart(12), "A vs ref".padStart(9), "effect".padStart(11), "robust".padStart(8)].join(" ")));
+console.log(["method".padEnd(20), `median ${result.objective.unit}`.padStart(10), "95% CI".padStart(16), "IQR".padStart(14), "to target".padStart(12), "A vs ref".padStart(9), "effect".padStart(11), "robust".padStart(8), "calls".padStart(9)].join(" "));
 for (const m of analysis.methods) {
   const c = analysis.comparisons.find((x) => x.method === m.id);
-  console.log([m.id.padEnd(20), m.best.median.toFixed(3).padStart(10), `${m.best.lower.toFixed(3)}–${m.best.upper.toFixed(3)}`.padStart(16), `${m.q1Best.toFixed(3)}–${m.q3Best.toFixed(3)}`.padStart(14), (m.medianEvaluationsToTarget ? `${Math.round(m.medianEvaluationsToTarget)} (${m.runsReachingTarget}/${m.runs})` : "not reached").padStart(12), (c ? c.varghaDelaneyA.toFixed(2) : "ref").padStart(9), (c ? c.effectLabel : "").padStart(11), (m.medianRobustFeasible === undefined ? "" : `${(m.medianRobustFeasible * 100).toFixed(0)} %`).padStart(8)].join(" "));
+  console.log([m.id.padEnd(20), m.best.median.toFixed(3).padStart(10), `${m.best.lower.toFixed(3)}–${m.best.upper.toFixed(3)}`.padStart(16), `${m.q1Best.toFixed(3)}–${m.q3Best.toFixed(3)}`.padStart(14), (m.medianEvaluationsToTarget ? `${Math.round(m.medianEvaluationsToTarget)} (${m.runsReachingTarget}/${m.runs})` : "not reached").padStart(12), (c ? c.varghaDelaneyA.toFixed(2) : "ref").padStart(9), (c ? c.effectLabel : "").padStart(11), (m.medianRobustFeasible === undefined ? "" : `${(m.medianRobustFeasible * 100).toFixed(0)} %`).padStart(8), Math.round(m.medianSolverCalls).toLocaleString().padStart(9)].join(" "));
 }
 mkdirSync("benchmarks/results", { recursive: true });
 const out = `benchmarks/results/${spec.id}-${new Date().toISOString().slice(0, 10)}.json`;

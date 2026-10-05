@@ -5,6 +5,61 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-10-05 · engine 1.1.0 · robustness formulations at equal solver calls, 10 seeds
+
+Registered study `benchmarks/studies/robust-formulations.json`, raw runs
+(with every run's best design and its per-constraint violation
+probabilities) in `benchmarks/results/robust-formulations-2026-10-05.json`.
+Canonical truss, evolutionary algorithm (population 30) for every method so
+only the formulation varies. Budget 19,500 solver calls per run: nominal and
+margin methods get 19,500 design evaluations; copy-based methods get
+19,500 / (1 + copies) designs; post-hoc methods add their check cost on top.
+Robustness of each run's reported design is measured independently with
+300 fresh +/- 2 % perturbations through the nominal evaluator.
+
+| Method | Median kg | 95 % CI | Independent robust fraction (median, min) | Runs at >= 95 % | Solver calls (median) | Area vs nominal |
+|---|---|---|---|---|---|---|
+| nominal (reference) | 0.505 | 0.497–0.513 | 0 % (0 %) | 0/10 | 19,500 | – |
+| post-hoc 95 %, linear scan | 0.569 | 0.556–0.578 | 99 % (97 %) | 10/10 | 85,350 | +20 % |
+| post-hoc 95 %, bisection | 0.588 | 0.550–0.596 | 100 % (99 %) | 5/10 (5 runs found nothing) | 58,800 | +25 % |
+| post-hoc 95 %, strided (16) | 0.581 | 0.569–0.588 | 100 % (97 %) | 10/10 | 26,400 | +26 % |
+| margin 3 % | 0.523 | 0.513–0.535 | 41 % (27 %) | 0/10 | 19,500 | +2 % |
+| margin 5 % | 0.525 | 0.511–0.553 | 87 % (64 %) | 2/10 | 19,500 | +5 % |
+| margin 7 % | 0.531 | 0.517–0.570 | 98 % (82 %) | 6/10 | 19,500 | +7 % |
+| margin buckling 6 % / others 3 % | 0.524 | 0.507–0.541 | 72 % (12 %) | 1/10 | 19,500 | +4 % |
+| robust copies 12, target 95 % (v1.0) | 0.854 | 0.765–0.912 | 100 % (88 %) | 9/10 | 19,500 | +129 % |
+| robust copies 8, target 87.5 % | 0.647 | 0.611–0.713 | 100 % (96 %) | 10/10 | 19,710 | +57 % |
+| robust copies 32, target 90 % | 1.671 | 1.426–1.818 | 100 % (100 %) | 10/10 | 19,800 | +337 % |
+| two-phase: 70 % nominal, then copies 12 | 1.887 | 1.776–1.986 | 100 % (99 %) | 10/10 | 19,500 | +495 % |
+
+Reading.
+- **The converged nominal optimum is not robust at all.** At 19,500
+  evaluations the EA reaches 0.505 kg with 0 % of perturbations feasible;
+  the violation probabilities are buckling 98 % and stress 86 %, deflection
+  0 %. Buckling drives the overhead, but stress is close behind because both
+  are binding at the optimum.
+- **Cheapest robust designs.** Post-hoc selection from the nominal trajectory
+  gives a 95 %-robust design at 0.569 kg (+13 % mass) on every seed; the
+  strided scan reaches the same designs to within its stride at a third of
+  the linear scan's cost. Margin 7 % gives +5 % mass with a 98 % median but
+  only 6 of 10 seeds at or above 95 %: the margin that buys a given
+  feasible fraction varies across optima and must be measured per design.
+- **Per-constraint margins did not help.** Buckling 6 % with stress at 3 %
+  moved the violations to stress (23 %); both constraints need the margin.
+- **Copy-based constraints are budget-starved at equal solver calls.** Eight
+  copies at 87.5 % is the best of them (+28 % mass); 32 copies leaves 590
+  designs and never converges; the two-phase run, seeded from a fragile
+  optimum into a hard robust constraint, restarts from infeasibility and
+  ends heavier than the baseline.
+- **Bisection over the trajectory is unreliable** because robustness along a
+  converging run is not monotone: near zero for the final designs, rising
+  through a transition band, high for the early heavy designs, and dipping
+  again at the solver-sized baseline (49–54 %). Five seeds found no anchor.
+  Recorded as a negative result; the strided scan replaces it.
+- **Structure.** Margin optima are the nominal shape with 2–7 % more area;
+  post-hoc designs carry 20–26 % more area; copy-based optima are different,
+  much heavier regions, not thickened versions of the nominal design.
+
 ## 2026-10-03 · engine 1.0.0 · robust versus nominal, 10 seeds, 1,500 design evaluations
 
 Registered study `benchmarks/studies/robust-versus-nominal.json`, raw runs and

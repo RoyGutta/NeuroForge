@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.0 — 2026-10-05 · Robustness formulations and per-run design retention
+- Cheaper robustness formulations (`src/engine/robustness/formulations.ts`):
+  constraint tightening by a uniform or per-constraint margin, and post-hoc
+  selection along a nominal run's best-so-far trajectory (linear, bisection,
+  strided), all verified afterwards with an independent sample.
+- Experiment configs accept `margin`, `margins` and `seedDesigns` (warm
+  start); the runner applies them before robust mode.
+- Study registry: `budgetUnit: "solverCalls"` equalises solver calls across
+  copy-based and plain methods; per-method `margin`, `postHoc` and
+  `nominalPhaseFraction`; every run keeps its best design, nominal metrics,
+  solver calls, phases and per-constraint violation probabilities.
+- Registered study `robust-formulations` (10 seeds, 19,500 solver calls):
+  post-hoc selection gives 95 %-robust designs at +13 % mass on every seed;
+  margin 7 % costs +5 % at 98 % median robustness but misses 95 % on four
+  seeds; copy-based constraints are budget-starved; bisection over the
+  trajectory is a recorded negative result.
+- Benchmarks page: solver-call columns, per-run robust fraction, and the
+  design behind any run (parameters, metrics, violation probabilities) with
+  a button that opens it in the workspace.
+- Study script prints robust fraction and solver calls (a syntax error from
+  1.0.0 in that script is fixed).
+
 ## 1.0.0 — 2026-10-03 · Research-grade platform
 - Robust mode (`robustify`): any compiled problem evaluated with perturbed
   copies inside each design evaluation and a `robustness` constraint on the

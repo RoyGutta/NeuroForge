@@ -81,7 +81,19 @@ it is real, tested, and honest in the interface.
 - [x] Lab records exportable as JSON and re-runnable with `npm run reproduce:lab`
 - [x] Independent robustness check column in registered studies and the Benchmarks page
 
-## Beyond 1.0
+## v1.1 · Research expansion (in progress)
+v1.0 completed the original roadmap. v1.1 answers harder questions with
+controlled experiments; a milestone is done only when implemented, tested,
+benchmarked, documented and verified live.
+
+- [x] M1 Robust-optimisation formulation study: solver-call budgets, constraint tightening (uniform and per-constraint), post-hoc trajectory selection (linear and bisection), copy-count and target sweep, two-phase search; registered study `robust-formulations`
+- [x] M2 Per-run design retention: study records keep each run's design, metrics and per-constraint violation probabilities; the Benchmarks page shows the design behind a run and opens it in the workspace
+- [ ] M3 Third engineering domain (thermal or aerospace) with defensible mathematics
+- [ ] M4 3D truss and a Three.js viewport bound to the solved structure
+- [ ] M5 LLM interpreter behind `ProblemInterpreter`, validated against the rule-based one
+- [ ] M6 Server-side job execution; the browser architecture stays functional
+
+## Beyond v1.1
 - [ ] Thermal or aerospace domain behind `EngineeringDomain`
 - [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
 - [ ] LLM-backed interpreter implementing `ProblemInterpreter`, validated against the rule-based one

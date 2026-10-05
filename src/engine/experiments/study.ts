@@ -8,6 +8,8 @@
  */
 import { createManipulatorProblem } from "../domains/robotics/manipulator/template";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
+import type { Design, Evaluation } from "../core/design";
+import { postHocRobustSelection } from "../robustness/formulations";
 import { robustnessStudy } from "../robustness/robustness";
 import type { RobustSpec } from "../robustness/robustProblem";
 import { compileProblem } from "../domains/registry";
@@ -26,6 +28,14 @@ export interface StudyMethod {
   budget?: number;
   /** Optimise in robust mode (perturbed copies inside every evaluation). */
   robust?: RobustSpec;
+  /** Constraint tightening by a relative margin on every limit. */
+  margin?: number;
+  /** Nominal run, then the best-so-far trajectory screened with the study's robustCheck tolerance. */
+  postHoc?: { targetFraction: number; strategy?: "linear" | "bisection" | "strided"; stride?: number };
+  /** Per-constraint margin overrides used with `margin`. */
+  margins?: Record<string, number>;
+  /** With `robust`: spend this fraction of the budget nominally first, then continue in robust mode from the nominal best. */
+  nominalPhaseFraction?: number;
 }
 
 export interface StudySpec {
@@ -34,6 +44,8 @@ export interface StudySpec {
   hypothesis: string;
   benchmark: StudyBenchmark;
   budget: number;
+  /** "evaluations" (default): design evaluations per run. "solverCalls": copy-based methods get budget / (1 + copies) designs. */
+  budgetUnit?: "evaluations" | "solverCalls";
   seeds: number[];
   reference: string;
   methods: StudyMethod[];
@@ -66,6 +78,17 @@ export interface StudyRun {
   feasible: boolean;
   /** Feasible fraction of the best design under the spec's robustCheck, measured with the nominal evaluator. */
   robustFeasibleFraction?: number;
+  /** Per-constraint violation probabilities of that check. */
+  robustDetail?: { tolerance: number; samples: number; seed: number; constraints: { id: string; violationProbability: number; maxUtilization: number }[] };
+  /** The design behind the numbers, kept even when the record is stripped. */
+  bestParameters: number[];
+  bestEvaluation: Evaluation;
+  /** Solver calls actually spent: design evaluations times copies, plus post-hoc checks and nominal phases. */
+  solverCalls: number;
+  /** Phases of a two-phase method; the final phase is `record`. */
+  phases?: { kind: "nominal" | "robust"; evaluations: number; solverCalls: number; bestObjective: number | null }[];
+  /** Post-hoc screening outcome. */
+  postHoc?: { checks: number; selectedFromTrajectory: boolean };
   evaluationsToTarget: number | null;
   wallTimeMs: number;
   curve: { evaluations: number; best: number }[];
@@ -106,6 +129,7 @@ export interface MethodAnalysis {
   medianForceR2?: number;
   /** Median independent robust feasible fraction of the best designs (when the spec has robustCheck). */
   medianRobustFeasible?: number;
+  medianSolverCalls: number;
 }
 
 export interface MethodComparison {
@@ -152,27 +176,67 @@ export function runStudy(spec: StudySpec, onRun?: (run: StudyRun, index: number,
   const runs: StudyRun[] = [];
   const total = spec.methods.length * spec.seeds.length;
   for (const m of spec.methods) {
-    const budget = m.budget ?? spec.budget;
+    const stated = m.budget ?? spec.budget;
+    const copies = m.robust ? 1 + m.robust.samples : 1;
+    const solverUnit = spec.budgetUnit === "solverCalls";
+    const phaseFraction = m.robust && m.nominalPhaseFraction ? Math.min(0.95, Math.max(0, m.nominalPhaseFraction)) : 0;
+    // Design evaluations for the (final) run: equalise solver calls when asked.
+    const nominalPhaseEvals = phaseFraction > 0 ? Math.floor(stated * phaseFraction) : 0;
+    const budget = solverUnit ? Math.floor((stated - nominalPhaseEvals) / copies) : phaseFraction > 0 ? Math.floor(stated * (1 - phaseFraction)) : stated;
+    if (!(budget > 0)) throw new Error(`method "${m.id}" has no design budget left`);
     for (const seed of spec.seeds) {
-      const cfg = createExperimentConfig({ id: `${spec.id}-${m.id}-${seed}`, label: `${spec.id} ${m.id} seed ${seed}`, problem, seed, optimizer: { id: m.optimizer, params: m.params }, budget: { maxEvaluations: budget }, robust: m.robust });
       const t0 = now();
+      const phases: StudyRun["phases"] = [];
+      let seedDesigns: number[][] | undefined;
+      if (nominalPhaseEvals > 0) {
+        const pre = runExperimentToCompletion(createExperimentConfig({ id: `${spec.id}-${m.id}-${seed}-nominal`, label: `${spec.id} ${m.id} seed ${seed} nominal phase`, problem, seed, optimizer: { id: m.optimizer, params: m.params }, budget: { maxEvaluations: nominalPhaseEvals }, margin: m.margin, margins: m.margins }));
+        phases.push({ kind: "nominal", evaluations: pre.totalEvaluations, solverCalls: pre.totalEvaluations, bestObjective: pre.best?.evaluation?.feasible ? pre.best.evaluation.objectives[obj.id] : null });
+        if (pre.best) seedDesigns = [pre.best.parameters];
+      }
+      const cfg = createExperimentConfig({ id: `${spec.id}-${m.id}-${seed}`, label: `${spec.id} ${m.id} seed ${seed}`, problem, seed, optimizer: { id: m.optimizer, params: m.params }, budget: { maxEvaluations: budget }, robust: m.robust, margin: m.margin, margins: m.margins, seedDesigns });
       const rec = runExperimentToCompletion(cfg);
-      const ev = rec.best?.evaluation;
+      if (phases.length) phases.push({ kind: "robust", evaluations: rec.totalEvaluations, solverCalls: rec.totalEvaluations * copies, bestObjective: rec.best?.evaluation?.feasible ? rec.best.evaluation.objectives[obj.id] : null });
+      let solverCalls = rec.totalEvaluations * copies + phases.reduce((acc, p) => acc + (p.kind === "nominal" ? p.solverCalls : 0), 0);
+      // The reported design: the run's best, or the post-hoc selection from its trajectory.
+      let chosen: Design | null = rec.best;
+      let postHoc: StudyRun["postHoc"];
+      if (m.postHoc && spec.robustCheck) {
+        const sel = postHocRobustSelection(compiled, rec, { tolerance: spec.robustCheck.tolerance, samples: spec.robustCheck.samples, seed: 104729 + seed, targetFraction: m.postHoc.targetFraction, strategy: m.postHoc.strategy, stride: m.postHoc.stride });
+        if (sel) {
+          chosen = sel.design;
+          solverCalls += sel.solverCalls;
+          postHoc = { checks: sel.checks, selectedFromTrajectory: true };
+        } else {
+          chosen = null;
+          const distinct = new Set(rec.generations.filter((g) => g.bestSoFar.evaluation?.feasible).map((g) => JSON.stringify(g.bestSoFar.parameters))).size;
+          solverCalls += distinct * spec.robustCheck.samples;
+          postHoc = { checks: distinct, selectedFromTrajectory: false };
+        }
+      }
+      // Metrics are always reported from the nominal evaluator so methods are comparable.
+      const nominalEval = chosen ? compiled.evaluate(chosen.parameters) : null;
       const hit = rec.generations.find((g) => g.bestSoFar.evaluation?.feasible && better(g.bestSoFar.evaluation.objectives[obj.id]));
       const run: StudyRun = {
         method: m.id,
         seed,
         budget,
-        bestObjective: ev?.feasible ? ev.objectives[obj.id] : null,
-        feasible: !!ev?.feasible,
+        bestObjective: nominalEval?.feasible ? nominalEval.objectives[obj.id] : null,
+        feasible: !!nominalEval?.feasible,
         evaluationsToTarget: hit?.cumulativeEvaluations ?? null,
         wallTimeMs: now() - t0,
         curve: rec.generations.map((g) => ({ evaluations: g.cumulativeEvaluations, best: g.bestSoFar.evaluation?.feasible ? g.bestSoFar.evaluation.objectives[obj.id] : NaN })).filter((c) => Number.isFinite(c.best)),
         reliability: reliabilityOf(rec),
         record: rec,
+        bestParameters: chosen ? chosen.parameters.slice() : [],
+        bestEvaluation: nominalEval ?? compiled.evaluate(compiled.baseline.parameters),
+        solverCalls,
+        ...(phases.length ? { phases } : {}),
+        ...(postHoc ? { postHoc } : {}),
       };
-      if (spec.robustCheck && rec.best) {
-        run.robustFeasibleFraction = robustnessStudy(compiled, rec.best.parameters, { samples: spec.robustCheck.samples, seed: 7919 + seed, tolerance: spec.robustCheck.tolerance }).feasibleFraction;
+      if (spec.robustCheck && chosen) {
+        const check = robustnessStudy(compiled, chosen.parameters, { samples: spec.robustCheck.samples, seed: 7919 + seed, tolerance: spec.robustCheck.tolerance });
+        run.robustFeasibleFraction = check.feasibleFraction;
+        run.robustDetail = { tolerance: check.tolerance, samples: check.samples, seed: check.seed, constraints: check.constraints.map((c) => ({ id: c.id, violationProbability: c.violationProbability, maxUtilization: c.maxUtilization })) };
       }
       runs.push(run);
       onRun?.(run, runs.length, total);
@@ -200,6 +264,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
     const fi = runs.map((r) => r.reliability?.falseInfeasibleRate).filter((v): v is number => v !== undefined);
     const fr = runs.map((r) => r.reliability?.forceR2).filter((v): v is number => v !== undefined);
     const rf = runs.map((r) => r.robustFeasibleFraction).filter((v): v is number => v !== undefined);
+    const sc = runs.map((r) => r.solverCalls);
     return {
       id: m.id,
       optimizer: m.optimizer,
@@ -216,6 +281,7 @@ export function analyzeStudy(result: StudyResult, opts: { resamples?: number; le
       medianFalseInfeasible: fi.length ? median(fi) : undefined,
       medianForceR2: fr.length ? median(fr) : undefined,
       medianRobustFeasible: rf.length ? median(rf) : undefined,
+      medianSolverCalls: sc.length ? median(sc) : 0,
     };
   });
   const refBests = (byMethod.get(result.spec.reference) ?? []).map((r) => r.bestObjective).filter((v): v is number => v !== null);

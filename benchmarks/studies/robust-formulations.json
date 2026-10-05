@@ -1,0 +1,164 @@
+{
+  "id": "robust-formulations",
+  "title": "Which robustness formulation gives feasible-under-tolerance designs at the least mass for an equal number of solver calls?",
+  "hypothesis": "At an equal solver-call budget, cheaper formulations (constraint tightening by a first-order margin; post-hoc screening of a nominal run's trajectory; a nominal phase followed by a short robust phase; percentile constraints with more copies and a lower target) reach designs that pass an independent +/- 2 % check at 95 % with less mass than the v1.0 formulation (12 copies, 95 % target), and the nominal run converged at this budget is not robust. A per-constraint margin (buckling twice the stress margin, from the first-order sensitivity of 1/A^2 versus 1/A) reaches the target at less mass than a uniform margin, and bisection over the trajectory makes post-hoc selection nearly free.",
+  "benchmark": {
+    "problem": "truss-bridge",
+    "span_m": 2,
+    "load_N": 500,
+    "panels": 4,
+    "safetyFactor": 2
+  },
+  "budget": 19500,
+  "budgetUnit": "solverCalls",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reference": "nominal",
+  "methods": [
+    {
+      "id": "nominal",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "posthoc-95",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "postHoc": {
+        "targetFraction": 0.95
+      }
+    },
+    {
+      "id": "posthoc-95-bisect",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "postHoc": {
+        "targetFraction": 0.95,
+        "strategy": "bisection"
+      }
+    },
+    {
+      "id": "posthoc-95-strided",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "postHoc": {
+        "targetFraction": 0.95,
+        "strategy": "strided",
+        "stride": 16
+      }
+    },
+    {
+      "id": "margin-3",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "margin": 0.03
+    },
+    {
+      "id": "margin-5",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "margin": 0.05
+    },
+    {
+      "id": "margin-7",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "margin": 0.07
+    },
+    {
+      "id": "margin-bk6-st3",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "margin": 0.03,
+      "margins": {
+        "buckling": 0.06
+      }
+    },
+    {
+      "id": "robust-k12-p95",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "robust": {
+        "tolerance": 0.02,
+        "samples": 12,
+        "targetFraction": 0.95
+      }
+    },
+    {
+      "id": "robust-k8-p875",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "robust": {
+        "tolerance": 0.02,
+        "samples": 8,
+        "targetFraction": 0.875
+      }
+    },
+    {
+      "id": "robust-k32-p90",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "robust": {
+        "tolerance": 0.02,
+        "samples": 32,
+        "targetFraction": 0.9
+      }
+    },
+    {
+      "id": "twophase-k12-p95",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      },
+      "robust": {
+        "tolerance": 0.02,
+        "samples": 12,
+        "targetFraction": 0.95
+      },
+      "nominalPhaseFraction": 0.7
+    }
+  ],
+  "metrics": [
+    "bestObjective",
+    "robustFeasibleFraction",
+    "solverCalls",
+    "evaluationsToTarget"
+  ],
+  "targetFraction": 0.5,
+  "robustCheck": {
+    "tolerance": 0.02,
+    "samples": 300
+  }
+}

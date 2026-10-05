@@ -1,3 +1,10 @@
+import { useNavigate } from "react-router-dom";
+import { stashPendingProblem } from "../app/store";
+import type { Design } from "../engine/core/design";
+import { compileProblem } from "../engine/domains/registry";
+import type { ExperimentRecord } from "../engine/experiments/experiment";
+import { createExperimentConfig } from "../engine/experiments/runner";
+import { studyProblem } from "../engine/experiments/study";
 import { useMemo, useState } from "react";
 import { Footer } from "../components/Footer";
 import { NavBar } from "../components/NavBar";
@@ -88,6 +95,7 @@ function pct(v?: number | null): string {
 function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport; selected: { group: number; seed: number } | null; onSelect: (g: number) => void }) {
   const hasRel = report.groups.some((g) => g.summary.medianFalseFeasible !== undefined);
   const hasRobust = report.groups.some((g) => g.summary.medianRobustFeasible !== undefined);
+  const hasCalls = report.groups.some((g) => g.summary.medianSolverCalls !== undefined);
   const isStudy = report.kind === "study";
   return (
     <div className="table-wrap">
@@ -108,6 +116,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
             {hasRel && <th>False-infeasible</th>}
             {hasRel && <th>Response R²</th>}
             {hasRobust && <th>Robust feasible (independent check)</th>}
+            {hasCalls && <th>Solver calls (median)</th>}
           </tr>
         </thead>
         <tbody>
@@ -134,6 +143,7 @@ function SummaryTable({ report, selected, onSelect }: { report: NormalizedReport
                 {hasRel && <td>{pct(s.medianFalseInfeasible)}</td>}
                 {hasRel && <td>{s.medianForceR2?.toFixed(3) ?? "—"}</td>}
                 {hasRobust && <td className={s.medianRobustFeasible !== undefined && s.medianRobustFeasible >= 0.95 ? "green" : undefined}>{pct(s.medianRobustFeasible)}</td>}
+                {hasCalls && <td>{s.medianSolverCalls !== undefined ? Math.round(s.medianSolverCalls).toLocaleString() : "—"}</td>}
               </tr>
             );
           })}
@@ -253,6 +263,8 @@ function RunInspector({ report, selected, onSelect }: { report: NormalizedReport
               {group.runs.some((r) => r.reliability) && <th>Precision / recall</th>}
               {group.runs.some((r) => r.reliability) && <th>False-feasible / false-infeasible</th>}
               {group.runs.some((r) => r.reliability?.forceR2 !== undefined) && <th>Response R² · coverage</th>}
+              {group.runs.some((r) => r.robustFeasibleFraction !== undefined) && <th>Robust feasible</th>}
+              {group.runs.some((r) => r.solverCalls !== undefined) && <th>Solver calls</th>}
             </tr>
           </thead>
           <tbody>
@@ -266,11 +278,80 @@ function RunInspector({ report, selected, onSelect }: { report: NormalizedReport
                 {group.runs.some((x) => x.reliability) && <td>{r.reliability ? `${pct(r.reliability.precision)} / ${pct(r.reliability.recall)}` : "—"}</td>}
                 {group.runs.some((x) => x.reliability) && <td>{r.reliability ? `${pct(r.reliability.falseFeasibleRate)} / ${pct(r.reliability.falseInfeasibleRate)}` : "—"}</td>}
                 {group.runs.some((x) => x.reliability?.forceR2 !== undefined) && <td>{r.reliability?.forceR2 !== undefined ? `${r.reliability.forceR2.toFixed(3)} · ${pct(r.reliability.coverage95)}` : "—"}</td>}
+                {group.runs.some((x) => x.robustFeasibleFraction !== undefined) && <td className={r.robustFeasibleFraction !== undefined && r.robustFeasibleFraction >= 0.95 ? "green" : undefined}>{pct(r.robustFeasibleFraction)}</td>}
+                {group.runs.some((x) => x.solverCalls !== undefined) && <td>{r.solverCalls?.toLocaleString() ?? "—"}</td>}
               </tr>
             ))}
           </tbody>
         </table>
       )}
+      {group && selected && <RunDesign report={report} group={group} seed={selected.seed} />}
     </section>
   );
+}
+
+/** The design behind a selected run: parameters, nominal metrics, independent robustness, and a way to open it in the workspace. */
+function RunDesign({ report, group, seed }: { report: NormalizedReport; group: NormalizedGroup; seed: number }) {
+  const navigate = useNavigate();
+  const run = group.runs.find((r) => r.seed === seed);
+  if (!run || !run.bestParameters || !report.benchmark) return null;
+  const problem = studyProblem(report.benchmark);
+  const compiled = compileProblem(problem);
+  const open = () => {
+    const config = createExperimentConfig({ id: `${report.file}-${group.label}-${seed}`, label: `${group.label} seed ${seed} (${(report.title ?? report.file).slice(0, 40)})`, problem, seed, optimizer: { id: group.optimizer, params: group.params }, budget: { maxEvaluations: group.budget } });
+    const best: Design = { id: `study-${group.label}-${seed}`, generation: 0, parentIds: [], operator: "study", parameters: run.bestParameters!, evaluation: compiled.evaluate(run.bestParameters!) };
+    const baseline: Design = { id: "baseline", generation: 0, parentIds: [], operator: "baseline", parameters: compiled.baseline.parameters, evaluation: compiled.evaluate(compiled.baseline.parameters) };
+    const record: ExperimentRecord = { id: config.id, label: config.label, config, status: "completed", startedAt: report.createdAt, finishedAt: report.createdAt, backendId: compiled.backendId, engineVersion: report.engineVersion, baseline, generations: [], best, totalEvaluations: run.solverCalls ?? group.budget, wallTimeMs: run.wallTimeMs ?? 0 };
+    stashPendingProblem({ problem, record });
+    navigate("/workspace");
+  };
+  return (
+    <div className="run-design">
+      <h3>
+        Design behind {group.label} · seed {seed}
+      </h3>
+      <p className="fine">
+        {compiled.space.variables.map((v, i) => `${v.label} ${formatParam(run.bestParameters![i], v.unit)}`).join(" · ")}
+      </p>
+      {run.bestMetrics && (
+        <p className="fine">
+          {Object.entries(run.bestMetrics)
+            .filter(([k]) => !k.startsWith("robust"))
+            .map(([k, v]) => `${k} ${Number.isFinite(v) ? (Math.abs(v) >= 1e4 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2) : v.toPrecision(4)) : "—"}`)
+            .join(" · ")}
+        </p>
+      )}
+      {run.robustDetail && (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Constraint</th>
+              <th>Violation probability (±{(run.robustDetail.tolerance * 100).toFixed(1)} %, {run.robustDetail.samples} samples)</th>
+              <th>Max utilisation sampled</th>
+            </tr>
+          </thead>
+          <tbody>
+            {run.robustDetail.constraints.map((c) => (
+              <tr key={c.id}>
+                <td>{c.id}</td>
+                <td className={c.violationProbability > 0.05 ? "bad" : undefined}>{pct(c.violationProbability)}</td>
+                <td>{Number.isFinite(c.maxUtilization) ? pct(c.maxUtilization) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {run.phases && <p className="fine">Phases: {run.phases.map((p) => `${p.kind} ${p.evaluations.toLocaleString()} evaluations (${p.solverCalls.toLocaleString()} solver calls)${p.bestObjective !== null ? ` → ${p.bestObjective.toFixed(3)}` : ""}`).join("; ")}</p>}
+      {run.postHoc && <p className="fine">Post-hoc screening: {run.postHoc.checks} trajectory designs checked; {run.postHoc.selectedFromTrajectory ? "a passing design was found" : "no design passed"}.</p>}
+      <button className="secondary" onClick={open}>
+        Open this design in the workspace
+      </button>
+    </div>
+  );
+}
+
+function formatParam(v: number, unit: string): string {
+  if (/^m\^?2$|^m²$|^m2$/.test(unit)) return `${(v * 1e6).toFixed(1)} mm²`;
+  if (unit === "m") return `${(v * 1000).toFixed(1)} mm`;
+  return unit ? `${v.toPrecision(4)} ${unit}` : v.toPrecision(4);
 }

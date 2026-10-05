@@ -143,6 +143,26 @@ regressor, so that every constraint is derived from learned responses?
   cause; with λ = 24, σ₀ = 0.1 and IPOP restarts it beats the plain EA
   (0.672 vs 0.686 kg, A = 0.63, small effect) but not the surrogates.
 
+## Robustness formulations at equal solver calls (2026-10-05, engine 1.1.0)
+
+Eleven formulations ran on the canonical truss with the same optimiser and
+the same 19,500 solver calls per run, 10 seeds, every reported design
+re-checked independently and kept in the record. The converged nominal
+optimum (0.505 kg) is 0 % robust, with buckling (98 %) and stress (86 %)
+violated almost always. The cheapest 95 %-robust designs come from
+selecting backwards along the nominal run's own best-so-far trajectory:
+0.569 kg (+13 %) on every seed, and a strided scan finds them at a third of
+the exact scan's cost. Constraint tightening by 7 % costs 5 % mass and is
+98 % robust in the median but misses 95 % on four seeds; a buckling-only
+margin fails because stress is binding too. Copy-based constraints, the v1.0
+formulation included, are budget-starved once solver calls are equalised,
+and a two-phase run seeded from a fragile optimum is worse than the
+baseline. Robustness along a trajectory is non-monotone (near zero at the
+end, high in the early heavy designs, lower again at the solver-sized
+baseline), so bisection fails on half the seeds. Margin and post-hoc designs
+are the nominal shape with more area; copy-based optima are different
+structures. Table in `docs/BENCHMARKS.md`.
+
 ## Robust versus nominal (2026-10-03, engine 1.0.0)
 
 Robust mode (perturbed copies inside every evaluation, a constraint on the
@@ -185,7 +205,10 @@ lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 | Does the representation result transfer between domains? | Answered: yes, with a smaller margin where the objective has a hard floor | study `manipulator-optimizers` |
 | How sensitive are discovered designs to manufacturing tolerance? | Measurable now; measured per lab run | robustness stage, v0.9 |
 | Does optimising the robust margin rather than the nominal design change the optimum? | Answered in part (negative at 1,500 evaluations): robust mode gives 100 % independently robust designs at +24 % to +43 % mass; the formulation (12 copies, 95 % target) over-constrains and the structural redistribution was not measured | study `robust-versus-nominal` |
-| What is the cheapest formulation of robustness: more in-loop copies with a lower target, constraint tightening by a margin, or a robust-margin objective? | Open | needs a study at convergence budgets with per-run designs kept |
+| What is the cheapest formulation of robustness? | Answered (2026-10-05): post-hoc selection from the nominal trajectory, +13 % mass at 95 % robustness on every seed, strided scan at about a third of the linear cost; margin 7 % is +5 % mass but reaches 95 % on only 6 of 10 seeds; copy-based constraints are budget-starved at equal solver calls; bisection over the trajectory is unreliable | study `robust-formulations` |
+| Which constraints drive the robust-mode overhead? | Answered: buckling (98 % violation probability at the nominal optimum) then stress (86 %); deflection never; a buckling-only margin shifts violations to stress | study `robust-formulations` |
+| Does robust optimisation change the structure or thicken it uniformly? | Answered in part: margin and post-hoc designs are the nominal shape with 2–26 % more area; copy-based optima land in different, heavier regions at this budget | per-run designs in `robust-formulations` |
+| Can robustness be estimated more cheaply than 300 perturbations, and can the member surrogate screen the perturbed copies? | Open | next formulation study |
 | Do multi-seed pilots pick a different strategy than single-seed pilots at equal budget? | Open; the lab now records both | lab records, v0.9 |
 
 ## Next experiments

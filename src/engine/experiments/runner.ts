@@ -11,6 +11,7 @@ import { compareDesigns, type Design } from "../core/design";
 import type { EngineeringProblem } from "../core/problem";
 import { Rng } from "../core/rng";
 import { compileProblem } from "../domains/registry";
+import { tightenConstraints } from "../robustness/formulations";
 import { robustify, type RobustSpec } from "../robustness/robustProblem";
 import type { CompiledProblem } from "../domains/domain";
 import { createOptimizer, getOptimizerDescriptor, resolveParams } from "../optimization";
@@ -33,6 +34,9 @@ export interface CreateExperimentOptions {
   budget: ExperimentBudget;
   seedBaseline?: boolean;
   robust?: RobustSpec;
+  margin?: number;
+  margins?: Record<string, number>;
+  seedDesigns?: number[][];
 }
 
 export function createExperimentConfig(opts: CreateExperimentOptions): ExperimentConfig {
@@ -47,6 +51,9 @@ export function createExperimentConfig(opts: CreateExperimentOptions): Experimen
     budget: { ...opts.budget },
     seedBaseline: opts.seedBaseline ?? true,
     ...(opts.robust ? { robust: { ...opts.robust } } : {}),
+    ...(opts.margin !== undefined ? { margin: opts.margin } : {}),
+    ...(opts.margins ? { margins: { ...opts.margins } } : {}),
+    ...(opts.seedDesigns ? { seedDesigns: opts.seedDesigns.map((d) => d.slice()) } : {}),
   };
 }
 
@@ -65,7 +72,9 @@ export function* runExperiment(
   config: ExperimentConfig,
   hooks: RunHooks = {}
 ): Generator<ExperimentEvent, ExperimentRecord, void> {
-  const compiled = config.robust ? robustify(compileProblem(config.problem), config.robust) : compileProblem(config.problem);
+  let compiled = compileProblem(config.problem);
+  if (config.margin !== undefined) compiled = tightenConstraints(compiled, { margin: config.margin, margins: config.margins });
+  if (config.robust) compiled = robustify(compiled, config.robust);
   const objective = config.problem.objectives[0];
   const rng = new Rng(config.seed);
   let counter = 0;
@@ -92,7 +101,14 @@ export function* runExperiment(
       compiled,
     },
     config.optimizer.params,
-    config.seedBaseline ? [baseline] : []
+    [
+      ...(config.seedBaseline ? [baseline] : []),
+      ...(config.seedDesigns ?? []).map((params, i): Design => {
+        const d: Design = { id: `seed${i + 1}`, generation: 0, parentIds: [], operator: "seed", parameters: params.slice() };
+        d.evaluation = compiled.evaluate(d.parameters);
+        return d;
+      }),
+    ]
   );
 
   const startedAt = new Date();

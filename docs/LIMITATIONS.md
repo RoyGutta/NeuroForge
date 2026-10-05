@@ -33,6 +33,12 @@ Be explicit about these when presenting results.
   modelled. Results are Monte Carlo estimates from a finite, seeded sample.
 - "Quantified" in the uncertainty taxonomy means a measurement from this
   engine exists; it is not a validated uncertainty budget.
+- Constraint tightening by a margin is a first-order proxy for tolerance:
+  the margin that reaches a given feasible fraction depends on how many
+  constraints sit at their limits and must be measured, not derived.
+- Post-hoc trajectory selection can only return designs the nominal search
+  visited; bisection assumes robustness decreases along the converging
+  trajectory after a passing anchor and may miss a lighter passing design.
 - Robust mode estimates the feasible fraction from a small in-loop sample
   (12 copies by default), so its constraint is noisy; the independent check
   with a fresh seed and a larger sample is the number to report. Robust mode
