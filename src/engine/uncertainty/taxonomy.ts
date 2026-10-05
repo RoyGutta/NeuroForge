@@ -63,7 +63,7 @@ export function buildUncertaintyReport(input: UncertaintyInput): UncertaintyRepo
   // Parameters: material and load values are inputs, not measured distributions.
   entries.push({ kind: "parameter", source: "material properties", status: "documented", evidence: `${problem.material.name}: handbook values, no scatter modelled` });
   for (const l of problem.loads) {
-    entries.push({ kind: "parameter", source: `load ${l.id}`, status: "documented", evidence: `${l.magnitude_N} N treated as exact` });
+    entries.push({ kind: "parameter", source: `load ${l.id}`, status: "documented", evidence: l.kind === "heat" ? `${l.power_W} W treated as exact` : `${l.magnitude_N} N treated as exact` });
   }
 
   // Numerical: deterministic direct solves; no stochastic error.

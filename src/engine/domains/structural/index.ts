@@ -30,8 +30,8 @@ function validate(p: EngineeringProblem): ValidationIssue[] {
   }
   if (!(p.safetyFactor >= 1)) issues.push({ path: "safetyFactor", message: "safety factor must be >= 1" });
   p.loads.forEach((l, i) => {
-    if (!(l.magnitude_N > 0)) {
-      issues.push({ path: `loads[${i}].magnitude_N`, message: "load must be positive" });
+    if (l.kind !== "point" || !(l.magnitude_N > 0)) {
+      issues.push({ path: `loads[${i}].magnitude_N`, message: "load must be a positive point load" });
     }
   });
   if (p.loads.length !== 1) issues.push({ path: "loads", message: "exactly one point load is supported" });
@@ -76,6 +76,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<TrussModel> {
     },
     evaluate: (params) => evaluateTrussDesign(problem, space, params),
     artifact: (params) => space.buildModel(params),
+    tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "compliance_J" : "mass_kg",
     backendId: TRUSS_BACKEND_ID,
   };
 }

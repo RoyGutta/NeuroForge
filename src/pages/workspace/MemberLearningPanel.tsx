@@ -1,3 +1,4 @@
+import { pointLoadMagnitude_N } from "../../engine/core/problem";
 import { useMemo, useState } from "react";
 import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { startMemberStudy } from "../../app/experimentClient";
@@ -42,7 +43,11 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   const response = compiled?.responses[0];
   const unit = response?.unit ?? "";
   const componentLabel = (i: number) =>
-    isTruss ? compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}` : `task point ${Math.floor(i / 2) + 1} · joint ${(i % 2) + 1}`;
+    isTruss
+      ? compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}`
+      : problem.domain === "thermal"
+        ? ["base temperature", "tip temperature", "convection coefficient", "fin efficiency", "thermal resistance", "fin heat", "base heat"][i] ?? `component ${i}`
+        : `task point ${Math.floor(i / 2) + 1} · joint ${(i % 2) + 1}`;
   const trussModel = useMemo(() => (isTruss && compiled && design ? (compiled.artifact(design.parameters) as TrussModel) : null), [isTruss, compiled, design]);
   const result = useMemo(() => (trussModel ? solveTruss(trussModel) : null), [trussModel]);
   const colors = useMemo(() => {
@@ -63,7 +68,9 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         <p>
           {isTruss
             ? "Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver."
-            : "A multi-output surrogate predicts the joint torque at every task point with an uncertainty; peak torque and bending stress are then computed exactly from those torques (tip deflection is regressed separately). The screen's reliability is measured on the held-out split against the solver."}
+            : problem.domain === "thermal"
+              ? "A multi-output surrogate predicts the thermal state (base and tip temperature, convection coefficient, fin efficiency, resistance, heat split) with an uncertainty; the constraint and objective metrics are read from that state and mass from the geometry. The screen's reliability is measured on the held-out split against the solver."
+              : "A multi-output surrogate predicts the joint torque at every task point with an uncertainty; peak torque and bending stress are then computed exactly from those torques (tip deflection is regressed separately). The screen's reliability is measured on the held-out split against the solver."}
         </p>
         <div className="row wrap">
           <label className="check">
@@ -86,7 +93,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
                   <option value="displacements">displacements only (forces differenced)</option>
                 </>
               ) : (
-                <option value="forces">joint torques (deflection regressed)</option>
+                <option value="forces">{problem.domain === "thermal" ? "thermal state (all metrics derived)" : "joint torques (deflection regressed)"}</option>
               )}
             </select>
           </label>
@@ -199,7 +206,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         )}
         {trussModel && result && (
           <div className="map-viewport">
-            <TrussSvg model={trussModel} result={result} mode="structure" safetyFactor={problem.safetyFactor} areaMax_m2={trussGeometry(problem).areaMax_m2} appliedLoad_N={problem.loads[0]?.magnitude_N} memberColors={colors} compact ariaLabel="Structure coloured by member prediction error or uncertainty" />
+            <TrussSvg model={trussModel} result={result} mode="structure" safetyFactor={problem.safetyFactor} areaMax_m2={trussGeometry(problem).areaMax_m2} appliedLoad_N={pointLoadMagnitude_N(problem)} memberColors={colors} compact ariaLabel="Structure coloured by member prediction error or uncertainty" />
           </div>
         )}
         {study && (

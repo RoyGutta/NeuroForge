@@ -1,3 +1,4 @@
+import { pointLoadMagnitude_N } from "../../src/engine/core/problem";
 import { describe, expect, test } from "vitest";
 import { validateProblem } from "../../src/engine/domains/registry";
 import { interpretBrief } from "../../src/engine/interpret";
@@ -9,7 +10,7 @@ describe("workspace form <-> problem mapping", () => {
     expect(validateProblem(p)).toEqual([]);
     expect(p.geometry.kind).toBe("truss-bridge");
     if (p.geometry.kind === "truss-bridge") expect(p.geometry.span_m).toBe(2);
-    expect(p.loads[0].magnitude_N).toBe(500);
+    expect(pointLoadMagnitude_N(p)).toBe(500);
     expect(p.assumptions.map((a) => a.field)).toContain("safetyFactor");
   });
 
@@ -58,7 +59,7 @@ describe("workspace form <-> problem mapping", () => {
     const p = problemFromForm(form);
     expect(p.domain).toBe("robotics");
     expect(validateProblem(p)).toEqual([]);
-    expect(p.loads[0].magnitude_N).toBeCloseTo(2 * 9.80665, 6);
+    expect(pointLoadMagnitude_N(p)).toBeCloseTo(2 * 9.80665, 6);
     const back = formFromProblem(p);
     expect(back.domain).toBe("robotics");
     expect(back.payload_kg).toBe("2");

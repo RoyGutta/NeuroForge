@@ -1,3 +1,4 @@
+import { pointLoadMagnitude_N } from "../../../src/engine/core/problem";
 import { describe, expect, test } from "vitest";
 import { validateProblem } from "../../../src/engine/domains/registry";
 import { interpretBrief, ruleBasedInterpreter } from "../../../src/engine/interpret";
@@ -8,7 +9,7 @@ describe("rule-based brief interpreter", () => {
     expect(r.supported).toBe(true);
     if (!r.supported) return;
     expect(r.problem.geometry.kind === "truss-bridge" ? r.problem.geometry.span_m : NaN).toBe(2);
-    expect(r.problem.loads[0].magnitude_N).toBe(500);
+    expect(pointLoadMagnitude_N(r.problem)).toBe(500);
     expect(r.problem.objectives[0].metric).toBe("mass_kg");
     expect(r.problem.provenance.source).toBe("interpreter");
     expect(r.problem.provenance.sourceText).toContain("bridge");
@@ -23,7 +24,7 @@ describe("rule-based brief interpreter", () => {
     expect(r.supported).toBe(true);
     if (!r.supported) return;
     expect(r.problem.geometry.kind === "truss-bridge" ? r.problem.geometry.span_m : NaN).toBeCloseTo(1.5, 12);
-    expect(r.problem.loads[0].magnitude_N).toBeCloseTo(2000, 9);
+    expect(pointLoadMagnitude_N(r.problem)).toBeCloseTo(2000, 9);
     expect(r.problem.safetyFactor).toBe(1.5);
     expect(r.problem.material.id).toBe("steel-a36");
     expect(r.problem.assumptions.map((a) => a.field)).not.toContain("safetyFactor");
@@ -34,7 +35,7 @@ describe("rule-based brief interpreter", () => {
     const r = interpretBrief("Bridge with a 3 m span holding 50 kg");
     expect(r.supported).toBe(true);
     if (!r.supported) return;
-    expect(r.problem.loads[0].magnitude_N).toBeCloseTo(50 * 9.80665, 6);
+    expect(pointLoadMagnitude_N(r.problem)).toBeCloseTo(50 * 9.80665, 6);
     expect(r.extracted.find((e) => e.field === "load_N")?.note).toMatch(/kg/i);
   });
 
@@ -49,11 +50,11 @@ describe("rule-based brief interpreter", () => {
   });
 
   test("reports unsupported domains honestly instead of guessing", () => {
-    const r = interpretBrief("Design a heatsink that keeps a 100 W processor below 80 C.");
+    const r = interpretBrief("Design a drone frame that minimizes mass while maintaining a safety factor of 2.");
     expect(r.supported).toBe(false);
     if (r.supported) return;
-    expect(r.reason).toMatch(/thermal|heat/i);
-    expect(r.detectedDomain).toBe("thermal");
+    expect(r.reason).toMatch(/aerospace/i);
+    expect(r.detectedDomain).toBe("aerospace");
   });
 
   test("picks 'minimize displacement' when the brief asks for stiffness", () => {
@@ -77,7 +78,7 @@ describe("rule-based brief interpreter", () => {
     expect(r.problem.geometry.kind).toBe("planar-manipulator");
     if (r.problem.geometry.kind !== "planar-manipulator") return;
     expect(r.problem.geometry.reach_m).toBeCloseTo(0.8, 9);
-    expect(r.problem.loads[0].magnitude_N).toBeCloseTo(2 * 9.80665, 6);
+    expect(pointLoadMagnitude_N(r.problem)).toBeCloseTo(2 * 9.80665, 6);
     expect(r.problem.objectives[0].metric).toBe("peakTorque_Nm");
     expect(r.extracted.map((e) => e.field)).toEqual(expect.arrayContaining(["payload_kg", "reach_m"]));
     expect(validateProblem(r.problem)).toEqual([]);
@@ -93,5 +94,28 @@ describe("rule-based brief interpreter", () => {
     expect(r.problem.material.id).toBe("aluminum-6061-t6");
     expect(r.problem.assumptions.find((a) => a.field === "payload")?.confidence).toBe("low");
     expect(r.problem.assumptions.find((a) => a.field === "reach")?.confidence).toBe("low");
+  });
+
+  test("interprets a heat-sink brief as a thermal problem with power, temperature limit and ambient", () => {
+    const r = interpretBrief("Design a heatsink that keeps a 40 W processor below 80 C with ambient air at 30 C.");
+    expect(r.supported).toBe(true);
+    if (!r.supported) return;
+    expect(r.problem.domain).toBe("thermal");
+    expect(r.problem.geometry.kind).toBe("fin-array");
+    expect(r.problem.loads[0].kind === "heat" && r.problem.loads[0].power_W).toBe(40);
+    expect(r.problem.constraints.find((c) => c.id === "temperature")?.limit).toBe(80);
+    expect(r.problem.geometry.kind === "fin-array" && r.problem.geometry.ambient_C).toBe(30);
+    expect(r.extracted.map((e) => e.field)).toEqual(expect.arrayContaining(["power_W", "maxTemperature_C", "ambient_C"]));
+    expect(validateProblem(r.problem)).toEqual([]);
+  });
+
+  test("a 100 W brief is accepted and left to the engine to judge; missing values become assumptions", () => {
+    const r = interpretBrief("Design a heatsink that keeps a 100 W processor below 80°C.");
+    expect(r.supported).toBe(true);
+    if (!r.supported) return;
+    expect(r.problem.loads[0].kind === "heat" && r.problem.loads[0].power_W).toBe(100);
+    expect(r.problem.assumptions.find((a) => a.field === "ambient")?.confidence).toBe("medium");
+    const bare = interpretBrief("Design a lightweight heatsink.");
+    expect(bare.supported && bare.problem.assumptions.some((a) => a.field === "power" && a.confidence === "low")).toBe(true);
   });
 });

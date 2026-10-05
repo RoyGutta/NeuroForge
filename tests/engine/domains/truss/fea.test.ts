@@ -7,7 +7,7 @@ const steel = {
   name: "Test steel",
   youngsModulus_Pa: 200e9,
   density_kg_m3: 7850,
-  yieldStrength_Pa: 250e6,
+  yieldStrength_Pa: 250e6, thermalConductivity_W_mK: 167
 };
 
 describe("2D truss direct-stiffness solver", () => {

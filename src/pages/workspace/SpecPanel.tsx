@@ -10,6 +10,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
   const { form, updateForm, applyForm, switchDomain, interpret, interpretation, problem, issues, status } = ws;
   const busy = status === "running";
   const isArm = form.domain === "robotics";
+  const isHeat = form.domain === "thermal";
   const src = (k: keyof typeof form.sources) => (
     <em className={`src src-${form.sources[k] ?? "user"}`}>{SOURCE_LABEL[form.sources[k] ?? "user"]}</em>
   );
@@ -67,6 +68,12 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
                   <option value="mass_kg">Minimize link mass</option>
                   <option value="multi">Trade off torque against mass (Pareto front)</option>
                 </>
+              ) : isHeat ? (
+                <>
+                  <option value="mass_kg">Minimize mass</option>
+                  <option value="thermalResistance_K_W">Minimize thermal resistance (coolest within a mass budget)</option>
+                  <option value="multi">Trade off mass against thermal resistance (Pareto front)</option>
+                </>
               ) : (
                 <>
                   <option value="mass_kg">Minimize mass</option>
@@ -76,7 +83,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
               )}
             </select>
           </div>
-          {!isArm && form.objective === "compliance_J" && (
+          {(form.objective === "compliance_J" || form.objective === "thermalResistance_K_W") && (
             <div className="field">
               <label htmlFor="massBudget">Mass budget</label>
               <div className="unit-field">
@@ -95,6 +102,42 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           )}
 
           <p className="section-label">Constraints</p>
+          {isHeat && (
+            <>
+              <div className="two">
+                <div className="field">
+                  <label htmlFor="power">Dissipated power {src("power_W")}</label>
+                  <div className="unit-field">
+                    <input id="power" type="number" min="0.1" max="5000" step="1" required value={form.power_W} onChange={(e) => updateForm({ power_W: e.target.value }, "power_W")} />
+                    <span>W</span>
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="tmax">Temperature limit {src("maxTemperature_C")}</label>
+                  <div className="unit-field">
+                    <input id="tmax" type="number" min="-20" max="300" step="1" required value={form.maxTemperature_C} onChange={(e) => updateForm({ maxTemperature_C: e.target.value }, "maxTemperature_C")} />
+                    <span>C</span>
+                  </div>
+                </div>
+              </div>
+              <div className="two">
+                <div className="field">
+                  <label htmlFor="ambient">Ambient {src("ambient_C")}</label>
+                  <div className="unit-field">
+                    <input id="ambient" type="number" min="-40" max="100" step="1" required value={form.ambient_C} onChange={(e) => updateForm({ ambient_C: e.target.value }, "ambient_C")} />
+                    <span>C</span>
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="footprint">Base footprint</label>
+                  <div className="unit-field">
+                    <input id="footprint" type="number" min="10" max="1000" step="5" required value={form.baseWidth_mm} onChange={(e) => updateForm({ baseWidth_mm: e.target.value, baseDepth_mm: e.target.value })} aria-label="Base width and depth in millimetres" />
+                    <span>mm square</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           {isArm ? (
             <div className="two">
               <div className="field">
@@ -112,7 +155,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : isHeat ? null : (
           <div className="two">
             <div className="field">
               <label htmlFor="span">Span {src("span_m")}</label>
@@ -130,6 +173,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
             </div>
           </div>
           )}
+          {!isHeat && (
           <div className="two">
             <div className="field">
               <label htmlFor="sf">Safety factor {src("safetyFactor")}</label>
@@ -153,6 +197,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
             </div>
             )}
           </div>
+          )}
           <div className="field">
             <label htmlFor="material">Material {src("materialId")}</label>
             <select id="material" value={form.materialId} onChange={(e) => updateForm({ materialId: e.target.value }, "materialId")}>
@@ -165,6 +210,22 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           </div>
 
           <p className="section-label">Design space</p>
+          {isHeat && (
+            <>
+              <div className="boundary">
+                <span>Convection</span>
+                <b>Natural, vertical fins, still air</b>
+              </div>
+              <div className="boundary">
+                <span>Variables</span>
+                <b>Fin height · fin thickness · fin pitch · base thickness</b>
+              </div>
+              <div className="boundary">
+                <span>Fins</span>
+                <b>Rectangular plate fins across the base width; gap at least 2 mm</b>
+              </div>
+            </>
+          )}
           {isArm ? (
             <>
               <div className="boundary">
@@ -184,7 +245,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
                 <b>{problem.geometry.kind === "planar-manipulator" ? `${problem.geometry.taskPoints.length} static holds across the envelope` : "—"}</b>
               </div>
             </>
-          ) : (
+          ) : isHeat ? null : (
           <>
           <div className="two">
             <div className="field">

@@ -1,5 +1,8 @@
+import { pointLoadMagnitude_N } from "../../engine/core/problem";
 import { useMemo } from "react";
 import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
+import type { FinArrayArtifact } from "../../engine/domains/thermal/finArray/evaluate";
+import { FinArraySvg } from "./FinArraySvg";
 import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
 import type { TrussModel } from "../../engine/domains/structural/truss/model";
@@ -25,6 +28,15 @@ const TRUSS_METRICS: [string, string][] = [
   ["Buckling util.", "bucklingUtilization"],
   ["Max deflection", "maxDisplacement_m"],
 ];
+const HEAT_MODES: [ViewMode, string][] = [
+  ["structure", "Cross-section"],
+  ["utilization", "Temperature"],
+];
+const HEAT_METRICS: [string, string][] = [
+  ["Base temperature", "baseTemperature_C"],
+  ["Thermal resistance", "thermalResistance_K_W"],
+  ["Fin efficiency", "finEfficiency"],
+];
 const ARM_METRICS: [string, string][] = [
   ["Stress util.", "stressUtilization"],
   ["Tip deflection", "maxTipDeflection_m"],
@@ -35,12 +47,15 @@ export function Viewport({ ws }: { ws: Workspace }) {
   const { compiled, displayed, baseline, mode, setMode, generations, scrub, setScrub, showing, setShowing, problem, status } = ws;
   const design = displayed;
   const isArm = problem.domain === "robotics";
-  const MODES = isArm ? ARM_MODES : TRUSS_MODES;
-  const METRICS = isArm ? ARM_METRICS : TRUSS_METRICS;
+  const isHeat = problem.domain === "thermal";
+  const MODES = isArm ? ARM_MODES : isHeat ? HEAT_MODES : TRUSS_MODES;
+  const METRICS = isArm ? ARM_METRICS : isHeat ? HEAT_METRICS : TRUSS_METRICS;
 
   const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
-  const model = !isArm && artifact ? (artifact as TrussModel) : null;
+  const model = !isArm && !isHeat && artifact ? (artifact as TrussModel) : null;
   const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
+  const sink = isHeat && artifact ? (artifact as FinArrayArtifact) : null;
+  const heatMode: ViewMode = mode === "structure" ? "structure" : "utilization";
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
   const ev = design?.evaluation;
   const objective = problem.objectives[0];
@@ -95,7 +110,7 @@ export function Viewport({ ws }: { ws: Workspace }) {
             mode={mode}
             safetyFactor={problem.safetyFactor}
             areaMax_m2={trussGeometry(problem).areaMax_m2}
-            appliedLoad_N={problem.loads[0]?.magnitude_N}
+            appliedLoad_N={pointLoadMagnitude_N(problem)}
             ariaLabel={`Truss elevation, ${label.toLowerCase()}`}
           />
         )}
@@ -110,7 +125,18 @@ export function Viewport({ ws }: { ws: Workspace }) {
             ariaLabel={`Manipulator drawing, ${label.toLowerCase()}`}
           />
         )}
+        {sink && (
+          <FinArraySvg artifact={sink} mode={heatMode} temperatureLimit_C={problem.constraints.find((c) => c.id === "temperature")?.limit ?? Infinity} ariaLabel={`Heat sink cross-section, ${label.toLowerCase()}`} />
+        )}
         <div className="legend">
+          {isHeat && heatMode === "structure" && <span>{problem.material.name} · fins and base to scale · red bar = heat source</span>}
+          {isHeat && heatMode === "utilization" && (
+            <>
+              <span>ambient</span>
+              <i className="ramp" />
+              <span>temperature limit · fins coloured by the solved temperature profile</span>
+            </>
+          )}
           {isArm && mode === "structure" && <span>{problem.material.name} · width ∝ tube radius · arm drawn at the worst-torque task point · ghosts at every other pose</span>}
           {isArm && mode === "force" && (
             <>
@@ -133,22 +159,22 @@ export function Viewport({ ws }: { ws: Workspace }) {
               <span>tip deflection / limit · dashed tick at the worst pose</span>
             </>
           )}
-          {!isArm && mode === "force" && (
+          {!isArm && !isHeat && mode === "force" && (
             <>
               <i className="sw sw-comp" /> <span>compression</span>
               <i className="sw sw-tens" /> <span>tension</span>
               <span>· width ∝ bar diameter</span>
             </>
           )}
-          {!isArm && mode === "utilization" && (
+          {!isArm && !isHeat && mode === "utilization" && (
             <>
               <span>0 %</span>
               <i className="ramp" />
               <span>100 % of allowable (stress or buckling)</span>
             </>
           )}
-          {!isArm && mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
-          {!isArm && mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
+          {!isArm && !isHeat && mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
+          {!isArm && !isHeat && mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
         </div>
         <div className="view-note">{ev ? (ev.feasible ? "feasible" : `infeasible · violation ${ev.totalViolation.toFixed(3)}`) : ""}</div>
       </div>

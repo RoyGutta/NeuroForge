@@ -11,6 +11,7 @@ export const MATERIALS: Record<string, Material> = {
     name: "Aluminum 6061-T6",
     youngsModulus_Pa: 68.9e9,
     density_kg_m3: 2700,
+    thermalConductivity_W_mK: 167,
     yieldStrength_Pa: 276e6,
   },
   "steel-a36": {
@@ -18,6 +19,7 @@ export const MATERIALS: Record<string, Material> = {
     name: "Structural steel (A36)",
     youngsModulus_Pa: 200e9,
     density_kg_m3: 7850,
+    thermalConductivity_W_mK: 50,
     yieldStrength_Pa: 250e6,
   },
   "titanium-6al-4v": {
@@ -25,6 +27,7 @@ export const MATERIALS: Record<string, Material> = {
     name: "Titanium Ti-6Al-4V",
     youngsModulus_Pa: 113.8e9,
     density_kg_m3: 4430,
+    thermalConductivity_W_mK: 6.7,
     yieldStrength_Pa: 880e6,
   },
 };

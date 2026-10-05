@@ -1,0 +1,19 @@
+{
+  "id": "heat-sink-optimizers",
+  "title": "How do the optimisers compare on a third domain with different mathematics (plate-fin heat sink, natural convection, minimum mass)?",
+  "hypothesis": "On the four-variable heat-sink problem, whose evaluator is a closed-form fixed point with an interior optimum in fin pitch, CMA-ES and the member-response surrogate reach a lower median mass than the plain evolutionary algorithm at equal budget, as they did on the manipulator; the global surrogate and Bayesian optimisation again trail the evolutionary algorithm.",
+  "benchmark": { "problem": "fin-array", "power_W": 40, "maxTemperature_C": 80 },
+  "budget": 1500,
+  "seeds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "reference": "evolutionary",
+  "methods": [
+    { "id": "evolutionary", "optimizer": "evolutionary", "params": { "populationSize": 30 } },
+    { "id": "global-surrogate", "optimizer": "surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200 } },
+    { "id": "member-k0", "optimizer": "member-surrogate-evolutionary", "params": { "populationSize": 30, "screeningFactor": 4, "warmupEvaluations": 200, "riskK": 0, "exploreFraction": 0 } },
+    { "id": "cmaes", "optimizer": "cmaes", "params": {} },
+    { "id": "bayesian", "optimizer": "bayesian", "params": {} }
+  ],
+  "metrics": ["bestObjective", "evaluationsToTarget", "robustFeasibleFraction"],
+  "targetFraction": 0.6,
+  "robustCheck": { "tolerance": 0.02, "samples": 300 }
+}

@@ -8,6 +8,7 @@ import type { Workspace } from "./useWorkspace";
 const TARGETS: Record<string, string[]> = {
   structural: ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"],
   robotics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "maxTipDeflection_m"],
+  thermal: ["mass_kg", "baseTemperature_C", "thermalResistance_K_W", "finEfficiency"],
 };
 
 /**

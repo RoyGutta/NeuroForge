@@ -14,6 +14,7 @@
  *     b0 --- b1 --- b2 --- b3 --- b4
  *     pin                          roller
  */
+import { pointLoadMagnitude_N } from "../../../core/problem";
 import type { EngineeringProblem, TrussBridgeGeometry } from "../../../core/problem";
 import { createDesignSpace, type DesignSpace, type VariableSpec } from "../../../core/space";
 import { memberLength_m, type TrussModel } from "./model";
@@ -70,7 +71,7 @@ export function createBridgeSpace(problem: EngineeringProblem): BridgeSpace {
   }
   const base = createDesignSpace(variables);
 
-  const load = problem.loads[0];
+  const load = { magnitude_N: pointLoadMagnitude_N(problem) ?? 0 };
   const midNode = n / 2;
 
   function buildModel(params: number[]): TrussModel {

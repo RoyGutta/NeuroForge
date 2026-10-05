@@ -43,6 +43,8 @@ export interface Material {
   name: string;
   youngsModulus_Pa: number;
   density_kg_m3: number;
+  /** Thermal conductivity, W/(m K); handbook value at room temperature. */
+  thermalConductivity_W_mK: number;
   yieldStrength_Pa: number;
 }
 

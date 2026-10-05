@@ -2,6 +2,23 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-05 — A natural-convection heat sink as the third domain
+**Decision.** The third engineering domain is a plate-fin heat sink in
+natural convection: fin theory and the Bar-Cohen and Rohsenow channel
+correlation, coupled through a fixed point on the temperature rise.
+**Why.** It is the thermal problem with a genuinely closed-form, testable
+model that still has an interior optimum (fin spacing trades convection
+against area), so it exercises the contract with mathematics unlike either
+the truss (linear system) or the arm (kinematics and statics). An aerospace
+spar would have been beam bending again. A finite-volume thermal solver was
+rejected for now: it would add discretisation error without adding a
+qualitatively new test of the architecture.
+**Consequences.** Three domains run on the same optimisers, surrogates,
+study registry and lab. The canonical brief had to change from 100 W to
+40 W because the physics says a 100 x 100 mm sink cannot do 100 W in still
+air; the interpreter accepts such briefs and the engine reports them
+infeasible rather than solving a different problem.
+
 ## 2026-10-03 — Robustness as a measured constraint, verified independently
 **Decision.** Robust mode evaluates perturbed copies of every design through
 the real solver inside the evaluation and adds a constraint on their feasible

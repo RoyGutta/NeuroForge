@@ -1,4 +1,5 @@
 import { trussGeometry } from "../../../src/engine/domains/structural/truss/bridgeSpace";
+import { pointLoadMagnitude_N } from "../../../src/engine/core/problem";
 import { describe, expect, test } from "vitest";
 import { validateProblem } from "../../../src/engine/domains/registry";
 import { createTrussBridgeProblem } from "../../../src/engine/domains/structural/truss/template";
@@ -10,7 +11,7 @@ describe("truss bridge problem template", () => {
     expect(p.domain).toBe("structural");
     expect(p.geometry.kind).toBe("truss-bridge");
     expect(p.geometry.kind === "truss-bridge" ? p.geometry.span_m : NaN).toBe(2);
-    expect(p.loads[0].magnitude_N).toBe(500);
+    expect(pointLoadMagnitude_N(p)).toBe(500);
     expect(p.safetyFactor).toBe(2);
     expect(p.objectives.map((o) => o.metric)).toContain("mass_kg");
   });

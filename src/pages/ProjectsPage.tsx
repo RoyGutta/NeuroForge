@@ -152,15 +152,15 @@ const PROJECTS: Project[] = [
         />
       </>
     ),
-    title: "A cooler 100 W processor",
-    body: "Keep a processor below 80°C. Explore how fin spacing and geometry change the path heat takes out.",
-    constraints: ["100 W heat load", "Temperature < 80°C"],
+    title: "The lightest heat sink for 40 W",
+    body: "Keep a 40 W component below 80 C in still air. Fin spacing sets the convection; fin height sets the area; both set the mass.",
+    constraints: ["40 W heat load", "Temperature < 80 C", "Natural convection"],
     detailsText:
-      "Fin height, thickness, spacing, and base dimensions. Specify ambient temperature, airflow, material, and contact resistance to make the thermal model meaningful.",
+      "Fin height, thickness, pitch and base thickness on a 100 x 100 mm footprint: closed-form fin efficiency and the Bar-Cohen and Rohsenow channel correlation, solved to a fixed point on the temperature rise. Radiation, spreading resistance and fan flow are not modelled.",
     discipline: "Thermal engineering",
     workspaceHref: "/workspace?project=thermal",
-    runnable: false,
-    brief: "Design a heatsink that keeps a 100 W processor below 80°C.",
+    runnable: true,
+    brief: "Design the lightest heatsink that keeps a 40 W processor below 80 C in still air.",
   },
 ];
 
@@ -193,7 +193,7 @@ const FILTERS: { id: Filter; label: string }[] = [
 export function ProjectsPage() {
   usePageMeta(
     "Explore projects — NeuroForge",
-    "Explore engineering challenges in structures and robotics, with airflow and thermal design on the roadmap. Start with an editable brief and investigate the design space with NeuroForge."
+    "Explore engineering challenges in structures, robotics and thermal design, with airflow on the roadmap. Start with an editable brief and investigate the design space with NeuroForge."
   );
 
   const [term, setTerm] = useState("");

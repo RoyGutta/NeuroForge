@@ -5,6 +5,37 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-10-05 · engine 1.2.0 · heat-sink optimisers, 10 seeds, 1,500 evaluations
+
+Registered study `benchmarks/studies/heat-sink-optimizers.json`, record
+`benchmarks/results/heat-sink-optimizers-2026-10-05.json`. Plate-fin heat
+sink, 40 W, limit 80 C, ambient 25 C, 100 x 100 mm aluminium base, minimum
+mass; baseline 0.216 kg (conventional extrusion, fin height bisected to the
+limit). Independent robustness check: 300 perturbations at +/- 2 %.
+
+| Method | Median kg | 95 % CI | Evaluations to 0.6 x baseline | A vs EA | Robust fraction (median) | Median design (H / t / pitch / base, mm) |
+|---|---|---|---|---|---|---|
+| evolutionary (reference) | 0.075 | 0.074–0.078 | 285 (10/10) | – | 64 % | 27.6 / 0.51 / 7.8 / 1.0 |
+| global-surrogate | 0.071 | 0.069–0.074 | 255 (10/10) | 0.83 (large) | 54 % | 24.1 / 0.50 / 7.2 / 1.0 |
+| member-k0 | 0.071 | 0.069–0.076 | 255 (10/10) | 0.72 (medium) | 59 % | 22.2 / 0.50 / 6.7 / 1.0 |
+| cmaes | **0.068** | 0.067–0.071 | 56 (10/10) | 0.93 (large) | 21 % | 17.6 / 0.50 / 5.9 / 1.0 |
+| bayesian | 0.069 | 0.068–0.069 | 56 (10/10) | 1.00 (large) | 42 % | 19.0 / 0.50 / 6.2 / 1.0 |
+
+Reading. A third ranking for a third domain. On this smooth four-variable
+problem CMA-ES and Bayesian optimisation reach the target in 56 evaluations
+and lead the field; Bayesian optimisation, which trailed on both earlier
+domains, is competitive once each evaluation's cost no longer dominates and
+the landscape is smooth. The surrogate methods give a medium-to-large gain
+over the evolutionary algorithm but less than the covariance and GP
+methods. Every optimum sits at the temperature limit and on the minimum
+fin thickness (0.5 mm) and base thickness (1 mm): the model has no fin
+strength or manufacturing constraint beyond the bounds, so the optimiser
+spends the whole mass budget on fin height and pitch. The temperature
+constraint is violated in 36 to 79 % of +/- 2 % perturbations at the
+optima, in line with the truss and arm: a nominal optimum sits on its
+limit. The canonical 100 W brief is infeasible on this footprint and is
+reported as such.
+
 ## 2026-10-05 · engine 1.1.0 · robustness formulations on the manipulator, 10 seeds
 
 Registered study `benchmarks/studies/robust-formulations-manipulator.json`,

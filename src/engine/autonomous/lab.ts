@@ -350,7 +350,7 @@ export function* runLab(config: LabConfig): Generator<LabEvent, LabRecord, void>
     });
 
     // Stage 4: trade-off front against a second metric the domain exposes.
-    const secondId = objective.metric === "mass_kg" ? "compliance_J" : "mass_kg";
+    const secondId = compiled.tradeoffMetric ?? (objective.metric === "mass_kg" ? "compliance_J" : "mass_kg");
     const second = compiled.metrics.find((m) => m.id === secondId);
     if (second && problem.objectives.length === 1) {
       yield { type: "stage", stage: "tradeoff", message: `Mapping the ${objective.label.toLowerCase()}-versus-${second.label.toLowerCase()} trade-off with NSGA-II (${config.tradeoffBudget.toLocaleString()} evaluations).` };

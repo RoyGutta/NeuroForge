@@ -88,7 +88,7 @@ benchmarked, documented and verified live.
 
 - [x] M1 Robust-optimisation formulation study: solver-call budgets, constraint tightening (uniform and per-constraint), post-hoc trajectory selection (linear and bisection), copy-count and target sweep, two-phase search; registered study `robust-formulations`
 - [x] M2 Per-run design retention: study records keep each run's design, metrics and per-constraint violation probabilities; the Benchmarks page shows the design behind a run and opens it in the workspace
-- [ ] M3 Third engineering domain (thermal or aerospace) with defensible mathematics
+- [x] M3 Third engineering domain: plate-fin heat sink in natural convection (fin theory and the Bar-Cohen and Rohsenow correlation), baseline, responses, interpreter routing, UI, registered study `heat-sink-optimizers`
 - [ ] M4 3D truss and a Three.js viewport bound to the solved structure
 - [ ] M5 LLM interpreter behind `ProblemInterpreter`, validated against the rule-based one
 - [ ] M6 Server-side job execution; the browser architecture stays functional

@@ -149,6 +149,65 @@ regresses tip deflection separately.
   reproduces the evaluator's metrics; the evolutionary and member-surrogate
   optimisers improve on the baseline through the registry.
 
+## Plate-fin heat sink in natural convection (thermal domain)
+
+`src/engine/domains/thermal/finArray/`. A rectangular base plate with n
+plate fins across its width, vertical in still air. Closed-form fin theory
+coupled to a buoyant-channel correlation; no mesh, no fitted parameters.
+
+### Fin theory (`fin.ts`)
+Fin parameter `m = sqrt(h P / (k A_c))` with `P = 2 (D + t)` and `A_c = D t`;
+efficiency `eta = tanh(m L_c) / (m L_c)` with the corrected length
+`L_c = H + t / 2` (adiabatic tip with the tip area folded into the length).
+Temperature along a fin `theta(x) / theta_b = cosh(m (L_c - x)) / cosh(m L_c)`.
+
+### Natural convection between the fins
+Elenbaas number `El = g beta dT S^4 Pr / (nu^2 L)` on the clear gap `S` and
+fin height `L`; Bar-Cohen and Rohsenow composite correlation
+`Nu_S = [576 / El^2 + 2.873 / sqrt(El)]^(-1/2)`, `h = Nu_S k_air / S`. Its
+limits are the fully developed channel (`Nu -> El / 24`) and the isolated
+plate (`Nu -> 0.59 El^(1/4)`), both tested. Air properties are held at a
+320 K film temperature (beta 1/320 K, nu 1.78e-5 m2/s, k 0.0278 W/mK,
+Pr 0.70), a documented assumption.
+
+### Network and fixed point
+`T_b = T_inf + Q (R_base + 1 / (h (n eta A_f + A_b)))` with `R_base =
+t_b / (k W D)`, `A_f = 2 D L_c` per fin and `A_b` the exposed base. Because
+`h` depends on the temperature rise it produces, the residual
+`Q R(h(dT)) - dT` (strictly decreasing in `dT`) is solved by bisection.
+Energy balance closes to 1e-6 (tested).
+
+### Metrics and constraints
+`mass_kg`, `baseTemperature_C`, `thermalResistance_K_W`, `finEfficiency`,
+`heatTransferCoefficient_W_m2K`, `gap_m`, `finCount`. Constraints: base
+temperature at or below the limit, clear gap at least 2 mm, at least two
+fins. Response `thermalState` (base and tip temperature, h, efficiency,
+resistance, fin and base heat) with an exact response model.
+
+### Design space and baseline (`space.ts`)
+Fin height 5 to 120 mm, fin thickness 0.5 to 6 mm (log), fin pitch 3 to
+40 mm (log), base thickness 1 to 12 mm; `n = floor(W / p)`. Baseline: a
+conventional extrusion (1.5 mm fins at 8 mm pitch on a 3 mm base) with fin
+height bisected to just meet the temperature limit.
+
+### Verification (tests/engine/domains/thermal)
+Fin parameter and efficiency against closed forms and limits; Elenbaas
+number and both correlation limits; the interior optimum of heat per unit
+width over the gap; the prescribed-h network against hand algebra; the
+natural-convection fixed point's consistency and energy balance;
+monotonicity in power and height; invalid gaps reported; the domain
+contract (template, baseline near its limit, artifact, response model,
+optimiser runs, infeasible briefs reported as infeasible).
+
+### What the physics says about the canonical briefs
+A 100 x 100 mm aluminium sink in still air bottoms out near 0.67 K/W within
+these bounds, so a 100 W component cannot be held below 80 C at 25 C ambient;
+the interpreter accepts such a brief and the engine reports the baseline as
+infeasible. The canonical case is 40 W. Mass optima push fin thickness and
+base thickness to their lower bounds: the model has no fin-strength or
+extrusion-manufacturing constraint beyond those bounds, which the
+limitations file states.
+
 ## Material library (`materials.ts`)
 Handbook values for Al 6061-T6, ASTM A36 steel, Ti-6Al-4V. Adequate for a
 preliminary study; production work must use certified properties.

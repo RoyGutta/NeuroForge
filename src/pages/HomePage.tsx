@@ -16,7 +16,7 @@ const BRIEFS: Record<string, string> = {
   steel: "A 3 m steel footbridge truss must carry 1.5 kN with a safety factor of 1.5, minimising mass.",
   stiff: "2 m aluminium bridge carrying 500 N; make it as stiff as possible.",
   drone: "Design a drone frame that minimizes mass while maintaining a safety factor of 2.",
-  thermal: "Design a heatsink that keeps a 100 W processor below 80°C.",
+  thermal: "Design the lightest heatsink that keeps a 40 W processor below 80°C in still air.",
   robot: "Design a robot arm that lifts a 2 kg payload anywhere within a 0.8 m reach while minimizing motor torque.",
 };
 
@@ -25,13 +25,13 @@ const CHIPS: [string, string][] = [
   ["steel", "Steel footbridge · 1.5 kN"],
   ["stiff", "Stiffest at fixed mass"],
   ["robot", "Robot arm · 2 kg · 0.8 m"],
-  ["thermal", "Heatsink (not yet)"],
+  ["thermal", "Heat sink · 40 W · 80 °C"],
 ];
 
 export function HomePage() {
   usePageMeta(
     "NeuroForge — Engineering, evolved.",
-    "Describe a structural or robotics problem. NeuroForge turns it into a specification, runs a real physics-based optimization in your browser, and shows the evidence."
+    "Describe a structural, robotics or thermal problem. NeuroForge turns it into a specification, runs a real physics-based optimization in your browser, and shows the evidence."
   );
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState(BRIEFS.bridge);
@@ -294,11 +294,11 @@ export function HomePage() {
                 </button>
               </article>
               <article className="project">
-                <span>THERMAL · ROADMAP</span>
-                <h3>A cooler 100 W processor</h3>
-                <p>Heat-sink fin optimization needs a thermal domain module. The interpreter will tell you so rather than guess.</p>
+                <span>THERMAL · RUNNABLE NOW</span>
+                <h3>The lightest heat sink for 40 W</h3>
+                <p>Fin height, thickness, pitch and base searched under a base-temperature limit in natural convection. Ask for 100 W and the engine will tell you the footprint cannot do it.</p>
                 <button className="text-link" onClick={() => applyExample("thermal")}>
-                  See how it responds <Arrow />
+                  Try this brief <Arrow />
                 </button>
               </article>
             </div>

@@ -74,7 +74,7 @@ export function useHomeDemo(initialBrief: string) {
         `Interpreted: ${r.extracted
           .filter((e) => e.field !== "objective")
           .map((e) => `${e.field.replace(/_.*$/, "")} ${typeof e.value === "number" ? +e.value.toFixed(3) : e.value}`)
-          .join(" · ")}. Running ${DEMO_BUDGET.toLocaleString()} ${r.problem.domain === "robotics" ? "static arm" : "finite-element"} evaluations in a Web Worker.`
+          .join(" · ")}. Running ${DEMO_BUDGET.toLocaleString()} ${r.problem.domain === "robotics" ? "static arm" : r.problem.domain === "thermal" ? "fin-array" : "finite-element"} evaluations in a Web Worker.`
       );
       const config = createExperimentConfig({
         problem: r.problem,
@@ -112,7 +112,7 @@ export function useHomeDemo(initialBrief: string) {
           const o = rec.best?.evaluation?.objectives[rec.config.problem.objectives[0].id];
           if (b && o !== undefined) {
             const metric = rec.config.problem.objectives[0].metric;
-            const what = metric === "mass_kg" ? "lighter than" : metric === "peakTorque_Nm" ? "lower in peak torque than" : "better than";
+            const what = metric === "mass_kg" ? "lighter than" : metric === "peakTorque_Nm" ? "lower in peak torque than" : metric === "thermalResistance_K_W" ? "lower in thermal resistance than" : "better than";
             setMessage(
               `Search complete: ${rec.totalEvaluations.toLocaleString()} solver evaluations in ${(rec.wallTimeMs / 1000).toFixed(1)} s. ` +
                 `Best feasible design is ${((1 - o / b) * 100).toFixed(1)} % ${what} the conventionally sized baseline under identical constraints.`

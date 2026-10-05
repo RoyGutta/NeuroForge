@@ -24,6 +24,18 @@ Be explicit about these when presenting results.
 - The task set is a fixed grid of static hold points; obstacle avoidance,
   orientation of the end effector and path continuity are outside the model.
 
+## Thermal domain
+- Natural convection only, vertical plate fins in still air; no fan flow,
+  no radiation, no spreading resistance under the component, uniform base
+  temperature, no contact resistance.
+- Air properties fixed at a 320 K film temperature; the correlation is a
+  composite of two asymptotes and is accurate to about 10 % in its range.
+- Fin theory assumes a small Biot number across the fin thickness and an
+  adiabatic tip with the corrected-length approximation.
+- No fin-strength, vibration or extrusion-manufacturing constraint beyond
+  the variable bounds; mass optima therefore sit on the minimum fin and base
+  thickness bounds.
+
 ## Robustness and uncertainty
 - The robustness study perturbs design parameters only (geometry and
   sections); material scatter, load variability and model-form error are

@@ -44,8 +44,9 @@ CAD tool. NeuroForge takes the opposite position: the intelligence belongs in
 the engineering and optimisation system, and a language model, when one is
 added, is one interchangeable interpreter behind an interface.
 
-The current release (v1.1.0) implements two problem families end to end, the
-planar truss bridge and a planar two-link manipulator, deeply enough that
+The current release (v1.2.0) implements three problem families end to end,
+the planar truss bridge, a planar two-link manipulator and a plate-fin heat
+sink in natural convection, deeply enough that
 every stage of the pipeline is real, tested, and inspectable, and adds a
 learning layer: surrogate models trained
 on simulation data with held-out evaluation, surrogate-assisted evolutionary
@@ -55,7 +56,8 @@ front of mass against stiffness, and a per-member surrogate representation
 whose uncertainty-aware screen is measured against the solver on every run,
 and an autonomous search that pilots the strategies, runs the winner to a
 plateau, maps the trade-off front and reports what it found. The robotics
-domain (kinematics, static torques, beam bending) was added behind the same
+domain (kinematics, static torques, beam bending) and the thermal domain
+(fin theory and a natural-convection correlation) were added behind the same
 `EngineeringDomain` contract without changing the optimisers, runner,
 surrogates, study registry or autonomous lab, which is the test the
 architecture was built to pass. The domain, optimiser, interpreter, and
@@ -126,11 +128,12 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Area | What exists |
 |---|---|
 | Problem specification | `EngineeringProblem` schema with objectives, constraints (metric, operator, limit, source), assumptions (field, value, reason, confidence), provenance, versioning; per-domain validation |
-| Interpretation | Rule-based natural-language interpreter for span, load (N, kN, kg), safety factor, material, deflection ratio, and objective on structural briefs, and payload, reach, material and objective on manipulator briefs; declines thermal, aerospace and fluids briefs explicitly |
+| Interpretation | Rule-based natural-language interpreter for span, load (N, kN, kg), safety factor, material, deflection ratio and objective on structural briefs; payload, reach, material and objective on manipulator briefs; power, temperature limit, ambient, material and objective on heat-sink briefs; declines aerospace and fluids briefs explicitly |
 | Structural analysis | 2D pin-jointed truss finite-element solver: stiffness assembly, boundary conditions, Cholesky factorisation, member forces and stresses, reactions, compliance, mechanism detection |
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
 | Robotics analysis | Planar two-link manipulator: closed-form inverse kinematics with elbow choice, static gravity torques at every task point, hollow tubular links checked for root bending stress and superposed cantilever tip deflection, reachability as a hard constraint; joint torques and tip deflections exposed as responses with an exact response model |
-| Baseline | Conventional uniform-section Warren truss at span/8 depth, or an equal-link arm with a common tube radius, each sized by bisection to just satisfy the same constraints |
+| Thermal analysis | Plate-fin heat sink in natural convection: closed-form fin efficiency with the corrected length, the Bar-Cohen and Rohsenow parallel-plate correlation, a bisection fixed point on the temperature rise; thermal state exposed as a response with an exact response model |
+| Baseline | Conventional uniform-section Warren truss at span/8 depth, an equal-link arm with a common tube radius, or a conventional extruded heat sink with fin height sized to the temperature limit, each sized by bisection to just satisfy the same constraints |
 | Optimisation | Elitist (mu + lambda) evolutionary algorithm, surrogate-assisted evolutionary search, member-surrogate uncertainty-aware search, constrained Bayesian optimisation (Gaussian processes, expected improvement), CMA-ES, NSGA-II multi-objective search with an external Pareto archive and hypervolume tracking, simulated annealing, random search; Deb's feasibility rules; optional warm start from the baseline |
 | Learning | Dataset builder over reproducible runs with seeded splits, including per-member force and free-node displacement columns and log-linear encoding of log-scaled variables; `SurrogateModel` and multi-output contracts with polynomial ridge, Bayesian ridge, MLP and Gaussian-process implementations; a hybrid predictor that learns member forces and the displacement field and applies the exact stress, buckling, deflection and compliance equations with uncertainty propagated through the linear force map; held-out MAE, RMSE, R², feasibility precision/recall, false-feasible and false-infeasible rates, interval coverage and calibration; predicted-versus-actual plots and error/uncertainty maps in the workspace |
 | Studies | Registered studies (`benchmarks/studies/*.json`, `npm run study`) on either domain: declared hypothesis, methods, seeds and budget in design evaluations or solver calls; every run's best design, metrics and independent robustness check kept in the record; raw runs kept separate from an analysis with seeded bootstrap intervals of the median, quartiles, evaluations-to-target, and Vargha–Delaney A / Cliff's delta against a reference method |
@@ -141,7 +144,7 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Explainability | Finite-difference parameter sensitivity, binding-constraint detection, structured baseline-to-result diff, all computed from the evaluator |
 | Execution | Web Worker execution with cancellation; main-thread fallback |
 | Interface | Domain selector; editable specification with assumption badges; truss viewport with structure, axial-force, utilisation and deformed-shape modes, manipulator viewport with task-point, torque, utilisation and deflection modes; generation scrubber; experiment panel; Pareto-front panel with click-to-inspect; learning panels; evidence tables |
-| Testing | 215 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
+| Testing | 232 vitest tests including closed-form solver cases, a known-optimum constrained optimisation problem, ZDT1 for NSGA-II, surrogate recovery of known functions, Bayesian-ridge and Gaussian-process calibration, exact derivation of metrics from forces, screening monotonicity in k, determinism, and UI state mapping |
 
 ### Planned / research direction
 
@@ -457,9 +460,10 @@ commitments.
    and re-runnable lab records. v1.0 completed the original roadmap.
 11. **v1.1 (in progress):** research expansion. Done: robustness
    formulations at equal solver calls with per-run design retention
-   (`robust-formulations` study). Next: a third engineering domain, 3D
-   trusses with a bound viewport, an LLM interpreter validated against the
-   rule-based one, server-side execution.
+   (`robust-formulations` studies on both domains, estimator analysis) and a
+   third engineering domain (plate-fin heat sink, `heat-sink-optimizers`
+   study). Next: 3D trusses with a bound viewport, an LLM interpreter
+   validated against the rule-based one, server-side execution.
 12. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, aerospace, fluids), tubular truss sections, 3D trusses.
 13. Advanced learning components where they earn their place: neural

@@ -201,7 +201,8 @@ lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 | Do per-member (response) surrogates screen feasibility more reliably than global regression? | Answered: yes | Ablation 2026-09-22; study `representation-and-screening` |
 | Can the displacement field replace the deflection regressor without losing force accuracy? | Answered: only with log-encoded features; differenced forces are ill-conditioned, so both are learned | v0.7 follow-up above |
 | Was CMA-ES's negative result on the truss a property of the algorithm or its defaults? | Answered: defaults (population, step size); bounds exonerated | v0.7 diagnosis |
-| Do optimiser rankings transfer between domains? | Answered: no; CMA-ES wins on the manipulator | study `manipulator-optimizers` |
+| Do optimiser rankings transfer between domains? | Answered: no; CMA-ES wins on the manipulator, CMA-ES and Bayesian optimisation lead on the heat sink, surrogates win on the truss | studies `manipulator-optimizers`, `heat-sink-optimizers` |
+| Does the architecture generalise to a third domain with different mathematics? | Answered (2026-10-05): yes; the heat sink (fin theory, convection correlation, fixed point) ran on every layer above the contract unchanged | thermal domain, v1.2.0 |
 | Does the representation result transfer between domains? | Answered: yes, with a smaller margin where the objective has a hard floor | study `manipulator-optimizers` |
 | How sensitive are discovered designs to manufacturing tolerance? | Measurable now; measured per lab run | robustness stage, v0.9 |
 | Does optimising the robust margin rather than the nominal design change the optimum? | Answered in part (negative at 1,500 evaluations): robust mode gives 100 % independently robust designs at +24 % to +43 % mass; the formulation (12 copies, 95 % target) over-constrains and the structural redistribution was not measured | study `robust-versus-nominal` |

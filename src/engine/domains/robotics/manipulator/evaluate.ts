@@ -67,7 +67,7 @@ export function armMasses(problem: EngineeringProblem, d: ArmDesign) {
   const s1 = tubeSection(d.r1_m, g.wallRatio);
   const s2 = tubeSection(d.r2_m, g.wallRatio);
   const rho = problem.material.density_kg_m3;
-  return { s1, s2, m1: rho * s1.area_m2 * d.L1_m, m2: rho * s2.area_m2 * d.L2_m, payload: problem.loads[0].magnitude_N / GRAVITY_M_S2 };
+  return { s1, s2, m1: rho * s1.area_m2 * d.L1_m, m2: rho * s2.area_m2 * d.L2_m, payload: (problem.loads[0].kind === "point" ? problem.loads[0].magnitude_N : 0) / GRAVITY_M_S2 };
 }
 
 /** Full per-pose analysis; the artifact for visualisation and the source of responses. */

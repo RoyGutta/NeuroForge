@@ -68,6 +68,8 @@ export interface CompiledProblem<TArtifact = unknown> {
   /** Domain-specific model for visualisation (e.g. a TrussModel). */
   artifact(params: number[]): TArtifact;
   backendId: string;
+  /** Metric the autonomous lab trades the objective against (e.g. compliance for a mass objective). */
+  tradeoffMetric?: string;
 }
 
 export interface EngineeringDomain<TArtifact = unknown> {

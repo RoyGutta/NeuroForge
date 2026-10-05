@@ -13,6 +13,7 @@ import { compileProblem } from "../domains/registry";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
 import { extractDeflectionRatio, extractLength, extractLoad, extractMassBudget, extractMaterial, extractSafetyFactor } from "./extract";
 import { interpretRoboticsBrief } from "./robotics";
+import { interpretThermalBrief } from "./thermal";
 import type { ExtractedValue, InterpretResult, ProblemInterpreter } from "./types";
 
 const DOMAIN_KEYWORDS: Array<[string, RegExp]> = [
@@ -30,12 +31,13 @@ export const ruleBasedInterpreter: ProblemInterpreter = {
     const text = brief.trim();
     const detected = detectDomain(text);
     if (detected === "robotics") return interpretRoboticsBrief(text, ruleBasedInterpreter.id);
+    if (detected === "thermal") return interpretThermalBrief(text, ruleBasedInterpreter.id);
     if (detected && detected !== "structural") {
       return {
         supported: false,
         detectedDomain: detected,
         reason:
-          `This brief reads as a ${detected} problem. NeuroForge currently solves planar truss bridges and planar manipulators; ` +
+          `This brief reads as a ${detected} problem. NeuroForge currently solves planar truss bridges, planar manipulators and plate-fin heat sinks; ` +
           `${detected} domains are on the roadmap and are not simulated yet.`,
       };
     }

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.2.0 — 2026-10-05 · Third engineering domain: plate-fin heat sink
+- Thermal domain (`src/engine/domains/thermal`): rectangular plate fins on a
+  base plate in natural convection; closed-form fin efficiency with the
+  corrected length, the Bar-Cohen and Rohsenow parallel-plate correlation,
+  and a bisection fixed point on the temperature rise; metrics mass, base
+  temperature, thermal resistance, fin efficiency, convection coefficient,
+  gap and fin count; response `thermalState` with an exact response model;
+  baseline sized by bisection on fin height. Registered as `thermal`.
+- Schema: `HeatLoadSpec`, `FinArrayGeometry`, `thermalConductivity_W_mK` on
+  materials, `pointLoadMagnitude_N` helper; compiled problems may name a
+  `tradeoffMetric` for the lab.
+- Interpreter routes heat-sink briefs (power in W or kW, temperature limit,
+  ambient, material); a brief the physics cannot meet is accepted and
+  reported infeasible by the engine.
+- Interface: domain selector and thermal specification form, a fin-array
+  cross-section coloured by the solved temperature profile, per-domain
+  metrics and learning targets, home demo and project card.
+- Registered study `heat-sink-optimizers` (10 seeds, 1,500 evaluations):
+  CMA-ES 0.068 kg and Bayesian optimisation 0.069 kg lead; the surrogate
+  methods 0.071 kg; the evolutionary algorithm 0.075 kg; baseline 0.216 kg.
+  Mass optima sit on the thickness lower bounds. 232 tests.
+
 ## 1.1.1 — 2026-10-05 · Robustness follow-ups (engine unchanged, 1.1.0)
 - `npm run robustness:estimator`: re-evaluates a study's retained designs at
   several perturbation counts against a 2,000-sample reference; 300 samples

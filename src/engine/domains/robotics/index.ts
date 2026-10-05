@@ -20,7 +20,7 @@ function validate(p: EngineeringProblem): ValidationIssue[] {
   if (!(g.radiusMin_m > 0) || !(g.radiusMin_m < g.radiusMax_m)) issues.push({ path: "geometry.radiusMin_m", message: "radius bounds must satisfy 0 < min < max" });
   if (!(g.wallRatio >= 0 && g.wallRatio < 1)) issues.push({ path: "geometry.wallRatio", message: "wall ratio must be in [0, 1)" });
   if (g.taskPoints.length === 0) issues.push({ path: "geometry.taskPoints", message: "at least one task point is required" });
-  if (p.loads.length !== 1 || !(p.loads[0].magnitude_N > 0)) issues.push({ path: "loads", message: "exactly one positive payload load is supported" });
+  if (p.loads.length !== 1 || p.loads[0].kind !== "point" || !(p.loads[0].magnitude_N > 0)) issues.push({ path: "loads", message: "exactly one positive payload load is supported" });
   if (!(p.safetyFactor >= 1)) issues.push({ path: "safetyFactor", message: "safety factor must be >= 1" });
   if (p.objectives.length === 0) issues.push({ path: "objectives", message: "at least one objective is required" });
   p.objectives.forEach((o, i) => { if (!METRIC_IDS.has(o.metric)) issues.push({ path: `objectives[${i}].metric`, message: `unknown metric "${o.metric}"` }); });
@@ -75,6 +75,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<ManipulatorArtifa
     },
     evaluate: (params) => evaluateArm(problem, space.buildDesign(params)),
     artifact: (params) => analyzeArm(problem, space.buildDesign(params)),
+    tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "peakTorque_Nm" : "mass_kg",
     backendId: MANIPULATOR_BACKEND_ID,
   };
 }

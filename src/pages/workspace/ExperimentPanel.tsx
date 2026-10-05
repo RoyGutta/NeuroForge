@@ -161,7 +161,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
             {desc.label} <small>seed {settings.seed} · budget {settings.maxEvaluations.toLocaleString()} evaluations</small>
           </li>
           <li>
-            {problem.domain === "robotics" ? "Kinematics, statics and beam bending per candidate" : "Linear-static FEA per candidate"} <small>{compiled?.backendId ?? "—"}</small>
+            {problem.domain === "robotics" ? "Kinematics, statics and beam bending per candidate" : problem.domain === "thermal" ? "Fin theory and convection fixed point per candidate" : "Linear-static FEA per candidate"} <small>{compiled?.backendId ?? "—"}</small>
           </li>
         </ol>
 
@@ -222,7 +222,9 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
           </button>
         )}
         <p className="helper">
-          {problem.domain === "robotics"
+          {problem.domain === "thermal"
+            ? "Natural-convection plate-fin model: closed-form fin efficiency and the Bar-Cohen and Rohsenow channel correlation at fixed air properties. No radiation, spreading or fan flow. A preliminary study, not a validated design."
+            : problem.domain === "robotics"
             ? "Static two-link model: closed-form kinematics, gravity torques and cantilever bending. No dynamics, joint limits or actuator model. A preliminary study, not a validated design."
             : "Linear-elastic pin-jointed truss model. Results are a preliminary study, not a validated or fabrication-ready design."}
         </p>

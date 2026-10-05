@@ -53,16 +53,24 @@ brief ──► ProblemInterpreter ──► EngineeringProblem (typed, versione
 ### `src/engine/domains`
 `EngineeringDomain` is the extension point: `validate(problem)`,
 `compile(problem) → CompiledProblem { space, evaluate, baseline, artifact,
-metrics, backendId }`. The registry maps domain id → module. Two domains are
-registered: `structural` (truss bridge) and `robotics` (planar manipulator).
-Adding thermal or aerospace means implementing this interface; nothing above
-it changes.
+metrics, backendId }`. The registry maps domain id → module. Three domains are
+registered: `structural` (truss bridge), `robotics` (planar manipulator) and
+`thermal` (plate-fin heat sink). Adding aerospace or fluids means
+implementing this interface; nothing above it changes. Each compiled problem
+may name a `tradeoffMetric` the autonomous lab uses for its NSGA-II stage.
 
 The structural module compiles a `truss-bridge` geometry into a Warren
 ground-structure space (`bridgeSpace.ts`), evaluates with the FEA solver
 (`fea.ts`) and derives metrics (`evaluate.ts`, `metrics.ts`). The baseline is
 a uniform-section truss at span/8 depth whose common area is found by
 bisection to just satisfy the same constraints.
+
+The thermal module compiles a `fin-array` geometry into a four-variable
+space (fin height, thickness, pitch, base thickness) and evaluates each
+design with closed-form fin theory and the Bar-Cohen and Rohsenow
+natural-convection correlation solved to a fixed point (`fin.ts`,
+`evaluate.ts`); its response is the thermal state vector. It was the third
+domain to run on every layer above the contract unchanged.
 
 The robotics module compiles a `planar-manipulator` geometry into a
 four-variable space (two link lengths, two tube radii), evaluates each task

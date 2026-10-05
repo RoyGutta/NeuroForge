@@ -5,6 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { startExperiment } from "../../app/experimentClient";
+import { pointLoadMagnitude_N } from "../../engine/core/problem";
 import { compileProblem } from "../../engine/domains/registry";
 import type { CompiledProblem } from "../../engine/domains/domain";
 import type { TrussModel } from "../../engine/domains/structural/truss/model";
@@ -56,7 +57,7 @@ export function useTechnologyData() {
     const spec = [
       `objective        ${problem.objectives[0].direction}(${problem.objectives[0].metric})`,
       `span             ${g.span_m} m`,
-      `applied_load     ${problem.loads[0].magnitude_N} N at midspan`,
+      `applied_load     ${pointLoadMagnitude_N(problem) ?? 0} N at midspan`,
       `material         ${problem.material.name}`,
       `safety_factor    ${problem.safetyFactor}`,
       ...problem.constraints.map((c) => `constraint       ${c.metric} ${c.op} ${fmt(c.limit)}  [${c.source}]`),

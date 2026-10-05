@@ -12,7 +12,7 @@
  */
 import type { Material } from "../domains/structural/truss/model";
 
-export type DomainId = "structural" | "robotics";
+export type DomainId = "structural" | "robotics" | "thermal";
 
 export type Confidence = "high" | "medium" | "low";
 
@@ -58,7 +58,21 @@ export interface PointLoadSpec {
   location: "midspan" | "tip";
 }
 
-export type LoadSpec = PointLoadSpec;
+/** Steady heat dissipated into a heat sink base. */
+export interface HeatLoadSpec {
+  id: string;
+  kind: "heat";
+  power_W: number;
+  location: "base";
+}
+
+export type LoadSpec = PointLoadSpec | HeatLoadSpec;
+
+/** First point load's magnitude, for domains that have one. */
+export function pointLoadMagnitude_N(problem: { loads: LoadSpec[] }): number | undefined {
+  const l = problem.loads.find((x): x is PointLoadSpec => x.kind === "point");
+  return l?.magnitude_N;
+}
 
 export interface SupportSpec {
   kind: "pin" | "roller" | "fixed";
@@ -97,7 +111,25 @@ export interface PlanarManipulatorGeometry {
   taskPoints: TaskPoint[];
 }
 
-export type ProblemGeometry = TrussBridgeGeometry | PlanarManipulatorGeometry;
+/** Plate-fin heat sink: fins along the base width, extruded over the base depth, vertical in natural convection. */
+export interface FinArrayGeometry {
+  kind: "fin-array";
+  baseWidth_m: number;
+  baseDepth_m: number;
+  ambient_C: number;
+  finHeightMin_m: number;
+  finHeightMax_m: number;
+  finThicknessMin_m: number;
+  finThicknessMax_m: number;
+  finPitchMin_m: number;
+  finPitchMax_m: number;
+  baseThicknessMin_m: number;
+  baseThicknessMax_m: number;
+  /** Minimum clear gap between fins (manufacturing and flow), metres. */
+  gapMin_m: number;
+}
+
+export type ProblemGeometry = TrussBridgeGeometry | PlanarManipulatorGeometry | FinArrayGeometry;
 
 export interface AnalysisSettings {
   includeSelfWeight: boolean;

@@ -1,6 +1,9 @@
+import { pointLoadMagnitude_N } from "../../engine/core/problem";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
+import type { FinArrayArtifact } from "../../engine/domains/thermal/finArray/evaluate";
+import { FinArraySvg } from "../workspace/FinArraySvg";
 import { trussGeometry } from "../../engine/domains/structural/truss/bridgeSpace";
 import { solveTruss } from "../../engine/domains/structural/truss/fea";
 import type { TrussModel } from "../../engine/domains/structural/truss/model";
@@ -18,9 +21,11 @@ export function DemoWindow({ demo }: { demo: Demo }) {
   const { compiled, problem, status, best, baseline, generations, progress } = demo;
   const design = showBaseline ? baseline : best ?? baseline;
   const isArm = problem.domain === "robotics";
+  const isHeat = problem.domain === "thermal";
   const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
-  const model = !isArm && artifact ? (artifact as TrussModel) : null;
+  const model = !isArm && !isHeat && artifact ? (artifact as TrussModel) : null;
   const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
+  const sink = isHeat && artifact ? (artifact as FinArrayArtifact) : null;
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
   const objective = problem.objectives[0];
   const b = baseline?.evaluation?.objectives[objective.id];
@@ -74,11 +79,12 @@ export function DemoWindow({ demo }: { demo: Demo }) {
               mode={mode}
               safetyFactor={problem.safetyFactor}
               areaMax_m2={trussGeometry(problem).areaMax_m2}
-              appliedLoad_N={problem.loads[0]?.magnitude_N}
+              appliedLoad_N={pointLoadMagnitude_N(problem)}
               compact
               ariaLabel="Live truss design from the finite-element optimization"
             />
           )}
+          {sink && <FinArraySvg artifact={sink} mode={mode === "utilization" ? "utilization" : "structure"} temperatureLimit_C={problem.constraints.find((c) => c.id === "temperature")?.limit ?? Infinity} compact ariaLabel="Live heat-sink design from the fin-theory optimization" />}
           {arm && problem.geometry.kind === "planar-manipulator" && (
             <ManipulatorSvg
               artifact={arm}
@@ -146,7 +152,7 @@ export function DemoWindow({ demo }: { demo: Demo }) {
         <button className="text-link" onClick={open}>
           Open this study in the workspace →
         </button>
-        <span>{isArm ? " · Static kinematics · gravity torques · tube bending · preliminary analysis, not a validated design" : " · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design"}</span>
+        <span>{isHeat ? " · Fin theory · natural-convection correlation · preliminary analysis, not a validated design" : isArm ? " · Static kinematics · gravity torques · tube bending · preliminary analysis, not a validated design" : " · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design"}</span>
       </p>
     </div>
   );

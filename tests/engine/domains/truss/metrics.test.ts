@@ -11,7 +11,7 @@ const al = {
   name: "Aluminium",
   youngsModulus_Pa: 69e9,
   density_kg_m3: 2700,
-  yieldStrength_Pa: 276e6,
+  yieldStrength_Pa: 276e6, thermalConductivity_W_mK: 167
 };
 
 describe("truss metrics", () => {
