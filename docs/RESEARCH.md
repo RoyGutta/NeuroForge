@@ -208,7 +208,10 @@ lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 | What is the cheapest formulation of robustness? | Answered (2026-10-05): post-hoc selection from the nominal trajectory, +13 % mass at 95 % robustness on every seed, strided scan at about a third of the linear cost; margin 7 % is +5 % mass but reaches 95 % on only 6 of 10 seeds; copy-based constraints are budget-starved at equal solver calls; bisection over the trajectory is unreliable | study `robust-formulations` |
 | Which constraints drive the robust-mode overhead? | Answered: buckling (98 % violation probability at the nominal optimum) then stress (86 %); deflection never; a buckling-only margin shifts violations to stress | study `robust-formulations` |
 | Does robust optimisation change the structure or thicken it uniformly? | Answered in part: margin and post-hoc designs are the nominal shape with 2–26 % more area; copy-based optima land in different, heavier regions at this budget | per-run designs in `robust-formulations` |
-| Can robustness be estimated more cheaply than 300 perturbations, and can the member surrogate screen the perturbed copies? | Open | next formulation study |
+| How many perturbations does a robustness estimate need? | Answered (2026-10-05): standard error near 95 % follows sqrt(p(1-p)/n); 300 samples flip 5 % of threshold decisions in the 80–100 % band, 1,000 samples 1 %; in-loop copies of 8 to 32 are very noisy classifiers | estimator analysis over the retained designs |
+| Do robustness-formulation results transfer between domains? | Answered (2026-10-05): no. On the manipulator the zero-limit reach constraint defeats margins (50 % robust), post-hoc finds a passing design on 1 of 10 seeds, and the copy-based constraint wins at +2 % torque with 100 % robustness because the 4-variable problem converges within its reduced budget | study `robust-formulations-manipulator` |
+| Can a generic margin act on zero-limit constraints such as reachability? | Open; needs a domain-level geometric margin | manipulator study |
+| Can the member surrogate screen the perturbed copies of robust mode? | Open | next formulation study |
 | Do multi-seed pilots pick a different strategy than single-seed pilots at equal budget? | Open; the lab now records both | lab records, v0.9 |
 
 ## Next experiments

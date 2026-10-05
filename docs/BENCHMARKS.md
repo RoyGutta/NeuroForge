@@ -5,6 +5,70 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-10-05 · engine 1.1.0 · robustness formulations on the manipulator, 10 seeds
+
+Registered study `benchmarks/studies/robust-formulations-manipulator.json`,
+record `benchmarks/results/robust-formulations-manipulator-2026-10-05.json`.
+Two-link manipulator (2 kg, 0.8 m, SF 2), peak torque, baseline 17.554 N m,
+6,500 solver calls per run, independent check 300 perturbations at +/- 2 %
+on link lengths and tube radii.
+
+| Method | Median N m | Independent robust fraction (median) | Runs with a design at >= 95 % | Solver calls | Violations at the reported design (reach / stress / deflection) |
+|---|---|---|---|---|---|
+| nominal (EA) | 16.978 | 20 % | 0/10 | 6,510 | 47 % / 0 % / 33 % |
+| post-hoc 95 %, strided | 17.156 | 99 % | 1/10 (9 runs found no passing design) | 27,810 | 0 % / 0 % / 1 % |
+| margin 3 % | 17.015 | 35 % | 0/10 | 6,510 | 48 % / 0 % / 18 % |
+| margin 7 % | 17.097 | 50 % | 0/10 | 6,510 | 48 % / 0 % / 3 % |
+| robust copies 12, target 95 % | 17.334 | 100 % | 9/10 | 6,630 | 0 % / 0 % / 0 % |
+| CMA-ES nominal | 16.950 | 18 % | 0/10 | 6,544 | 48 % / 0 % / 32 % |
+| CMA-ES margin 7 % | 16.997 | 50 % | 0/10 | 6,552 | 48 % / 0 % / 2 % |
+
+Reading. The formulation ranking does not transfer from the truss.
+- **The driver is a zero-limit constraint.** The torque optimum sets
+  L1 + L2 equal to the farthest task point, so any downward length
+  perturbation makes that point unreachable (reach violated in 47 % of
+  perturbations); tip deflection binds as well (33 %). Reachability's limit
+  is 0, so scaling the limit by a margin changes nothing: the margin methods
+  fix deflection and leave reach at 48 %. Tightening would have to act on
+  the geometry (require L1 + L2 >= 1.02 x the farthest point), which is a
+  domain-level formulation, not a generic one.
+- **Post-hoc selection mostly finds nothing.** The trajectory binds
+  deflection early (the baseline is sized to the deflection limit) and reach
+  late, so on 9 of 10 seeds no visited design passes 95 %.
+- **Copy-based robust mode wins here.** With four variables, 500 designs are
+  enough to converge, so the in-loop constraint costs 2.1 % torque for 100 %
+  independent robustness on 9 of 10 seeds. On the truss the same method was
+  budget-starved.
+- **Robust designs are different arms**: link 1 shorter by 13 %, link 2
+  longer by 23 %, radii up 3 to 17 %, instead of a thickened nominal arm.
+
+## 2026-10-05 · engine 1.1.0 · how many perturbations does a robustness estimate need?
+
+`npm run robustness:estimator -- benchmarks/results/robust-formulations-2026-10-05.json`
+re-evaluates the 120 retained designs of the formulation study at five
+sample sizes (5 independent seeds each) against a 2,000-sample reference;
+result in `benchmarks/results/robust-formulations-2026-10-05-estimator-2026-10-05.json`.
+
+| Samples | Mean std of the estimate | Max abs error | Decisions at the 95 % threshold flipped (all 600) | Flip rate for designs in the 80–100 % band (38 designs) |
+|---|---|---|---|---|
+| 30 | 0.024 | 0.191 | 35 | 18 % |
+| 60 | 0.017 | 0.151 | 22 | 12 % |
+| 100 | 0.015 | 0.129 | 18 | 9 % |
+| 300 | 0.009 | 0.074 | 10 | 5 % |
+| 1,000 | 0.004 | 0.050 | 2 | 1 % |
+
+Reading. Robustness is a Bernoulli fraction, so the estimate's standard
+error near 95 % is about sqrt(0.05 x 0.95 / n): 0.04 at 30 samples, 0.013 at
+300, 0.007 at 1,000, which the measured spreads match. The consequence for
+the formulation study is that "6 of 10 seeds at or above 95 %" for margin
+7 % includes threshold noise at 300 samples (a 5 % flip rate on designs in
+the band); the ordering of methods is unaffected because their medians are
+far apart. Studies that make a pass/fail claim at 95 % should use 1,000
+samples for designs that land within a few points of the threshold; the
+in-loop robust constraint with 8 to 32 copies is, by the same arithmetic,
+a very noisy classifier (std 0.04 to 0.08), which is part of why it
+over-constrains.
+
 ## 2026-10-05 · engine 1.1.0 · robustness formulations at equal solver calls, 10 seeds
 
 Registered study `benchmarks/studies/robust-formulations.json`, raw runs

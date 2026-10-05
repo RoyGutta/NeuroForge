@@ -1,0 +1,22 @@
+{
+  "id": "robust-formulations-manipulator",
+  "title": "Do the robustness-formulation results from the truss transfer to the manipulator (peak torque under +/- 2 % link and radius tolerance)?",
+  "hypothesis": "As on the truss, the converged nominal torque optimum loses feasibility under tolerance because the tip-deflection limit binds; post-hoc selection along the trajectory and a measured margin recover 95 % robustness for a few per cent of torque, and copy-based constraints are budget-starved at equal solver calls.",
+  "benchmark": { "problem": "planar-manipulator", "payload_kg": 2, "reach_m": 0.8, "safetyFactor": 2 },
+  "budget": 6500,
+  "budgetUnit": "solverCalls",
+  "seeds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "reference": "nominal",
+  "methods": [
+    { "id": "nominal", "optimizer": "evolutionary", "params": { "populationSize": 30 } },
+    { "id": "posthoc-95-strided", "optimizer": "evolutionary", "params": { "populationSize": 30 }, "postHoc": { "targetFraction": 0.95, "strategy": "strided", "stride": 16 } },
+    { "id": "margin-3", "optimizer": "evolutionary", "params": { "populationSize": 30 }, "margin": 0.03 },
+    { "id": "margin-7", "optimizer": "evolutionary", "params": { "populationSize": 30 }, "margin": 0.07 },
+    { "id": "robust-k12-p95", "optimizer": "evolutionary", "params": { "populationSize": 30 }, "robust": { "tolerance": 0.02, "samples": 12, "targetFraction": 0.95 } },
+    { "id": "cmaes-nominal", "optimizer": "cmaes", "params": {} },
+    { "id": "cmaes-margin-7", "optimizer": "cmaes", "params": {}, "margin": 0.07 }
+  ],
+  "metrics": ["bestObjective", "robustFeasibleFraction", "solverCalls"],
+  "targetFraction": 0.97,
+  "robustCheck": { "tolerance": 0.02, "samples": 300 }
+}

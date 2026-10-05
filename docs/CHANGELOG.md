@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 — 2026-10-05 · Robustness follow-ups (engine unchanged, 1.1.0)
+- `npm run robustness:estimator`: re-evaluates a study's retained designs at
+  several perturbation counts against a 2,000-sample reference; 300 samples
+  flip 5 % of threshold decisions in the 80–100 % band, 1,000 flip 1 %.
+- Registered study `robust-formulations-manipulator`: the formulation
+  ranking does not transfer; a zero-limit reach constraint defeats margins
+  and post-hoc selection, while the copy-based constraint wins at +2 %
+  torque. Analysis records are excluded from the Benchmarks page loader.
+
 ## 1.1.0 — 2026-10-05 · Robustness formulations and per-run design retention
 - Cheaper robustness formulations (`src/engine/robustness/formulations.ts`):
   constraint tightening by a uniform or per-constraint margin, and post-hoc
