@@ -5,12 +5,10 @@ import type { SurrogateResult, SurrogateStudy } from "../../engine/ml/study";
 import { formatNumber } from "./model";
 import type { Workspace } from "./useWorkspace";
 
-const TARGETS: Record<string, string[]> = {
-  structural: ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"],
-  robotics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "maxTipDeflection_m"],
-  thermal: ["mass_kg", "baseTemperature_C", "thermalResistance_K_W", "finEfficiency"],
-  structural3d: ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"],
-};
+/** Fallback when a domain declares no presentation: the objective and every constraint metric. */
+function defaultTargets(problem: { objectives: { metric: string }[]; constraints: { metric: string }[] }): string[] {
+  return Array.from(new Set([...problem.objectives.map((o) => o.metric), ...problem.constraints.map((c) => c.metric)]));
+}
 
 /**
  * Learning panel: trains surrogate models on the designs of the current
@@ -20,7 +18,7 @@ const TARGETS: Record<string, string[]> = {
  */
 export function LearningSection({ ws }: { ws: Workspace }) {
   const { record, status, problem, compiled } = ws;
-  const targets = TARGETS[problem.domain] ?? TARGETS.structural;
+  const targets = compiled?.presentation?.learningTargets ?? defaultTargets(problem);
   const [models, setModels] = useState<string[]>(["ridge", "gp"]);
   const [study, setStudy] = useState<SurrogateStudy | null>(null);
   const [busy, setBusy] = useState(false);

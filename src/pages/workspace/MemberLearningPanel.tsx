@@ -18,7 +18,8 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   const { record, compiled, latestBest, problem, status } = ws;
   const [model, setModel] = useState("ridge");
   const [representation, setRepresentation] = useState<"forces" | "both" | "displacements">("both");
-  const domainRepresentation = ws.problem.domain === "structural" || ws.problem.domain === "structural3d" ? representation : "forces";
+  const representations = ws.compiled?.presentation?.responseLearning.representations ?? [{ value: "forces" as const, label: "primary response" }];
+  const domainRepresentation = representations.some((r) => r.value === representation) ? representation : representations[0].value;
   const [riskK, setRiskK] = useState(2);
   const [study, setStudy] = useState<MemberStudy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,15 +41,11 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
 
   const design = latestBest;
   const isTruss = problem.domain === "structural";
-  const isMemberDomain = isTruss || problem.domain === "structural3d";
+  const pres = compiled?.presentation;
   const response = compiled?.responses[0];
   const unit = response?.unit ?? "";
-  const componentLabel = (i: number) =>
-    isMemberDomain
-      ? compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}`
-      : problem.domain === "thermal"
-        ? ["base temperature", "tip temperature", "convection coefficient", "fin efficiency", "thermal resistance", "fin heat", "base heat"][i] ?? `component ${i}`
-        : `task point ${Math.floor(i / 2) + 1} · joint ${(i % 2) + 1}`;
+  const noun = pres?.componentNoun ?? "component";
+  const componentLabel = (i: number) => pres?.componentLabel(i) ?? `${noun} ${i}`;
   const trussModel = useMemo(() => (isTruss && compiled && design ? (compiled.artifact(design.parameters) as TrussModel) : null), [isTruss, compiled, design]);
   const result = useMemo(() => (trussModel ? solveTruss(trussModel) : null), [trussModel]);
   const colors = useMemo(() => {
@@ -65,14 +62,8 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   return (
     <section className="under member-learning" aria-label="Member-level surrogate">
       <div>
-        <h2>{isMemberDomain ? "Learn member forces, apply exact physics" : `Learn ${response?.label.toLowerCase() ?? "responses"}, apply exact physics`}</h2>
-        <p>
-          {isMemberDomain
-            ? "Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver."
-            : problem.domain === "thermal"
-              ? "A multi-output surrogate predicts the thermal state (base and tip temperature, convection coefficient, fin efficiency, resistance, heat split) with an uncertainty; the constraint and objective metrics are read from that state and mass from the geometry. The screen's reliability is measured on the held-out split against the solver."
-              : "A multi-output surrogate predicts the joint torque at every task point with an uncertainty; peak torque and bending stress are then computed exactly from those torques (tip deflection is regressed separately). The screen's reliability is measured on the held-out split against the solver."}
-        </p>
+        <h2>{pres?.responseLearning.heading ?? `Learn ${response?.label.toLowerCase() ?? "responses"}, apply exact physics`}</h2>
+        <p>{pres?.responseLearning.description ?? "A multi-output surrogate predicts the primary response with an uncertainty; the metrics are derived exactly from it. The screen's reliability is measured on the held-out split against the solver."}</p>
         <div className="row wrap">
           <label className="check">
             model
@@ -87,15 +78,11 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
           <label className="check">
             learn
             <select value={representation} onChange={(e) => setRepresentation(e.target.value as "forces" | "both" | "displacements")} disabled={busy} aria-label="Learned response">
-              {isMemberDomain ? (
-                <>
-                  <option value="both">forces + displacements (all metrics derived)</option>
-                  <option value="forces">member forces (deflection regressed)</option>
-                  <option value="displacements">displacements only (forces differenced)</option>
-                </>
-              ) : (
-                <option value="forces">{problem.domain === "thermal" ? "thermal state (all metrics derived)" : "joint torques (deflection regressed)"}</option>
-              )}
+              {representations.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="check">
@@ -114,7 +101,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         {study && f && fc && (
           <>
             <p className="fine">
-              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} {isTruss ? "members" : "response components"} · train {study.split.train} / test {study.split.test} · {study.memberModel} · {study.representation} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
+              {study.dataset.size.toLocaleString()} designs · {study.dataset.members} {noun}s · train {study.split.train} / test {study.split.test} · {study.memberModel} · {study.representation} · fit {study.fitMs < 1000 ? `${study.fitMs.toFixed(0)} ms` : `${(study.fitMs / 1000).toFixed(1)} s`}
             </p>
             <table className="table">
               <thead>
@@ -155,7 +142,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
             <table className="table">
               <tbody>
                 <tr>
-                  <td>{isTruss ? "Member-force R² (all members)" : "Response R² (all components)"}</td>
+                  <td>{`Response R² (all ${noun}s)`}</td>
                   <td className={study.forces.overallR2 > 0.9 ? "green" : undefined}>{study.forces.overallR2.toFixed(3)}</td>
                 </tr>
                 <tr>
@@ -185,15 +172,15 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
         )}
       </div>
       <div>
-        <h2>{map === "error" ? `Error by ${isTruss ? "member" : "component"}` : `Uncertainty by ${isTruss ? "member" : "component"}`}</h2>
+        <h2>{map === "error" ? `Error by ${noun}` : `Uncertainty by ${noun}`}</h2>
         <p>
           {study
             ? map === "error"
-              ? `Mean absolute error on held-out designs, per ${isTruss ? "member (red = hardest to predict). Drawn on the best design." : "task point and joint (largest first)."}`
-              : `Mean predicted standard deviation, per ${isTruss ? "member (red = least understood). Drawn on the best design." : "task point and joint."}`
+              ? `Mean absolute error on held-out designs, per ${noun}${isTruss ? " (red = hardest to predict). Drawn on the best design." : "."}`
+              : `Mean predicted standard deviation, per ${noun}${isTruss ? " (red = least understood). Drawn on the best design." : "."}`
             : isTruss
               ? "Train the member surrogate to colour the structure by prediction error or uncertainty."
-              : "Train the surrogate to list prediction error and uncertainty per task point and joint."}
+              : `Train the surrogate to list prediction error and uncertainty per ${noun}.`}
         </p>
         {study && (
           <div className="tabs" style={{ marginBottom: 8 }}>

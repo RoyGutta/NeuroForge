@@ -35,6 +35,10 @@ export interface ResponseDescriptor {
  */
 export interface ResponseModel {
   responseIds: string[];
+  /** The response surrogates learn first (member forces, joint torques, thermal state). */
+  primaryResponseId: string;
+  /** A displacement-field response with an exact linear map to the primary response, when the domain has one. */
+  displacementResponseId?: string;
   /** Union of metric ids that `derive` can compute from some response. */
   derivableMetrics: string[];
   /** Metric ids derivable from one specific response alone. */
@@ -54,6 +58,21 @@ export interface ResponseModel {
   conservativeFromDisplacements?(params: number[], mean: number[], std: number[], k: number): Record<string, number>;
 }
 
+/** How a domain wants its learning results presented; owned by the domain, read by the interface. */
+export interface DomainPresentation {
+  /** Scalar surrogate targets the learning panel studies by default. */
+  learningTargets: string[];
+  /** Label of component `i` of the primary response. */
+  componentLabel(i: number): string;
+  /** Noun for the primary response's components ("member", "component"). */
+  componentNoun: string;
+  responseLearning: {
+    heading: string;
+    description: string;
+    representations: { value: "forces" | "displacements" | "both"; label: string }[];
+  };
+}
+
 export interface CompiledProblem<TArtifact = unknown> {
   problem: EngineeringProblem;
   space: DesignSpace;
@@ -70,6 +89,7 @@ export interface CompiledProblem<TArtifact = unknown> {
   backendId: string;
   /** Metric the autonomous lab trades the objective against (e.g. compliance for a mass objective). */
   tradeoffMetric?: string;
+  presentation?: DomainPresentation;
 }
 
 export interface EngineeringDomain<TArtifact = unknown> {

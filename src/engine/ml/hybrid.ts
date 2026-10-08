@@ -73,6 +73,7 @@ export class HybridPredictor {
   private globalRange = new Map<string, [number, number]>();
   private readonly forceId: string;
   private readonly responseId: string;
+  private readonly displacementId: string | null;
   private readonly representation: HybridRepresentation;
   private readonly nonDerivable: string[];
   private trainedOn = 0;
@@ -84,12 +85,14 @@ export class HybridPredictor {
   ) {
     const rm = compiled.responseModel;
     if (!rm) throw new Error("hybrid predictor needs a domain response model");
-    this.forceId = rm.responseIds[0];
+    this.forceId = rm.primaryResponseId;
     // Domains without a displacement field (no linear force map) fall back to
     // learning their primary response; the representation actually used is recorded.
-    this.representation = rm.forcesFromDisplacements ? (opts.representation ?? "forces") : "forces";
-    this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
-    const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);
+    const displacementId = rm.displacementResponseId;
+    this.representation = displacementId && rm.forcesFromDisplacements ? (opts.representation ?? "forces") : "forces";
+    this.displacementId = this.representation === "forces" ? null : displacementId ?? null;
+    this.responseId = this.representation === "displacements" && this.displacementId ? this.displacementId : this.forceId;
+    const derivable = this.representation === "both" && this.displacementId ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom(this.displacementId)])) : rm.derivableFrom(this.responseId);
     const needed = new Set([...compiled.problem.constraints.map((c) => c.metric), ...compiled.problem.objectives.map((o) => o.metric)]);
     this.nonDerivable = Array.from(needed).filter((m) => !derivable.includes(m));
   }
@@ -113,10 +116,10 @@ export class HybridPredictor {
     this.member = createMultiOutputSurrogate(this.opts.memberModel, this.opts.memberParams ?? {}, this.rng.fork("member"));
     this.member.fit(ds.inputs, ds.responseMatrix(this.responseId));
     this.displacement = null;
-    if (this.representation === "both") {
-      if (!ds.responseIds.includes("nodeDisplacements_m")) throw new Error("dataset lacks response \"nodeDisplacements_m\"");
+    if (this.representation === "both" && this.displacementId) {
+      if (!ds.responseIds.includes(this.displacementId)) throw new Error(`dataset lacks response "${this.displacementId}"`);
       this.displacement = createMultiOutputSurrogate(this.opts.memberModel, this.opts.memberParams ?? {}, this.rng.fork("displacement"));
-      this.displacement.fit(ds.inputs, ds.responseMatrix("nodeDisplacements_m"));
+      this.displacement.fit(ds.inputs, ds.responseMatrix(this.displacementId));
     }
     this.globals.clear();
     for (const m of this.nonDerivable) {

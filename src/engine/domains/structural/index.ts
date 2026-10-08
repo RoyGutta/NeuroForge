@@ -5,7 +5,7 @@
 import type { EngineeringProblem, ValidationIssue } from "../../core/problem";
 import type { CompiledProblem, EngineeringDomain } from "../domain";
 import { createBridgeSpace } from "./truss/bridgeSpace";
-import { evaluateTrussDesign, freeDofsOf, TRUSS_BACKEND_ID, TRUSS_METRICS, trussResponses } from "./truss/evaluate";
+import { evaluateTrussDesign, freeDofsOf, TRUSS_BACKEND_ID, TRUSS_METRICS, trussPresentation, trussResponses } from "./truss/evaluate";
 import { createTrussResponseModel } from "./truss/responseModel";
 import type { TrussModel } from "./truss/model";
 
@@ -77,6 +77,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<TrussModel> {
     evaluate: (params) => evaluateTrussDesign(problem, space, params),
     artifact: (params) => space.buildModel(params),
     tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "compliance_J" : "mass_kg",
+    presentation: trussPresentation(space),
     backendId: TRUSS_BACKEND_ID,
   };
 }

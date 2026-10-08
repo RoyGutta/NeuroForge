@@ -3,7 +3,7 @@
  */
 import { checkConstraints, FAILED_DESIGN_VIOLATION, type Evaluation } from "../../../core/design";
 import type { EngineeringProblem, MetricDescriptor } from "../../../core/problem";
-import type { ResponseDescriptor } from "../../domain";
+import type { DomainPresentation, ResponseDescriptor } from "../../domain";
 import type { BridgeSpace } from "./bridgeSpace";
 import type { TrussSolution } from "./fea";
 import { solveTruss } from "./fea";
@@ -139,6 +139,25 @@ export function evaluateTrussDesign(
     responses: {
       memberForces_N: Array.from(sol.memberForces_N),
       nodeDisplacements_m: freeDofsOf(model).map((d) => sol.displacements_m[d]),
+    },
+  };
+}
+
+/** Learning presentation shared by the planar and spatial trusses. */
+export function trussPresentation(space: { variables: { id: string; label: string }[] }): DomainPresentation {
+  return {
+    learningTargets: ["mass_kg", "maxStress_Pa", "bucklingUtilization", "maxDisplacement_m"],
+    componentLabel: (i) => space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}`,
+    componentNoun: "member",
+    responseLearning: {
+      heading: "Learn member forces, apply exact physics",
+      description:
+        "Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver.",
+      representations: [
+        { value: "both", label: "forces + displacements (all metrics derived)" },
+        { value: "forces", label: "member forces (deflection regressed)" },
+        { value: "displacements", label: "displacements only (forces differenced)" },
+      ],
     },
   };
 }

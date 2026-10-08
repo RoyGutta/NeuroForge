@@ -35,6 +35,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<ManipulatorArtifa
   const K = space.geometry.taskPoints.length;
   const responseModel: ResponseModel = {
     responseIds: ["jointTorques_Nm", "tipDeflections_m"],
+    primaryResponseId: "jointTorques_Nm",
     derivableMetrics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction", "maxTipDeflection_m"],
     derivableFrom(id) {
       if (id === "jointTorques_Nm") return ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction"];
@@ -75,6 +76,17 @@ function compile(problem: EngineeringProblem): CompiledProblem<ManipulatorArtifa
     },
     evaluate: (params) => evaluateArm(problem, space.buildDesign(params)),
     artifact: (params) => analyzeArm(problem, space.buildDesign(params)),
+    presentation: {
+      learningTargets: ["peakTorque_Nm", "mass_kg", "stressUtilization", "maxTipDeflection_m"],
+      componentLabel: (i) => `task point ${Math.floor(i / 2) + 1} · joint ${(i % 2) + 1}`,
+      componentNoun: "component",
+      responseLearning: {
+        heading: "Learn joint torques per task point, apply exact physics",
+        description:
+          "A multi-output surrogate predicts the joint torque at every task point with an uncertainty; peak torque and bending stress are then computed exactly from those torques (tip deflection is regressed separately). The screen's reliability is measured on the held-out split against the solver.",
+        representations: [{ value: "forces", label: "joint torques (deflection regressed)" }],
+      },
+    },
     tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "peakTorque_Nm" : "mass_kg",
     backendId: MANIPULATOR_BACKEND_ID,
   };

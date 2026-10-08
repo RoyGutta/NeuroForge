@@ -98,6 +98,8 @@ export function createCoreTrussResponseModel(opts: CoreResponseModelOptions): Re
 
   return {
     responseIds: ["memberForces_N", "nodeDisplacements_m"],
+    primaryResponseId: "memberForces_N",
+    displacementResponseId: "nodeDisplacements_m",
     derivableMetrics: DISPLACEMENT_METRICS,
     freeDofs: free,
     derivableFrom(id) {

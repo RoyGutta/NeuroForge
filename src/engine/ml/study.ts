@@ -201,8 +201,9 @@ export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOption
   const designs = collectDesigns(config);
   const constraintMetrics = config.problem.constraints.map((c) => c.metric);
   const representation = opts.representation ?? "forces";
-  const responseId = representation === "displacements" ? "nodeDisplacements_m" : rm.responseIds[0];
-  const derivable = representation === "both" ? Array.from(new Set([...rm.derivableFrom(rm.responseIds[0]), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(responseId);
+  const displacementId = rm.displacementResponseId;
+  const responseId = representation === "displacements" && displacementId ? displacementId : rm.primaryResponseId;
+  const derivable = representation === "both" && displacementId ? Array.from(new Set([...rm.derivableFrom(rm.primaryResponseId), ...rm.derivableFrom(displacementId)])) : rm.derivableFrom(responseId);
   const nonDerivable = constraintMetrics.filter((m) => !derivable.includes(m));
   const ds = buildDataset(compiled.space, designs, Array.from(new Set([...constraintMetrics, ...config.problem.objectives.map((o) => o.metric)])), rm.responseIds);
   const splitSeed = opts.splitSeed ?? 1;
@@ -221,7 +222,7 @@ export function runMemberStudy(config: ExperimentConfig, opts: MemberStudyOption
   const testDesigns = testIdx.map((i) => byId.get(ds.designIds[i])!);
   const params = testDesigns.map((d) => d.parameters);
   const preds = predictor.predict(params);
-  const actualForces = testDesigns.map((d) => d.evaluation!.responses![rm.responseIds[0]]);
+  const actualForces = testDesigns.map((d) => d.evaluation!.responses![rm.primaryResponseId]);
   const forces = predictor.forceAccuracy(params, actualForces);
   const feasibility = confusionFromPairs(preds.map((p, i) => ({ predicted: p.nominal.feasible, actual: testDesigns[i].evaluation!.feasible })));
   const feasibilityConservative = confusionFromPairs(preds.map((p, i) => ({ predicted: p.conservative.feasible, actual: testDesigns[i].evaluation!.feasible })));

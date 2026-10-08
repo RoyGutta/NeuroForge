@@ -5,6 +5,7 @@
  */
 import type { EngineeringProblem, ValidationIssue } from "../../../core/problem";
 import type { CompiledProblem, EngineeringDomain } from "../../domain";
+import { trussPresentation } from "../truss/evaluate";
 import { evaluateSpaceTruss, TRUSS3D_BACKEND_ID, TRUSS3D_METRICS, truss3dResponses } from "./evaluate";
 import { freeDofs3d, type Truss3dModel } from "./model";
 import { createSpaceTrussResponseModel } from "./responseModel";
@@ -50,6 +51,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<Truss3dModel> {
     evaluate: (params) => evaluateSpaceTruss(problem, space, params),
     artifact: (params) => space.buildModel(params),
     tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "compliance_J" : "mass_kg",
+    presentation: trussPresentation(space),
     backendId: TRUSS3D_BACKEND_ID,
   };
 }

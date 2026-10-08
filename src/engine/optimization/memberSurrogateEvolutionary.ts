@@ -96,6 +96,7 @@ class MemberSurrogateEvolutionary implements Optimizer {
   private sinceFit = Infinity;
   private readonly forceId: string;
   private readonly responseId: string;
+  private readonly displacementId: string | null;
   private readonly representation: "forces" | "displacements" | "both";
   private readonly nonDerivable: string[];
 
@@ -108,12 +109,13 @@ class MemberSurrogateEvolutionary implements Optimizer {
     this.inner = evolutionaryDescriptor.create(ctx, { ...p, offspringSize: this.lambda * Math.round(p.screeningFactor) }, seeds);
     const compiled = ctx.compiled;
     if (!compiled?.responseModel) throw new Error("member-surrogate optimiser needs a compiled problem with a response model");
-    this.forceId = compiled.responseModel.responseIds[0];
-    const requested = p.representation >= 2 ? "both" : p.representation >= 1 ? "displacements" : "forces";
-    this.representation = compiled.responseModel.forcesFromDisplacements ? requested : "forces";
-    this.responseId = this.representation === "displacements" ? "nodeDisplacements_m" : this.forceId;
     const rm = compiled.responseModel;
-    const derivable = this.representation === "both" ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom("nodeDisplacements_m")])) : rm.derivableFrom(this.responseId);
+    this.forceId = rm.primaryResponseId;
+    const requested = p.representation >= 2 ? "both" : p.representation >= 1 ? "displacements" : "forces";
+    this.displacementId = rm.displacementResponseId && rm.forcesFromDisplacements ? rm.displacementResponseId : null;
+    this.representation = this.displacementId ? requested : "forces";
+    this.responseId = this.representation === "displacements" && this.displacementId ? this.displacementId : this.forceId;
+    const derivable = this.representation === "both" && this.displacementId ? Array.from(new Set([...rm.derivableFrom(this.forceId), ...rm.derivableFrom(this.displacementId)])) : rm.derivableFrom(this.responseId);
     const needed = new Set([...compiled.problem.constraints.map((c) => c.metric), ...compiled.problem.objectives.map((o) => o.metric)]);
     this.nonDerivable = Array.from(needed).filter((m) => !derivable.includes(m));
   }
@@ -133,7 +135,7 @@ class MemberSurrogateEvolutionary implements Optimizer {
     if (this.sinceFit >= this.p.refitEvery || !this.predictor) {
       const t0 = now();
       this.predictor = new HybridPredictor(this.compiled, { memberModel: "ridge", riskK: this.p.riskK, representation: this.representation }, this.ctx.rng.fork("member-surrogate"));
-      const responses = this.representation === "forces" ? [this.forceId] : Array.from(new Set([this.forceId, "nodeDisplacements_m"]));
+      const responses = this.representation === "forces" || !this.displacementId ? [this.forceId] : Array.from(new Set([this.forceId, this.displacementId]));
       this.predictor.fit(buildDataset(this.ctx.space, this.archive, this.nonDerivable, responses));
       this.lastFitMs = now() - t0;
       this.refits++;

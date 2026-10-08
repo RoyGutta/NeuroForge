@@ -44,6 +44,7 @@ function compile(problem: EngineeringProblem): CompiledProblem<FinArrayArtifact>
   const derivable = ["mass_kg", "baseTemperature_C", "thermalResistance_K_W", "finEfficiency", "heatTransferCoefficient_W_m2K", "gap_m", "finCount"];
   const responseModel: ResponseModel = {
     responseIds: ["thermalState"],
+    primaryResponseId: "thermalState",
     derivableMetrics: derivable,
     derivableFrom(id) {
       return id === "thermalState" ? derivable : [];
@@ -74,6 +75,17 @@ function compile(problem: EngineeringProblem): CompiledProblem<FinArrayArtifact>
     },
     evaluate: (params) => evaluateFinArray(problem, space.buildDesign(params)),
     artifact: (params) => finArrayArtifact(problem, space.buildDesign(params)),
+    presentation: {
+      learningTargets: ["mass_kg", "baseTemperature_C", "thermalResistance_K_W", "finEfficiency"],
+      componentLabel: (i) => ["base temperature", "tip temperature", "convection coefficient", "fin efficiency", "thermal resistance", "fin heat", "base heat"][i] ?? `component ${i}`,
+      componentNoun: "component",
+      responseLearning: {
+        heading: "Learn thermal state (base and tip temperature, h, efficiency, resistance, fin and base heat), apply exact physics",
+        description:
+          "A multi-output surrogate predicts the thermal state (base and tip temperature, convection coefficient, fin efficiency, resistance, heat split) with an uncertainty; the constraint and objective metrics are read from that state and mass from the geometry. The screen's reliability is measured on the held-out split against the solver.",
+        representations: [{ value: "forces", label: "thermal state (all metrics derived)" }],
+      },
+    },
     tradeoffMetric: problem.objectives[0]?.metric === "mass_kg" ? "thermalResistance_K_W" : "mass_kg",
     backendId: FIN_ARRAY_BACKEND_ID,
   };
