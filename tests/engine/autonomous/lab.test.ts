@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createManipulatorProblem } from "../../../src/engine/domains/robotics/manipulator/template";
+import { createSpaceTrussProblem } from "../../../src/engine/domains/structural/truss3d/template";
 import { createTrussBridgeProblem } from "../../../src/engine/domains/structural/truss/template";
 import { detectPlateau } from "../../../src/engine/autonomous/convergence";
 import { createLabConfig, runLab, runLabToCompletion, type LabEvent } from "../../../src/engine/autonomous/lab";
@@ -136,5 +137,18 @@ describe("autonomous lab", () => {
     expect(record.robustness).toBeNull();
     expect(record.report.uncertainty.entries.find((e) => e.kind === "statistical")?.status).toBe("documented");
     expect(record.report.uncertainty.entries.find((e) => e.kind === "manufacturing")?.status).toBe("not-modelled");
+  });
+
+  test("runs on the spatial truss through the registry: pilots, main, trade-off on compliance, robustness and report", () => {
+    const girder = createSpaceTrussProblem({ span_m: 3, load_N: 2000, bays: 2 });
+    const cfg = createLabConfig({ problem: girder, seed: 4, strategies: ["evolutionary", "cmaes"], pilotBudget: 250, totalBudget: 2600, tradeoffBudget: 500, robustness: { tolerance: 0.02, samples: 60 }, convergence: { window: 12, minRelativeImprovement: 0.002 } });
+    const record = runLabToCompletion(cfg);
+    expect(record.status).toBe("completed");
+    expect(record.backendId).toBe("truss-fea-3d");
+    expect(record.report.objectiveMetric).toBe("mass_kg");
+    expect(record.tradeoff?.config.problem.objectives.map((o) => o.metric)).toEqual(["mass_kg", "compliance_J"]);
+    expect(record.robustness?.samples).toBe(60);
+    expect(record.report.improvementPercent).toBeGreaterThan(0);
+    expect(record.report.discovery.results.length).toBeGreaterThan(0);
   });
 });

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.3.0 — 2026-10-08 · Spatial truss and a Three.js engineering viewport
+- Dimension-generic direct-stiffness core (`truss/feaCore.ts`) and response
+  model core (`truss/responseModelCore.ts`); the planar solver and response
+  model are adapters verified bit for bit against the previous
+  implementations (committed fixtures).
+- Spatial structural domain `structural3d`: triangular space truss girder
+  (station heights plus every member area, X-braced floor, mirrored face
+  diagonals, seven-restraint support set, midspan point load, lumped
+  self-weight), same metrics and response ids as the planar truss, baseline
+  by bisection; solver verified on closed-form 3D cases (axial bar, tripod,
+  equilibrium, mechanism, scaling, planar embedding).
+- Three.js viewport (lazy-loaded chunk): instanced members, nodes and
+  supports, load arrows, grid and axes overlays, orbit, pan, zoom, camera
+  reset, member and node inspection with solved values, structure, axial
+  force, utilisation and deformed modes with a stated exaggeration factor;
+  responds to the generation scrubber using recorded designs.
+- Interpreter routes 3D or spatial truss briefs; study registry and lab run
+  the new domain; registered study `space-truss-optimizers` (10 seeds):
+  member surrogate 9.47 kg, global surrogate 10.0, CMA-ES 10.4, evolutionary
+  13.6, baseline 31.4 kg; force R² 0.997.
+- Heat-sink drawing: height dimension label no longer clips.
+
 ## 1.2.0 — 2026-10-05 · Third engineering domain: plate-fin heat sink
 - Thermal domain (`src/engine/domains/thermal`): rectangular plate fins on a
   base plate in natural convection; closed-form fin efficiency with the

@@ -18,7 +18,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   const { record, compiled, latestBest, problem, status } = ws;
   const [model, setModel] = useState("ridge");
   const [representation, setRepresentation] = useState<"forces" | "both" | "displacements">("both");
-  const domainRepresentation = ws.problem.domain === "structural" ? representation : "forces";
+  const domainRepresentation = ws.problem.domain === "structural" || ws.problem.domain === "structural3d" ? representation : "forces";
   const [riskK, setRiskK] = useState(2);
   const [study, setStudy] = useState<MemberStudy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,10 +40,11 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
 
   const design = latestBest;
   const isTruss = problem.domain === "structural";
+  const isMemberDomain = isTruss || problem.domain === "structural3d";
   const response = compiled?.responses[0];
   const unit = response?.unit ?? "";
   const componentLabel = (i: number) =>
-    isTruss
+    isMemberDomain
       ? compiled?.space.variables.find((x) => x.id === `area_${i}`)?.label.replace(" area", "") ?? `member ${i}`
       : problem.domain === "thermal"
         ? ["base temperature", "tip temperature", "convection coefficient", "fin efficiency", "thermal resistance", "fin heat", "base heat"][i] ?? `component ${i}`
@@ -64,9 +65,9 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
   return (
     <section className="under member-learning" aria-label="Member-level surrogate">
       <div>
-        <h2>{isTruss ? "Learn member forces, apply exact physics" : `Learn ${response?.label.toLowerCase() ?? "responses"}, apply exact physics`}</h2>
+        <h2>{isMemberDomain ? "Learn member forces, apply exact physics" : `Learn ${response?.label.toLowerCase() ?? "responses"}, apply exact physics`}</h2>
         <p>
-          {isTruss
+          {isMemberDomain
             ? "Instead of regressing the worst-member utilisation directly, a multi-output surrogate predicts every member's axial force with an uncertainty; stress and Euler buckling are then computed exactly from those forces. The screen's reliability is measured on the held-out split against the solver."
             : problem.domain === "thermal"
               ? "A multi-output surrogate predicts the thermal state (base and tip temperature, convection coefficient, fin efficiency, resistance, heat split) with an uncertainty; the constraint and objective metrics are read from that state and mass from the geometry. The screen's reliability is measured on the held-out split against the solver."
@@ -86,7 +87,7 @@ export function MemberLearningPanel({ ws }: { ws: Workspace }) {
           <label className="check">
             learn
             <select value={representation} onChange={(e) => setRepresentation(e.target.value as "forces" | "both" | "displacements")} disabled={busy} aria-label="Learned response">
-              {isTruss ? (
+              {isMemberDomain ? (
                 <>
                   <option value="both">forces + displacements (all metrics derived)</option>
                   <option value="forces">member forces (deflection regressed)</option>

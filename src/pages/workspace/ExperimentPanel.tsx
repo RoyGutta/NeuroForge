@@ -161,7 +161,7 @@ export function ExperimentPanel({ ws }: { ws: Workspace }) {
             {desc.label} <small>seed {settings.seed} · budget {settings.maxEvaluations.toLocaleString()} evaluations</small>
           </li>
           <li>
-            {problem.domain === "robotics" ? "Kinematics, statics and beam bending per candidate" : problem.domain === "thermal" ? "Fin theory and convection fixed point per candidate" : "Linear-static FEA per candidate"} <small>{compiled?.backendId ?? "—"}</small>
+            {problem.domain === "robotics" ? "Kinematics, statics and beam bending per candidate" : problem.domain === "thermal" ? "Fin theory and convection fixed point per candidate" : problem.domain === "structural3d" ? "3D linear-static FEA per candidate" : "Linear-static FEA per candidate"} <small>{compiled?.backendId ?? "—"}</small>
           </li>
         </ol>
 

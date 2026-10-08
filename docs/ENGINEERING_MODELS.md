@@ -208,6 +208,65 @@ base thickness to their lower bounds: the model has no fin-strength or
 extrusion-manufacturing constraint beyond those bounds, which the
 limitations file states.
 
+## Spatial truss girder (structural3d domain)
+
+`src/engine/domains/structural/truss3d/`. A triangular-section space truss:
+two bottom chords on the supports, one top chord, X-braced floor, one
+diagonal per inclined face per bay (mirrored about midspan), analysed by
+three-dimensional linear-static FEA.
+
+### Solver (`truss/feaCore.ts`, `truss3d/fea3d.ts`)
+Three translational DOFs per node. For a member with unit direction `d`
+(three direction cosines), the element stiffness in global coordinates is
+`(E A / L) [ d dᵀ, -d dᵀ; -d dᵀ, d dᵀ ]`; the planar `[c², cs; cs, s²]` form
+is the two-dimensional special case. Assembly, Cholesky solve of the reduced
+system, member forces `N = (E A / L) dᵀ (u_j - u_i)`, reactions `K u - F` at
+fixed DOFs and compliance `1/2 Fᵀu` are the same code for both dimensions;
+the planar solver is an adapter over the core and reproduces the
+pre-refactor solver bit for bit (fixture test). A singular factorisation is
+reported as a mechanism.
+
+### Verification (tests/engine/domains/truss3d)
+Single axial bar (`delta = P L / E A`, force, stress, reactions,
+compliance); symmetric tripod under vertical load (each bar
+`-P / (3 cos theta)`, apex displacement `P L / (3 E A cos² theta)`, zero
+lateral displacement); lateral load on the tripod (force and moment
+equilibrium of reactions, nodal equilibrium of member forces); coplanar
+tripod loaded out of plane reported as a mechanism; scaling with E and A;
+a planar truss embedded in 3D with out-of-plane DOFs fixed matching the
+2D solver to 14 digits; invalid members reported.
+
+### Design space (`spaceTrussSpace.ts`)
+Stations `s = 0..n` at `x = s span / n`; nodes BL `(x, -w/2, 0)`, BR
+`(x, +w/2, 0)`, T `(x, 0, h_s)`. Members per station: BL-BR, BL-T, BR-T; per
+bay: BL-BL', BR-BR', T-T', BL-BR', BR-BL' (X-bracing), BL-T' and BR-T'
+(face diagonals, mirrored for bays past midspan): `10 n + 3` members.
+Variables: the `n + 1` station heights (linear) and one area per member
+(log-scaled for learning). Default `n = 2`: 26 variables, 9 nodes, 23
+members. Supports: vertical at all four bottom corners plus x and y at one
+corner and x at its neighbour (seven restraints; externally once
+indeterminate in the vertical direction, like a four-legged table). Load:
+the point load at the midspan top node; self-weight lumped half to each end
+node of every member.
+
+### A sanity check the viewport makes visible
+With the load at the midspan top node, the face diagonals run from the
+supports straight to the loaded node, so the end top-chord members (T0-T1,
+T1-T2 at two bays) are in equilibrium with no axial force: their only
+neighbours at the end stations are the posts, which have no x-component.
+The solver reports exactly zero force there and the optimiser drives those
+areas to the bound, which is the correct answer for this topology and load,
+not a defect.
+
+### Metrics, baseline and responses
+The same metric ids as the planar truss (mass, peak stress, stress and
+buckling utilisation with solid round bars and `K = 1`, max displacement,
+compliance). Baseline: uniform section at span/8 depth with the common area
+found by bisection to just satisfy the constraints. Responses
+`memberForces_N` and `nodeDisplacements_m` with the dimension-generic
+response model (`truss/responseModelCore.ts`), whose planar adapter is also
+verified bit for bit against the previous implementation.
+
 ## Material library (`materials.ts`)
 Handbook values for Al 6061-T6, ASTM A36 steel, Ti-6Al-4V. Adequate for a
 preliminary study; production work must use certified properties.

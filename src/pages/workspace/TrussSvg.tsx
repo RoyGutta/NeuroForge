@@ -214,13 +214,13 @@ export function rampColor(t: number): string {
   return utilColor(Math.min(1.5, Math.max(0, t)) );
 }
 
-function utilColor(u: number): string {
+export function utilColor(u: number): string {
   if (u <= 0.5) return mix("#79f2c0", "#c0e584", u / 0.5);
   if (u <= 1) return mix("#c0e584", "#dfa75b", (u - 0.5) / 0.5);
   return mix("#dfa75b", "#f25f5c", Math.min(1, (u - 1) / 0.5));
 }
 
-function mix(a: string, b: string, t: number): string {
+export function mix(a: string, b: string, t: number): string {
   const pa = hex(a);
   const pb = hex(b);
   const c = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));

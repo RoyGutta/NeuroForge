@@ -52,6 +52,28 @@ const PROJECTS: Project[] = [
     brief: "Design a lightweight bridge spanning 2 meters that supports 500 N.",
   },
   {
+    id: "space",
+    category: "structural",
+    drawingLabel: "06 / STRUCTURAL 3D",
+    drawingType: "SPACE TRUSS / 3D FEA",
+    drawingAriaLabel: "Triangular space truss girder concept",
+    drawing: (
+      <>
+        <path d="M90 128 250 92 410 128M90 150 250 114 410 150M170 70 330 70M90 128 170 70 250 92 330 70 410 128M90 150 170 70M410 150 330 70M250 114 170 70 250 92 330 70 250 114" />
+        <path d="M90 128 250 114M250 92 410 150M90 150 250 92M250 114 410 128" stroke="#7c8cff" strokeDasharray="4 5" />
+      </>
+    ),
+    title: "A lighter space truss girder",
+    body: "Span 3 m in three dimensions and carry 2 kN at midspan with the least mass. Station heights and every member area are searched through a 3D finite-element solver.",
+    constraints: ["3 m span", "2 kN", "3D FEA", "Minimize mass"],
+    detailsText:
+      "Triangular girder with an X-braced floor: 26 variables (station heights plus member areas), yield, Euler buckling and deflection checks, seven-restraint supports. Drawn live in a Three.js viewport that shows the solved structure only.",
+    discipline: "Structural mechanics",
+    workspaceHref: "/workspace?project=space",
+    runnable: true,
+    brief: "Design a lightweight 3D space truss spanning 3 meters that carries 2 kN at midspan.",
+  },
+  {
     id: "drone",
     category: "structural",
     drawingLabel: "02 / AEROSPACE",

@@ -11,6 +11,7 @@
 import type { Assumption, ConstraintSpec } from "../core/problem";
 import { compileProblem } from "../domains/registry";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
+import { createSpaceTrussProblem } from "../domains/structural/truss3d/template";
 import { extractDeflectionRatio, extractLength, extractLoad, extractMassBudget, extractMaterial, extractSafetyFactor } from "./extract";
 import { interpretRoboticsBrief } from "./robotics";
 import { interpretThermalBrief } from "./thermal";
@@ -23,6 +24,7 @@ const DOMAIN_KEYWORDS: Array<[string, RegExp]> = [
   ["fluids", /\b(duct|airflow|air flow|cfd|pressure (?:loss|drop)|pipe|nozzle)\b/i],
   ["structural", /\b(bridge|truss|beam|span|girder|footbridge|structure)\b/i],
 ];
+const SPATIAL = /\b(3d|3-d|three[- ]dimensional|spatial|space truss|space frame)\b/i;
 
 export const ruleBasedInterpreter: ProblemInterpreter = {
   id: "rule-based-v1",
@@ -97,6 +99,17 @@ export const ruleBasedInterpreter: ProblemInterpreter = {
       brief: text,
     };
 
+    const spatial = SPATIAL.test(text);
+    if (spatial) {
+      const problem3d = createSpaceTrussProblem({ ...base, span_m: span?.value ?? 3, load_N: load?.value ?? 2000 });
+      if (!span) extraAssumptions[0] = { ...extraAssumptions[0], value: "3.0 m", reason: "No span was found in the brief; a 3 m span is the canonical space-truss demonstration case." };
+      if (!load) { const i = extraAssumptions.findIndex((a) => a.field === "load"); if (i >= 0) extraAssumptions[i] = { ...extraAssumptions[i], value: "2000 N", reason: "No load was found in the brief; 2 kN is the canonical space-truss demonstration case." }; }
+      problem3d.assumptions = [...extraAssumptions, ...problem3d.assumptions];
+      problem3d.provenance = { source: "interpreter", sourceText: text, interpreter: ruleBasedInterpreter.id };
+      problem3d.title = "Space truss girder study";
+      extracted.push({ field: "domain", value: "structural3d", confidence: "high" });
+      return { supported: true, problem: problem3d, extracted, warnings };
+    }
     let problem = createTrussBridgeProblem(base);
     if (wantsStiffness) {
       // Minimising compliance alone is unbounded (heavier is always stiffer),

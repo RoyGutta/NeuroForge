@@ -18,6 +18,7 @@ const BRIEFS: Record<string, string> = {
   drone: "Design a drone frame that minimizes mass while maintaining a safety factor of 2.",
   thermal: "Design the lightest heatsink that keeps a 40 W processor below 80°C in still air.",
   robot: "Design a robot arm that lifts a 2 kg payload anywhere within a 0.8 m reach while minimizing motor torque.",
+  space: "Design a lightweight 3D space truss spanning 3 meters that carries 2 kN at midspan.",
 };
 
 const CHIPS: [string, string][] = [
@@ -25,6 +26,7 @@ const CHIPS: [string, string][] = [
   ["steel", "Steel footbridge · 1.5 kN"],
   ["stiff", "Stiffest at fixed mass"],
   ["robot", "Robot arm · 2 kg · 0.8 m"],
+  ["space", "3D space truss · 3 m · 2 kN"],
   ["thermal", "Heat sink · 40 W · 80 °C"],
 ];
 
@@ -282,6 +284,14 @@ export function HomePage() {
                 <h3>Stiffest bridge at fixed mass</h3>
                 <p>Same span and load, but minimize compliance within the baseline's mass budget. A different optimum.</p>
                 <button className="text-link" onClick={() => applyExample("stiff")}>
+                  Try this brief <Arrow />
+                </button>
+              </article>
+              <article className="project">
+                <span>STRUCTURAL 3D · RUNNABLE NOW</span>
+                <h3>A lighter space truss girder</h3>
+                <p>A triangular girder in three dimensions: 26 variables through a 3D finite-element solver, drawn live in a Three.js viewport.</p>
+                <button className="text-link" onClick={() => applyExample("space")}>
                   Try this brief <Arrow />
                 </button>
               </article>

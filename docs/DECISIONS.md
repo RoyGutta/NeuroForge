@@ -2,6 +2,21 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-08 — Generalise the solver over the spatial dimension instead of copying it
+**Decision.** The 3D truss solver and response model are dimension-generic
+cores; the planar solver and response model became adapters over them.
+**Why.** The member stiffness `(EA/L)[d dᵀ, -d dᵀ; -d dᵀ, d dᵀ]` is the
+same expression in two and three dimensions, so a second implementation
+would have been a copy with a different DOF stride. Generalising the one
+implementation is the architectural experiment the milestone exists to run.
+**Consequences.** Both planar adapters are verified bit for bit against the
+pre-refactor code with committed fixtures, so every earlier benchmark and
+study record stays reproducible. The 3D viewport is a separate renderer
+(three.js, lazy-loaded) that draws a pure, tested mapping of the solved
+state; it computes nothing. A triangular girder with an X-braced floor was
+chosen over a single-diagonal floor because the latter is asymmetric about
+the girder's centre plane, which a symmetry test exposed.
+
 ## 2026-10-05 — A natural-convection heat sink as the third domain
 **Decision.** The third engineering domain is a plate-fin heat sink in
 natural convection: fin theory and the Bar-Cohen and Rohsenow channel

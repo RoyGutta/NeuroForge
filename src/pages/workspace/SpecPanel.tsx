@@ -11,6 +11,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
   const busy = status === "running";
   const isArm = form.domain === "robotics";
   const isHeat = form.domain === "thermal";
+  const is3d = form.domain === "structural3d";
   const src = (k: keyof typeof form.sources) => (
     <em className={`src src-${form.sources[k] ?? "user"}`}>{SOURCE_LABEL[form.sources[k] ?? "user"]}</em>
   );
@@ -249,11 +250,11 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           <>
           <div className="two">
             <div className="field">
-              <label htmlFor="panels">Truss panels</label>
+              <label htmlFor="panels">{is3d ? "Girder bays" : "Truss panels"}</label>
               <select id="panels" value={form.panels} onChange={(e) => updateForm({ panels: e.target.value })}>
-                {[2, 4, 6, 8].map((n) => (
+                {(is3d ? [2, 4] : [2, 4, 6, 8]).map((n) => (
                   <option key={n} value={n}>
-                    {n} panels · {5 * n - 1} variables
+                    {is3d ? `${n} bays · ${n + 1 + 10 * n + 3} variables` : `${n} panels · ${5 * n - 1} variables`}
                   </option>
                 ))}
               </select>
@@ -268,11 +269,11 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
           </div>
           <div className="boundary">
             <span>Supports</span>
-            <b>Pin + roller</b>
+            <b>{is3d ? "Four vertical corners + three in-plane restraints" : "Pin + roller"}</b>
           </div>
           <div className="boundary">
             <span>Variables</span>
-            <b>Top-node heights · member areas</b>
+            <b>{is3d ? "Station heights · every member area (triangular girder, X-braced floor)" : "Top-node heights · member areas"}</b>
           </div>
           <div className="boundary">
             <span>Section</span>

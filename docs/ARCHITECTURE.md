@@ -53,9 +53,9 @@ brief ──► ProblemInterpreter ──► EngineeringProblem (typed, versione
 ### `src/engine/domains`
 `EngineeringDomain` is the extension point: `validate(problem)`,
 `compile(problem) → CompiledProblem { space, evaluate, baseline, artifact,
-metrics, backendId }`. The registry maps domain id → module. Three domains are
-registered: `structural` (truss bridge), `robotics` (planar manipulator) and
-`thermal` (plate-fin heat sink). Adding aerospace or fluids means
+metrics, backendId }`. The registry maps domain id → module. Four domains are
+registered: `structural` (truss bridge), `structural3d` (space truss girder),
+`robotics` (planar manipulator) and `thermal` (plate-fin heat sink). Adding aerospace or fluids means
 implementing this interface; nothing above it changes. Each compiled problem
 may name a `tradeoffMetric` the autonomous lab uses for its NSGA-II stage.
 
@@ -64,6 +64,14 @@ ground-structure space (`bridgeSpace.ts`), evaluates with the FEA solver
 (`fea.ts`) and derives metrics (`evaluate.ts`, `metrics.ts`). The baseline is
 a uniform-section truss at span/8 depth whose common area is found by
 bisection to just satisfy the same constraints.
+
+The spatial structural module (`structural/truss3d/`) compiles a
+`space-truss` geometry into station heights plus member areas and evaluates
+it with the dimension-generic direct-stiffness core (`truss/feaCore.ts`,
+three DOFs per node) and the dimension-generic response model
+(`truss/responseModelCore.ts`). Both cores were introduced in v1.3; the
+planar adapters are verified bit for bit against the previous
+implementations.
 
 The thermal module compiles a `fin-array` geometry into a four-variable
 space (fin height, thickness, pitch, base thickness) and evaluates each
@@ -172,6 +180,21 @@ keyword, and stamps its id into provenance.
 event loop every ~30 ms so cancel messages get through.
 `src/app/experimentClient.ts` wraps it and falls back to time-sliced
 main-thread execution when Workers are unavailable.
+
+### Architectural audit (v1.3)
+Adding the spatial domain exposed what was and was not tied to the planar
+truss. Generalised: the solver and the response model (now cores over the
+spatial dimension), the utilisation helper (typed on members' areas rather
+than the planar model). Unchanged and reused as is: optimisers, runner,
+datasets and surrogates (the hybrid predictor keys on the response ids
+`memberForces_N` / `nodeDisplacements_m`, which the spatial domain shares),
+study registry, robustness, uncertainty taxonomy, autonomous lab,
+Benchmarks page, lab and experiment stores. Domain-specific by nature:
+template, design space, renderer (`pages/workspace/truss3d/`), specification
+form branch, interpreter routing. Still accidental: the hybrid predictor's
+displacement response id is a string literal rather than a response-model
+field, and the learning panels keep per-domain label maps; both are listed
+as follow-ups rather than refactored now.
 
 ### UI
 `src/pages/workspace/` — `useWorkspace` (state), `SpecPanel`, `Viewport`

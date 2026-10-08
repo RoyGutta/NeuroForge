@@ -1,5 +1,9 @@
 import { pointLoadMagnitude_N } from "../../engine/core/problem";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { solveTruss3d } from "../../engine/domains/structural/truss3d/fea3d";
+import type { Truss3dModel } from "../../engine/domains/structural/truss3d/model";
+import { deformationScale } from "../workspace/truss3d/truss3dView";
+const Truss3dViewport = lazy(() => import("../workspace/truss3d/Truss3dViewport").then((m) => ({ default: m.Truss3dViewport })));
 import { useNavigate } from "react-router-dom";
 import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
 import type { FinArrayArtifact } from "../../engine/domains/thermal/finArray/evaluate";
@@ -22,8 +26,12 @@ export function DemoWindow({ demo }: { demo: Demo }) {
   const design = showBaseline ? baseline : best ?? baseline;
   const isArm = problem.domain === "robotics";
   const isHeat = problem.domain === "thermal";
+  const is3d = problem.domain === "structural3d";
   const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
-  const model = !isArm && !isHeat && artifact ? (artifact as TrussModel) : null;
+  const model = !isArm && !isHeat && !is3d && artifact ? (artifact as TrussModel) : null;
+  const model3d = is3d && artifact ? (artifact as Truss3dModel) : null;
+  const result3d = useMemo(() => (model3d ? solveTruss3d(model3d) : null), [model3d]);
+  const ok3d = model3d && result3d && result3d.status === "ok" ? { model: model3d, result: result3d } : null;
   const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
   const sink = isHeat && artifact ? (artifact as FinArrayArtifact) : null;
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
@@ -83,6 +91,11 @@ export function DemoWindow({ demo }: { demo: Demo }) {
               compact
               ariaLabel="Live truss design from the finite-element optimization"
             />
+          )}
+          {ok3d && (
+            <Suspense fallback={<span className="view-label">loading 3D viewport</span>}>
+              <Truss3dViewport model={ok3d.model} result={ok3d.result} mode={mode} safetyFactor={problem.safetyFactor} areaMax_m2={problem.geometry.kind === "space-truss" ? problem.geometry.areaMax_m2 : 1e-3} deformScale={deformationScale(ok3d.model, ok3d.result, 0.06)} showAxes={false} showGrid={false} selected={null} onPick={() => undefined} fitToken={0} ariaLabel="Live space truss design from the 3D finite-element optimization" />
+            </Suspense>
           )}
           {sink && <FinArraySvg artifact={sink} mode={mode === "utilization" ? "utilization" : "structure"} temperatureLimit_C={problem.constraints.find((c) => c.id === "temperature")?.limit ?? Infinity} compact ariaLabel="Live heat-sink design from the fin-theory optimization" />}
           {arm && problem.geometry.kind === "planar-manipulator" && (
@@ -152,7 +165,7 @@ export function DemoWindow({ demo }: { demo: Demo }) {
         <button className="text-link" onClick={open}>
           Open this study in the workspace →
         </button>
-        <span>{isHeat ? " · Fin theory · natural-convection correlation · preliminary analysis, not a validated design" : isArm ? " · Static kinematics · gravity torques · tube bending · preliminary analysis, not a validated design" : " · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design"}</span>
+        <span>{is3d ? " · 3D linear-static FEA · Euler buckling · L/250 deflection · deformation exaggerated in the deformed view · preliminary analysis, not a validated design" : isHeat ? " · Fin theory · natural-convection correlation · preliminary analysis, not a validated design" : isArm ? " · Static kinematics · gravity torques · tube bending · preliminary analysis, not a validated design" : " · Linear-static FEA · Euler buckling · L/250 deflection · preliminary analysis, not a validated design"}</span>
       </p>
     </div>
   );

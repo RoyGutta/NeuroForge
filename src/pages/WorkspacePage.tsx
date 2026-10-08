@@ -23,6 +23,7 @@ export function WorkspacePage() {
   const ws = useWorkspace();
   const isArm = ws.problem.domain === "robotics";
   const isHeat = ws.problem.domain === "thermal";
+  const is3d = ws.problem.domain === "structural3d";
 
   return (
     <>
@@ -41,14 +42,16 @@ export function WorkspacePage() {
             </div>
             <div className="actions">
               <span className="pill">
-                <i className="dot" /> Live solver · {isArm ? "static kinematics and beam bending" : isHeat ? "fin theory and natural convection" : "linear-static FEA"} · runs in a Web Worker
+                <i className="dot" /> Live solver · {isArm ? "static kinematics and beam bending" : isHeat ? "fin theory and natural convection" : is3d ? "3D linear-static FEA" : "linear-static FEA"} · runs in a Web Worker
               </span>
             </div>
           </div>
           <div className="notice">
             <strong>Preliminary analysis</strong>
             <span>
-              {isHeat
+              {is3d
+                ? "Every number on this page comes from a deterministic three-dimensional finite-element model of a pin-jointed space truss (three translational degrees of freedom per node, axial members, Euler buckling, serviceability deflection). The 3D viewport draws the solved structure; deformations are exaggerated by a stated factor. It is a real computation, not a validated design: joints, fatigue, dynamics, lateral loads and code compliance are outside the model."
+                : isHeat
                 ? "Every number on this page comes from closed-form fin theory coupled to the Bar-Cohen and Rohsenow natural-convection correlation, solved to a fixed point on the temperature rise. It is a real computation, not a validated design: radiation, spreading resistance, fan flow, fin-tip effects beyond the corrected length and property variation with temperature are outside the model."
                 : isArm
                 ? "Every number on this page comes from a deterministic static model of a two-link arm: closed-form inverse kinematics, gravity torques and Euler-Bernoulli bending of tubular links at each task point. It is a real computation, not a validated design: dynamics, joint limits, actuators, joint compliance and fatigue are outside the model."

@@ -5,6 +5,33 @@ Measured comparisons of the registered optimisers on the canonical problem
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script.
 
+## 2026-10-08 · engine 1.3.0 · spatial truss optimisers, 10 seeds, 1,500 evaluations
+
+Registered study `benchmarks/studies/space-truss-optimizers.json`, record
+`benchmarks/results/space-truss-optimizers-2026-10-08.json`. Triangular
+space truss girder, 3 m span, 2 kN at the midspan top node, two bays, 26
+variables, aluminium 6061-T6, safety factor 2; baseline 31.387 kg (uniform
+section at span/8, sized to the buckling limit). Independent robustness
+check: 300 perturbations at +/- 2 %.
+
+| Method | Median kg | 95 % CI | Evaluations to 0.5 x baseline | A vs EA | Force R² | Robust fraction | Wall time per run |
+|---|---|---|---|---|---|---|---|
+| evolutionary (reference) | 13.625 | 12.520–14.230 | 1,140 (10/10) | – | – | 100 % | 0.03 s |
+| global-surrogate | 10.002 | 9.591–10.181 | 720 (10/10) | 1.00 (large) | – | 100 % | 1.9 s |
+| member-both-k0 | **9.471** | 9.005–9.863 | 690 (10/10) | 1.00 (large) | 0.997 | 88 % | 5.6 s |
+| cmaes | 10.375 | 9.890–10.966 | 689 (10/10) | 0.99 (large) | – | 97 % | 0.05 s |
+
+Reading. The planar ranking transfers to the spatial truss: the
+member-response surrogate is best (A = 1.00, non-overlapping interval with
+the evolutionary algorithm), the global surrogate and CMA-ES follow, the
+plain evolutionary algorithm trails. Force R² 0.997 on the spatial girder
+without any change to the learning layer: the response representation
+generalises across dimensions. The optimised girders are 70 % lighter than
+the uniform baseline; the most converged designs (member method) are the
+least robust, as on every other domain. This is the architectural result
+the milestone set out to measure: optimisers, surrogates, study registry
+and lab ran on the 3D domain unchanged.
+
 ## 2026-10-05 · engine 1.2.0 · heat-sink optimisers, 10 seeds, 1,500 evaluations
 
 Registered study `benchmarks/studies/heat-sink-optimizers.json`, record

@@ -30,8 +30,10 @@ export function FinArraySvg({ artifact, mode, temperatureLimit_C, compact, ariaL
   const d = artifact.design;
   const n = artifact.finCount;
   const totalHeight = d.baseThickness_m + d.finHeight_m;
-  const scale = Math.min((W - 2 * PAD) / g.baseWidth_m, (H - 2 * PAD - 20) / Math.max(totalHeight, 0.03));
-  const x0 = (W - g.baseWidth_m * scale) / 2;
+  // Leave room on the right for the height dimension and its label.
+  const DIM = 70;
+  const scale = Math.min((W - 2 * PAD - DIM) / g.baseWidth_m, (H - 2 * PAD - 20) / Math.max(totalHeight, 0.03));
+  const x0 = (W - DIM - g.baseWidth_m * scale) / 2;
   const yBase = H - PAD - 10;
   const toX = (x: number) => x0 + x * scale;
   const font = compact ? 9 : 10;

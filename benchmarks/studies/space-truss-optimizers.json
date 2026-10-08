@@ -1,0 +1,73 @@
+{
+  "id": "space-truss-optimizers",
+  "title": "Do the optimisers and the member-response surrogate generalise from the planar truss to a spatial truss (26-variable triangular girder) without domain-specific changes?",
+  "hypothesis": "At an equal solver budget on the 3D girder, the member-response surrogate reaches a lower median mass than the plain evolutionary algorithm and reaches the target in fewer evaluations, as it did on the planar truss; CMA-ES is between them; the global surrogate trails the member method.",
+  "benchmark": {
+    "problem": "space-truss",
+    "span_m": 3,
+    "load_N": 2000,
+    "bays": 2,
+    "safetyFactor": 2
+  },
+  "budget": 1500,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reference": "evolutionary",
+  "methods": [
+    {
+      "id": "evolutionary",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "global-surrogate",
+      "optimizer": "surrogate-evolutionary",
+      "params": {
+        "populationSize": 30,
+        "screeningFactor": 4,
+        "warmupEvaluations": 200
+      }
+    },
+    {
+      "id": "member-both-k0",
+      "optimizer": "member-surrogate-evolutionary",
+      "params": {
+        "populationSize": 30,
+        "screeningFactor": 4,
+        "warmupEvaluations": 200,
+        "riskK": 0,
+        "exploreFraction": 0,
+        "representation": 2
+      }
+    },
+    {
+      "id": "cmaes",
+      "optimizer": "cmaes",
+      "params": {}
+    }
+  ],
+  "metrics": [
+    "bestObjective",
+    "evaluationsToTarget",
+    "falseFeasibleRate",
+    "forceR2",
+    "robustFeasibleFraction"
+  ],
+  "targetFraction": 0.5,
+  "robustCheck": {
+    "tolerance": 0.02,
+    "samples": 300
+  }
+}

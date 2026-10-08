@@ -4,6 +4,7 @@
 import { pointLoadMagnitude_N, type DomainId, type EngineeringProblem } from "../../engine/core/problem";
 import { createManipulatorProblem } from "../../engine/domains/robotics/manipulator/template";
 import { createHeatSinkProblem } from "../../engine/domains/thermal/finArray/template";
+import { createSpaceTrussProblem } from "../../engine/domains/structural/truss3d/template";
 import { GRAVITY_M_S2 } from "../../engine/domains/robotics/manipulator/statics";
 import { DEFAULT_MATERIAL_ID } from "../../engine/domains/structural/truss/materials";
 import { createTrussBridgeProblem } from "../../engine/domains/structural/truss/template";
@@ -54,8 +55,9 @@ export const DEFAULT_ROBUST: RobustSpec = { tolerance: 0.02, samples: 12, target
 export const DEFAULT_BRIEF = "Design a lightweight bridge spanning 2 meters that supports 500 N.";
 export const DEFAULT_ROBOTICS_BRIEF = "Design a two-link arm that lifts a 2 kg payload anywhere within a 0.8 m reach with minimum motor torque.";
 
-export const DOMAIN_LABELS: Record<DomainId, string> = { structural: "Structural: truss bridge", robotics: "Robotics: planar manipulator", thermal: "Thermal: plate-fin heat sink" };
+export const DOMAIN_LABELS: Record<DomainId, string> = { structural: "Structural: truss bridge", robotics: "Robotics: planar manipulator", thermal: "Thermal: plate-fin heat sink", structural3d: "Structural 3D: space truss girder" };
 export const DEFAULT_THERMAL_BRIEF = "Design the lightest heat sink that keeps a 40 W processor below 80 C in still air.";
+export const DEFAULT_SPACE_TRUSS_BRIEF = "Design a lightweight 3D space truss spanning 3 meters that carries 2 kN at midspan.";
 
 export function defaultForm(): SpecForm {
   return {
@@ -88,7 +90,10 @@ export function formForDomain(form: SpecForm, domain: DomainId): SpecForm {
   return {
     ...form,
     domain,
-    brief: domain === "robotics" ? DEFAULT_ROBOTICS_BRIEF : domain === "thermal" ? DEFAULT_THERMAL_BRIEF : DEFAULT_BRIEF,
+    brief: domain === "robotics" ? DEFAULT_ROBOTICS_BRIEF : domain === "thermal" ? DEFAULT_THERMAL_BRIEF : domain === "structural3d" ? DEFAULT_SPACE_TRUSS_BRIEF : DEFAULT_BRIEF,
+    panels: domain === "structural3d" ? "2" : form.domain === "structural3d" ? "4" : form.panels,
+    span_m: domain === "structural3d" && form.domain !== "structural3d" ? "3" : domain === "structural" && form.domain === "structural3d" ? "2" : form.span_m,
+    load_N: domain === "structural3d" && form.domain !== "structural3d" ? "2000" : domain === "structural" && form.domain === "structural3d" ? "500" : form.load_N,
     objective: domain === "robotics" ? "peakTorque_Nm" : "mass_kg",
     sources: { ...base.sources, safetyFactor: form.sources.safetyFactor, materialId: form.sources.materialId },
   };
@@ -160,6 +165,24 @@ export function formFromProblem(p: EngineeringProblem, extracted: ExtractedValue
       },
     };
   }
+  if (g.kind === "space-truss") {
+    return {
+      ...defaultForm(),
+      ...common,
+      domain: "structural3d",
+      span_m: String(g.span_m),
+      load_N: String(pointLoadMagnitude_N(p) ?? 0),
+      panels: String(g.bays),
+      deflectionRatio: defl ? String(Math.round(g.span_m / defl.limit)) : "250",
+      objective: p.objectives.length > 1 ? "multi" : p.objectives[0]?.metric === "compliance_J" ? "compliance_J" : "mass_kg",
+      sources: {
+        span_m: src("span_m", "span"),
+        load_N: src("load_N", "load"),
+        safetyFactor: src("safetyFactor", "safetyFactor"),
+        materialId: src("material", "material"),
+      },
+    };
+  }
   return {
     ...defaultForm(),
     ...common,
@@ -202,6 +225,33 @@ export function problemFromForm(form: SpecForm, base?: EngineeringProblem): Engi
       const carried = base.assumptions.filter(
         (a) => (a.field === "power" && form.sources.power_W === "assumed") || (a.field === "temperatureLimit" && form.sources.maxTemperature_C === "assumed")
       );
+      p.assumptions = [...carried, ...p.assumptions];
+    }
+    return p;
+  }
+  if (form.domain === "structural3d") {
+    const extra =
+      form.objective === "compliance_J" && form.massBudget_kg !== ""
+        ? [{ id: "mass-budget", metric: "mass_kg", op: "<=" as const, limit: num(form.massBudget_kg), label: `Mass <= ${num(form.massBudget_kg).toFixed(3)} kg`, source: "user" as const }]
+        : [];
+    const p = createSpaceTrussProblem({
+      span_m: num(form.span_m),
+      load_N: num(form.load_N),
+      bays: num(form.panels),
+      safetyFactor: sf,
+      materialId: mat,
+      deflectionRatio: num(form.deflectionRatio),
+      includeSelfWeight: form.includeSelfWeight,
+      objectiveMetric: form.objective === "multi" ? "multi" : form.objective === "compliance_J" ? "compliance_J" : "mass_kg",
+      extraConstraints: extra,
+      brief: form.brief,
+      id: base?.id,
+      title: base?.title,
+    });
+    if (base) {
+      p.version = base.version + 1;
+      p.provenance = { ...base.provenance, source: "user" };
+      const carried = base.assumptions.filter((a) => (a.field === "span" && form.sources.span_m === "assumed") || (a.field === "load" && form.sources.load_N === "assumed"));
       p.assumptions = [...carried, ...p.assumptions];
     }
     return p;

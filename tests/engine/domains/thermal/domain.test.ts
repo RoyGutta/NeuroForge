@@ -71,7 +71,7 @@ describe("thermal domain: plate-fin heat sink", () => {
   });
 
   test("the registry lists three domains and rejects a heat sink with a non-positive power", () => {
-    expect(listDomains().map((d) => d.id).sort()).toEqual(["robotics", "structural", "thermal"]);
+    expect(listDomains().map((d) => d.id).sort()).toEqual(["robotics", "structural", "structural3d", "thermal"]);
     const bad = createHeatSinkProblem({ power_W: 40, maxTemperature_C: 80 });
     (bad.loads[0] as { power_W: number }).power_W = 0;
     expect(validateProblem(bad).length).toBeGreaterThan(0);

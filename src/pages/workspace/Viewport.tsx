@@ -1,5 +1,10 @@
 import { pointLoadMagnitude_N } from "../../engine/core/problem";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { solveTruss3d } from "../../engine/domains/structural/truss3d/fea3d";
+import type { Truss3dModel } from "../../engine/domains/structural/truss3d/model";
+const Truss3dViewport = lazy(() => import("./truss3d/Truss3dViewport").then((m) => ({ default: m.Truss3dViewport })));
+import type { Pick } from "./truss3d/truss3dRenderer";
+import { deformationScale, memberInfo, nodeInfo } from "./truss3d/truss3dView";
 import type { ManipulatorArtifact } from "../../engine/domains/robotics/manipulator/evaluate";
 import type { FinArrayArtifact } from "../../engine/domains/thermal/finArray/evaluate";
 import { FinArraySvg } from "./FinArraySvg";
@@ -48,15 +53,27 @@ export function Viewport({ ws }: { ws: Workspace }) {
   const design = displayed;
   const isArm = problem.domain === "robotics";
   const isHeat = problem.domain === "thermal";
+  const is3d = problem.domain === "structural3d";
   const MODES = isArm ? ARM_MODES : isHeat ? HEAT_MODES : TRUSS_MODES;
   const METRICS = isArm ? ARM_METRICS : isHeat ? HEAT_METRICS : TRUSS_METRICS;
+  const [deformFactor, setDeformFactor] = useState(1);
+  const [showAxes, setShowAxes] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
+  const [pick, setPick] = useState<Pick>(null);
+  const [fitToken, setFitToken] = useState(0);
 
   const artifact = useMemo(() => (compiled && design ? compiled.artifact(design.parameters) : null), [compiled, design]);
-  const model = !isArm && !isHeat && artifact ? (artifact as TrussModel) : null;
+  const model = !isArm && !isHeat && !is3d && artifact ? (artifact as TrussModel) : null;
   const arm = isArm && artifact ? (artifact as ManipulatorArtifact) : null;
   const sink = isHeat && artifact ? (artifact as FinArrayArtifact) : null;
+  const model3d = is3d && artifact ? (artifact as Truss3dModel) : null;
   const heatMode: ViewMode = mode === "structure" ? "structure" : "utilization";
   const result = useMemo(() => (model ? solveTruss(model) : null), [model]);
+  const result3d = useMemo(() => (model3d ? solveTruss3d(model3d) : null), [model3d]);
+  const ok3d = model3d && result3d && result3d.status === "ok" ? { model: model3d, result: result3d } : null;
+  const autoScale = ok3d ? deformationScale(ok3d.model, ok3d.result, 0.06) : 0;
+  const areaMax3d = problem.geometry.kind === "space-truss" ? problem.geometry.areaMax_m2 : 1e-3;
+  const pickInfo = ok3d && pick ? (pick.kind === "member" ? { kind: "member" as const, info: memberInfo(ok3d.model, ok3d.result, pick.index, problem.safetyFactor), label: compiled?.space.variables.find((v) => v.id === `area_${pick.index}`)?.label.replace(" area", "") ?? `member ${pick.index}` } : { kind: "node" as const, info: nodeInfo(ok3d.model, ok3d.result, pick.index) }) : null;
   const ev = design?.evaluation;
   const objective = problem.objectives[0];
   const baselineObj = baseline?.evaluation?.objectives[objective.id];
@@ -125,10 +142,48 @@ export function Viewport({ ws }: { ws: Workspace }) {
             ariaLabel={`Manipulator drawing, ${label.toLowerCase()}`}
           />
         )}
+        {ok3d && (
+          <Suspense fallback={<div className="view-note">loading 3D viewport</div>}>
+          <Truss3dViewport model={ok3d.model} result={ok3d.result} mode={mode} safetyFactor={problem.safetyFactor} areaMax_m2={areaMax3d} deformScale={autoScale * deformFactor} showAxes={showAxes} showGrid={showGrid} selected={pick} onPick={setPick} fitToken={fitToken} ariaLabel={`Spatial truss, ${label.toLowerCase()}`} />
+          </Suspense>
+        )}
+        {is3d && (
+          <div className="three-tools">
+            <button onClick={() => setFitToken((t) => t + 1)}>Reset camera</button>
+            <label className="check">
+              <input type="checkbox" checked={showAxes} onChange={(e) => setShowAxes(e.target.checked)} /> axes
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} /> grid
+            </label>
+            {mode === "deformed" && (
+              <label className="check" title="Displacements are exaggerated for visibility by this factor">
+                scale x{(autoScale * deformFactor).toFixed(0)}
+                <input type="range" min={0.1} max={4} step={0.1} value={deformFactor} onChange={(e) => setDeformFactor(Number(e.target.value))} aria-label="Deformation exaggeration" />
+              </label>
+            )}
+          </div>
+        )}
         {sink && (
           <FinArraySvg artifact={sink} mode={heatMode} temperatureLimit_C={problem.constraints.find((c) => c.id === "temperature")?.limit ?? Infinity} ariaLabel={`Heat sink cross-section, ${label.toLowerCase()}`} />
         )}
         <div className="legend">
+          {is3d && mode === "structure" && <span>{problem.material.name} · radius ∝ sqrt(area) · orbit: drag · pan: right-drag · zoom: wheel · click a member or node to inspect</span>}
+          {is3d && mode === "force" && (
+            <>
+              <i className="sw sw-comp" /> <span>compression</span>
+              <i className="sw sw-tens" /> <span>tension</span>
+              <span>· intensity ∝ |N|</span>
+            </>
+          )}
+          {is3d && mode === "utilization" && (
+            <>
+              <span>0 %</span>
+              <i className="ramp" />
+              <span>100 % of allowable (stress or buckling)</span>
+            </>
+          )}
+          {is3d && mode === "deformed" && <span>solved displacements exaggerated x{(autoScale * deformFactor).toFixed(0)} for visibility · max {formatMetric("maxDisplacement_m", ok3d?.result.maxDisplacement_m)}</span>}
           {isHeat && heatMode === "structure" && <span>{problem.material.name} · fins and base to scale · red bar = heat source</span>}
           {isHeat && heatMode === "utilization" && (
             <>
@@ -159,22 +214,22 @@ export function Viewport({ ws }: { ws: Workspace }) {
               <span>tip deflection / limit · dashed tick at the worst pose</span>
             </>
           )}
-          {!isArm && !isHeat && mode === "force" && (
+          {!isArm && !isHeat && !is3d && mode === "force" && (
             <>
               <i className="sw sw-comp" /> <span>compression</span>
               <i className="sw sw-tens" /> <span>tension</span>
               <span>· width ∝ bar diameter</span>
             </>
           )}
-          {!isArm && !isHeat && mode === "utilization" && (
+          {!isArm && !isHeat && !is3d && mode === "utilization" && (
             <>
               <span>0 %</span>
               <i className="ramp" />
               <span>100 % of allowable (stress or buckling)</span>
             </>
           )}
-          {!isArm && !isHeat && mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
-          {!isArm && !isHeat && mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
+          {!isArm && !isHeat && !is3d && mode === "deformed" && <span>dashed = deformed shape, scale factor shown top-right</span>}
+          {!isArm && !isHeat && !is3d && mode === "structure" && <span>{problem.material.name} · width ∝ bar diameter · real FEA geometry</span>}
         </div>
         <div className="view-note">{ev ? (ev.feasible ? "feasible" : `infeasible · violation ${ev.totalViolation.toFixed(3)}`) : ""}</div>
       </div>
@@ -198,6 +253,28 @@ export function Viewport({ ws }: { ws: Workspace }) {
         ))}
       </div>
 
+      {pickInfo && pickInfo.kind === "member" && (
+        <div className="insight pick-info" role="status">
+          <strong>{pickInfo.label}</strong>
+          <div className="kv"><span>length</span><b>{(pickInfo.info.length_m * 1000).toFixed(1)} mm</b></div>
+          <div className="kv"><span>area</span><b>{(pickInfo.info.area_m2 * 1e6).toFixed(2)} mm²</b></div>
+          <div className="kv"><span>material</span><b>{problem.material.name}</b></div>
+          <div className="kv"><span>axial force</span><b>{pickInfo.info.force_N >= 0 ? "tension" : "compression"} {Math.abs(pickInfo.info.force_N).toFixed(1)} N</b></div>
+          <div className="kv"><span>stress</span><b>{(Math.abs(pickInfo.info.stress_Pa) / 1e6).toFixed(2)} MPa</b></div>
+          <div className="kv"><span>Euler capacity</span><b>{pickInfo.info.criticalLoad_N.toFixed(1)} N</b></div>
+          <div className="kv"><span>utilisation</span><b className={pickInfo.info.utilization > 1 ? "bad" : undefined}>{(pickInfo.info.utilization * 100).toFixed(1)} % (stress {(pickInfo.info.stressUtilization * 100).toFixed(0)} %, buckling {(pickInfo.info.bucklingUtilization * 100).toFixed(0)} %)</b></div>
+        </div>
+      )}
+      {pickInfo && pickInfo.kind === "node" && (
+        <div className="insight pick-info" role="status">
+          <strong>Node {pickInfo.info.index}</strong>
+          <div className="kv"><span>position</span><b>({pickInfo.info.x.toFixed(3)}, {pickInfo.info.y.toFixed(3)}, {pickInfo.info.z.toFixed(3)}) m</b></div>
+          <div className="kv"><span>x displacement</span><b>{(pickInfo.info.ux_m * 1000).toFixed(3)} mm</b></div>
+          <div className="kv"><span>y displacement</span><b>{(pickInfo.info.uy_m * 1000).toFixed(3)} mm</b></div>
+          <div className="kv"><span>z displacement</span><b>{(pickInfo.info.uz_m * 1000).toFixed(3)} mm</b></div>
+          <div className="kv"><span>resultant</span><b>{(pickInfo.info.resultant_m * 1000).toFixed(3)} mm</b></div>
+        </div>
+      )}
       <HistoryChart ws={ws} />
       {generations.length > 1 && (
         <div className="scrub">

@@ -118,4 +118,17 @@ describe("rule-based brief interpreter", () => {
     const bare = interpretBrief("Design a lightweight heatsink.");
     expect(bare.supported && bare.problem.assumptions.some((a) => a.field === "power" && a.confidence === "low")).toBe(true);
   });
+
+  test("a brief that asks for a 3D or spatial truss routes to the space-truss domain", () => {
+    const r = interpretBrief("Design a lightweight 3D space truss spanning 3 meters that carries 2 kN at midspan.");
+    expect(r.supported).toBe(true);
+    if (!r.supported) return;
+    expect(r.problem.domain).toBe("structural3d");
+    expect(r.problem.geometry.kind).toBe("space-truss");
+    expect(r.problem.geometry.kind === "space-truss" && r.problem.geometry.span_m).toBe(3);
+    expect(pointLoadMagnitude_N(r.problem)).toBe(2000);
+    expect(validateProblem(r.problem)).toEqual([]);
+    const flat = interpretBrief("Design a lightweight bridge spanning 2 meters that supports 500 N.");
+    expect(flat.supported && flat.problem.domain).toBe("structural");
+  });
 });

@@ -24,6 +24,17 @@ Be explicit about these when presenting results.
 - The task set is a fixed grid of static hold points; obstacle avoidance,
   orientation of the end effector and path continuity are outside the model.
 
+## Spatial truss
+- Pin-jointed, linear-elastic, small-displacement space truss; no bending,
+  joint stiffness, global buckling or dynamics; member buckling as for the
+  planar truss (solid round bars, K = 1).
+- One vertical midspan point load and self-weight; no lateral, moving or
+  combined loads.
+- Fixed topology (triangular girder with X-braced floor); the design varies
+  station heights and areas only.
+- The 3D viewport exaggerates displacements by a stated factor; it draws
+  the solved state and never interpolates between designs.
+
 ## Thermal domain
 - Natural convection only, vertical plate fins in still air; no fan flow,
   no radiation, no spreading resistance under the component, uniform base

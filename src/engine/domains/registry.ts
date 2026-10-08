@@ -6,12 +6,14 @@ import type { DomainId, EngineeringProblem, ValidationIssue } from "../core/prob
 import type { CompiledProblem, EngineeringDomain } from "./domain";
 import { roboticsDomain } from "./robotics";
 import { structuralDomain } from "./structural";
+import { structural3dDomain } from "./structural/truss3d";
 import { thermalDomain } from "./thermal";
 
 const DOMAINS: Record<string, EngineeringDomain> = {
   structural: structuralDomain as EngineeringDomain,
   robotics: roboticsDomain as EngineeringDomain,
   thermal: thermalDomain as EngineeringDomain,
+  structural3d: structural3dDomain as EngineeringDomain,
 };
 
 export function getDomain(id: DomainId | string): EngineeringDomain | undefined {

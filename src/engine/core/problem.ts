@@ -12,7 +12,7 @@
  */
 import type { Material } from "../domains/structural/truss/model";
 
-export type DomainId = "structural" | "robotics" | "thermal";
+export type DomainId = "structural" | "robotics" | "thermal" | "structural3d";
 
 export type Confidence = "high" | "medium" | "low";
 
@@ -129,7 +129,26 @@ export interface FinArrayGeometry {
   gapMin_m: number;
 }
 
-export type ProblemGeometry = TrussBridgeGeometry | PlanarManipulatorGeometry | FinArrayGeometry;
+/**
+ * Spatial truss girder with a triangular cross-section: two bottom chords on
+ * the supports, one top chord, braced faces. Stations are evenly spaced along
+ * the span; the design varies every station's top-node height and every
+ * member area.
+ */
+export interface SpaceTrussGeometry {
+  kind: "space-truss";
+  span_m: number;
+  /** Number of bays along the span (even, >= 2); stations = bays + 1. */
+  bays: number;
+  /** Distance between the two bottom chords. */
+  width_m: number;
+  depthMin_m: number;
+  depthMax_m: number;
+  areaMin_m2: number;
+  areaMax_m2: number;
+}
+
+export type ProblemGeometry = TrussBridgeGeometry | PlanarManipulatorGeometry | FinArrayGeometry | SpaceTrussGeometry;
 
 export interface AnalysisSettings {
   includeSelfWeight: boolean;

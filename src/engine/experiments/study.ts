@@ -9,6 +9,7 @@
 import { createManipulatorProblem } from "../domains/robotics/manipulator/template";
 import { createTrussBridgeProblem } from "../domains/structural/truss/template";
 import { createHeatSinkProblem } from "../domains/thermal/finArray/template";
+import { createSpaceTrussProblem } from "../domains/structural/truss3d/template";
 import type { Design, Evaluation } from "../core/design";
 import { postHocRobustSelection } from "../robustness/formulations";
 import { robustnessStudy } from "../robustness/robustness";
@@ -60,15 +61,18 @@ export interface StudySpec {
 export type StudyBenchmark =
   | { problem: "truss-bridge"; span_m: number; load_N: number; panels: number; safetyFactor?: number; materialId?: string }
   | { problem: "planar-manipulator"; payload_kg: number; reach_m: number; safetyFactor?: number; materialId?: string; objectiveMetric?: "peakTorque_Nm" | "mass_kg" }
-  | { problem: "fin-array"; power_W: number; maxTemperature_C: number; ambient_C?: number; baseWidth_m?: number; baseDepth_m?: number; materialId?: string; objectiveMetric?: "mass_kg" | "thermalResistance_K_W" };;
+  | { problem: "fin-array"; power_W: number; maxTemperature_C: number; ambient_C?: number; baseWidth_m?: number; baseDepth_m?: number; materialId?: string; objectiveMetric?: "mass_kg" | "thermalResistance_K_W" }
+  | { problem: "space-truss"; span_m: number; load_N: number; bays: number; safetyFactor?: number; materialId?: string };;
 
 export function studyProblem(b: StudyBenchmark): EngineeringProblem {
+  if (b.problem === "space-truss") return createSpaceTrussProblem({ span_m: b.span_m, load_N: b.load_N, bays: b.bays, safetyFactor: b.safetyFactor, materialId: b.materialId });
   if (b.problem === "fin-array") return createHeatSinkProblem({ power_W: b.power_W, maxTemperature_C: b.maxTemperature_C, ambient_C: b.ambient_C, baseWidth_m: b.baseWidth_m, baseDepth_m: b.baseDepth_m, materialId: b.materialId, objectiveMetric: b.objectiveMetric });
   if (b.problem === "planar-manipulator") return createManipulatorProblem({ payload_kg: b.payload_kg, reach_m: b.reach_m, safetyFactor: b.safetyFactor, materialId: b.materialId, objectiveMetric: b.objectiveMetric });
   return createTrussBridgeProblem({ span_m: b.span_m, load_N: b.load_N, panels: b.panels, safetyFactor: b.safetyFactor, materialId: b.materialId });
 }
 
 export function studyProblemTitle(b: StudyBenchmark): string {
+  if (b.problem === "space-truss") return `Space truss girder (${b.span_m} m span, ${b.load_N} N, ${b.bays} bays)`;
   if (b.problem === "fin-array") return `Plate-fin heat sink (${b.power_W} W, limit ${b.maxTemperature_C} C)`;
   return b.problem === "planar-manipulator" ? `Planar manipulator (${b.payload_kg} kg payload, ${b.reach_m} m reach)` : `Truss bridge (${b.span_m} m span, ${b.load_N} N, ${b.panels} panels)`;
 }

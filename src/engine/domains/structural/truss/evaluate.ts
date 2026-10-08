@@ -58,7 +58,7 @@ export function freeDofsOf(model: TrussModel): number[] {
  */
 export function memberUtilizationsFromForces(
   problem: EngineeringProblem,
-  model: TrussModel,
+  model: { members: { area_m2: number }[] },
   forces: ArrayLike<number>,
   lengths: ArrayLike<number>
 ): { stress: number[]; buckling: number[]; maxStress_Pa: number } {
