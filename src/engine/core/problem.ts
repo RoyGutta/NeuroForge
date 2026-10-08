@@ -159,6 +159,9 @@ export interface ProblemProvenance {
   /** Original natural-language brief, if any. */
   sourceText?: string;
   interpreter?: string;
+  /** Model and prompt version for model-backed interpreters. */
+  model?: string;
+  promptVersion?: string;
 }
 
 export interface EngineeringProblem {

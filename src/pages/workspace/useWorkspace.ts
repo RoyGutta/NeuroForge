@@ -7,12 +7,33 @@ import { compileProblem, validateProblem } from "../../engine/domains/registry";
 import type { CompiledProblem } from "../../engine/domains/domain";
 import type { ExperimentRecord, ExperimentSummary, GenerationSummary } from "../../engine/experiments/experiment";
 import { createExperimentConfig } from "../../engine/experiments/runner";
-import { interpretBrief, type InterpretResult } from "../../engine/interpret";
+import { interpretBrief, ruleBasedInterpreter, type InterpretResult, type ProblemInterpreter } from "../../engine/interpret";
+import { createHybridInterpreter } from "../../engine/interpret/llm/hybrid";
+import { createLLMInterpreter } from "../../engine/interpret/llm/llmInterpreter";
+import { createRemoteGenerator, fetchRemoteStatus, type RemoteStatus } from "../../engine/interpret/llm/remoteGenerator";
 import { getOptimizerDescriptor } from "../../engine/optimization";
 import type { ViewMode } from "./TrussSvg";
 import { defaultForm, defaultSettings, formForDomain, formFromProblem, problemFromForm, type RunSettings, type SpecForm } from "./model";
 
 export type RunStatus = "idle" | "running" | "completed" | "cancelled" | "error";
+
+export type InterpreterChoice = "rule-based-v1" | "llm-v1" | "hybrid-v1";
+
+export interface ComparisonRow {
+  id: InterpreterChoice;
+  label: string;
+  result: InterpretResult;
+}
+
+/** The interpreters the workspace can run, given what the server reports. */
+export function availableInterpreters(remote: RemoteStatus | null): ProblemInterpreter[] {
+  const out: ProblemInterpreter[] = [ruleBasedInterpreter];
+  if (remote?.configured) {
+    const llm = createLLMInterpreter(createRemoteGenerator(remote), { label: `LLM interpreter (${remote.model})` });
+    out.push(llm, createHybridInterpreter(llm));
+  }
+  return out;
+}
 
 export interface PendingProblemPayload {
   problem: EngineeringProblem;
@@ -24,6 +45,10 @@ export function useWorkspace() {
   const [form, setForm] = useState<SpecForm>(defaultForm);
   const [problem, setProblem] = useState<EngineeringProblem>(() => problemFromForm(defaultForm()));
   const [interpretation, setInterpretation] = useState<InterpretResult | null>(null);
+  const [interpreterId, setInterpreterId] = useState<InterpreterChoice>("rule-based-v1");
+  const [remote, setRemote] = useState<RemoteStatus | null>(null);
+  const [interpreting, setInterpreting] = useState(false);
+  const [comparison, setComparison] = useState<ComparisonRow[] | null>(null);
   const [settings, setSettings] = useState<RunSettings>(defaultSettings);
   const [status, setStatus] = useState<RunStatus>("idle");
   const [record, setRecord] = useState<ExperimentRecord | null>(null);
@@ -49,6 +74,16 @@ export function useWorkspace() {
 
   const refreshLibrary = useCallback(async () => {
     setLibrary(await getExperimentStore().list());
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    void fetchRemoteStatus().then((s) => {
+      if (alive) setRemote(s);
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -100,18 +135,44 @@ export function useWorkspace() {
     setSelectedDesign(null);
   }, []);
 
-  const interpret = useCallback(() => {
-    const r = interpretBrief(form.brief);
+  const applyInterpretation = useCallback((r: InterpretResult) => {
     setInterpretation(r);
-    if (r.supported) {
-      setProblem(r.problem);
-      setForm(formFromProblem(r.problem, r.extracted));
-      setRecord(null);
-      setGenerations([]);
-      setStatus("idle");
-      setScrub(null);
+    const problemOut = r.supported ? r.problem : r.kind === "validation-failed" ? r.problem : undefined;
+    if (!problemOut) return;
+    setProblem(problemOut);
+    setForm(formFromProblem(problemOut, r.supported ? r.extracted : []));
+    setRecord(null);
+    setGenerations([]);
+    setStatus("idle");
+    setScrub(null);
+  }, []);
+
+  /** Interpret the brief with the selected interpreter; model-backed ones go through the server endpoint. */
+  const interpret = useCallback(async () => {
+    const chosen = availableInterpreters(remote).find((i) => i.id === interpreterId) ?? ruleBasedInterpreter;
+    if (chosen.kind === "rule") {
+      applyInterpretation(interpretBrief(form.brief));
+      return;
     }
-  }, [form.brief]);
+    setInterpreting(true);
+    try {
+      applyInterpretation(await chosen.interpret(form.brief));
+    } finally {
+      setInterpreting(false);
+    }
+  }, [form.brief, interpreterId, remote, applyInterpretation]);
+
+  /** Run every available interpreter on the brief for side-by-side comparison; the specification is not changed. */
+  const compareInterpreters = useCallback(async () => {
+    setInterpreting(true);
+    try {
+      const rows: ComparisonRow[] = [];
+      for (const i of availableInterpreters(remote)) rows.push({ id: i.id as InterpreterChoice, label: i.label, result: await i.interpret(form.brief) });
+      setComparison(rows);
+    } finally {
+      setInterpreting(false);
+    }
+  }, [form.brief, remote]);
 
   const start = useCallback(() => {
     if (!compiled || status === "running") return;
@@ -258,6 +319,13 @@ export function useWorkspace() {
   return {
     form,
     updateForm,
+    interpreterId,
+    setInterpreterId,
+    remote,
+    interpreting,
+    comparison,
+    compareInterpreters,
+    applyInterpretation,
     applyForm,
     switchDomain,
     interpret,

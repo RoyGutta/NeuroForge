@@ -11,6 +11,7 @@ import { NavBar } from "../components/NavBar";
 import { usePageMeta } from "../hooks/usePageMeta";
 import css from "../styles/benchmarks.css?inline";
 import { REPORTS } from "./benchmarks/loadReports";
+import { InterpreterReport } from "./benchmarks/InterpreterReport";
 import { aggregateCurves, evaluationGrid, type NormalizedGroup, type NormalizedReport } from "./benchmarks/model";
 
 const COLORS = ["#79f2c0", "#7c8cff", "#f2d279", "#f28b79", "#c0e584", "#dfa75b", "#9ab5aa", "#b48cff"];
@@ -73,6 +74,7 @@ export function BenchmarksPage() {
               <RunInspector report={report} selected={selected} onSelect={setSelected} />
             </>
           )}
+          <InterpreterReport />
         </main>
         <Footer
           current="benchmarks"

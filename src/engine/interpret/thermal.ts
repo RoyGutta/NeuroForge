@@ -3,10 +3,9 @@
  * limit, ambient temperature, material and objective. A brief the physics
  * cannot satisfy is still accepted; the engine reports the infeasibility.
  */
-import type { Assumption } from "../core/problem";
-import { createHeatSinkProblem } from "../domains/thermal/finArray/template";
 import { extractMaterial, NUM, parseNumber } from "./extract";
-import type { ExtractedValue, InterpretResult } from "./types";
+import { explicitField } from "./realize";
+import { emptySpec, type CandidateSpec, type SpecField } from "./spec";
 
 const TEMP_UNIT = "(?:°\\s*C|º\\s*C|deg(?:rees)?\\s*C|\\bC\\b|celsius)";
 
@@ -31,30 +30,24 @@ function extractTemperatures(text: string): { limit?: { value: number; span: str
   return out;
 }
 
-export function interpretThermalBrief(text: string, interpreterId: string): InterpretResult {
-  const extracted: ExtractedValue[] = [];
-  const assumptions: Assumption[] = [];
+export function extractThermalSpec(text: string): CandidateSpec {
+  const spec = emptySpec();
+  spec.domain = "thermal";
+  spec.detectedDomain = "thermal";
+  const fields: SpecField[] = [];
   const power = extractPower(text);
-  if (power) extracted.push({ field: "power_W", value: power.value, confidence: "high", sourceSpan: power.span });
-  else assumptions.push({ id: "assume-power", field: "power", value: "40 W", reason: "No dissipated power was found in the brief; 40 W is a representative natural-convection module.", confidence: "low" });
+  if (power) fields.push(explicitField("power_W", power.value, power.span));
+  else spec.missing.push("power_W");
   const temps = extractTemperatures(text);
-  if (temps.limit) extracted.push({ field: "maxTemperature_C", value: temps.limit.value, confidence: "high", sourceSpan: temps.limit.span });
-  else assumptions.push({ id: "assume-temperature", field: "temperatureLimit", value: "80 C", reason: "No temperature limit was found in the brief; 80 C is a common component case-temperature limit.", confidence: "low" });
-  if (temps.ambient) extracted.push({ field: "ambient_C", value: temps.ambient.value, confidence: "high", sourceSpan: temps.ambient.span });
+  if (temps.limit) fields.push(explicitField("maxTemperature_C", temps.limit.value, temps.limit.span));
+  else spec.missing.push("maxTemperature_C");
+  if (temps.ambient) fields.push(explicitField("ambient_C", temps.ambient.value, temps.ambient.span));
+  else spec.missing.push("ambient_C");
   const material = extractMaterial(text);
-  if (material) extracted.push({ field: "material", value: material.value, confidence: "high", sourceSpan: material.span });
+  if (material) fields.push(explicitField("materialId", material.value, material.span));
+  else spec.missing.push("materialId");
   const wantsCool = /\b(coolest|lowest temperature|minimi[sz]e (?:the )?(?:temperature|resistance))\b/i.test(text) && !/\b(light|lightweight|mass|weight)\b/i.test(text);
-  extracted.push({ field: "objective", value: wantsCool ? "minimize thermal resistance" : "minimize mass", confidence: wantsCool || /\b(light|lightweight|mass|weight|minimi[sz]e)\b/i.test(text) ? "high" : "medium" });
-  const problem = createHeatSinkProblem({
-    power_W: power?.value ?? 40,
-    maxTemperature_C: temps.limit?.value ?? 80,
-    ambient_C: temps.ambient?.value,
-    materialId: material?.value,
-    objectiveMetric: wantsCool ? "thermalResistance_K_W" : "mass_kg",
-    brief: text,
-    title: wantsCool ? "Coolest heat sink study" : "Heat sink study",
-  });
-  problem.assumptions = [...assumptions, ...problem.assumptions];
-  problem.provenance = { source: "interpreter", sourceText: text, interpreter: interpreterId };
-  return { supported: true, problem, extracted, warnings: [] };
+  fields.push({ id: "objective", value: wantsCool ? "thermalResistance_K_W" : "mass_kg", provenance: "inferred", confidence: wantsCool || /\b(light|lightweight|mass|weight|minimi[sz]e)\b/i.test(text) ? "high" : "medium" });
+  spec.fields = fields;
+  return spec;
 }

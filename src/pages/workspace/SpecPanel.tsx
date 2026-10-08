@@ -3,11 +3,12 @@ import { listDomains } from "../../engine/domains/registry";
 import { MATERIALS } from "../../engine/domains/structural/truss/materials";
 import type { Workspace } from "./useWorkspace";
 import { DOMAIN_LABELS, type FieldSource, type ObjectiveChoice } from "./model";
+import { InterpreterControls } from "./InterpretationPanel";
 
 const SOURCE_LABEL: Record<FieldSource, string> = { brief: "from brief", assumed: "assumed", user: "set by you" };
 
 export function SpecPanel({ ws }: { ws: Workspace }) {
-  const { form, updateForm, applyForm, switchDomain, interpret, interpretation, problem, issues, status } = ws;
+  const { form, updateForm, applyForm, switchDomain, problem, issues, status } = ws;
   const busy = status === "running";
   const isArm = form.domain === "robotics";
   const isHeat = form.domain === "thermal";
@@ -36,22 +37,7 @@ export function SpecPanel({ ws }: { ws: Workspace }) {
         <div className="field">
           <label htmlFor="brief">Brief</label>
           <textarea id="brief" value={form.brief} onChange={(e) => updateForm({ brief: e.target.value })} minLength={8} />
-          <div className="row">
-            <button type="button" onClick={interpret} disabled={busy}>
-              Interpret brief
-            </button>
-            <span className="tiny">Rule-based parser · no LLM</span>
-          </div>
-          {interpretation && !interpretation.supported && (
-            <p className="warn" role="status">
-              {interpretation.reason}
-            </p>
-          )}
-          {interpretation?.supported && interpretation.warnings.length > 0 && (
-            <p className="warn" role="status">
-              {interpretation.warnings.join(" ")}
-            </p>
-          )}
+          <InterpreterControls ws={ws} />
         </div>
 
         <form

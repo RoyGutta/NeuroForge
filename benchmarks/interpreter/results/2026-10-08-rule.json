@@ -1,0 +1,5171 @@
+{
+ "kind": "interpreter-benchmark",
+ "interpreter": {
+  "id": "rule-based-v1",
+  "label": "Rule-based",
+  "kind": "rule"
+ },
+ "dataset": {
+  "id": "interpreter-briefs",
+  "version": "1.0.0",
+  "file": "benchmarks/interpreter/briefs-v1.0.0.json",
+  "entries": 58
+ },
+ "settings": {
+  "deterministic": true
+ },
+ "engineVersion": "1.3.0",
+ "createdAt": "2026-10-08T08:36:08.558Z",
+ "metrics": {
+  "entries": 58,
+  "schemaValidity": {
+   "value": 1,
+   "n": 58
+  },
+  "domainClassification": {
+   "value": 0.9310344827586207,
+   "n": 58
+  },
+  "fieldExtraction": {
+   "value": 0.8197278911564624,
+   "n": 49
+  },
+  "unitNormalization": {
+   "value": 0.6249999999999999,
+   "n": 12
+  },
+  "missingInformation": {
+   "value": 1,
+   "n": 43
+  },
+  "ambiguityHandling": {
+   "value": 0,
+   "n": 7
+  },
+  "unsupportedDetection": {
+   "value": 0.6,
+   "n": 5
+  },
+  "unsupportedElementDetection": {
+   "value": 0,
+   "n": 2
+  },
+  "materialAccuracy": {
+   "value": 1,
+   "n": 17
+  },
+  "objectiveAccuracy": {
+   "value": 0.9433962264150944,
+   "n": 53
+  },
+  "validationPassRate": {
+   "value": 1,
+   "n": 53
+  },
+  "semanticEquivalence": {
+   "value": 0.7924528301886793,
+   "n": 53
+  },
+  "failures": {
+   "missing-constraint": 4,
+   "wrong-objective": 3,
+   "missing-value": 12,
+   "ambiguity-ignored": 7,
+   "wrong-domain": 2,
+   "unsupported-domain-miss": 2,
+   "unsupported-element-miss": 2
+  },
+  "byCategory": {
+   "basic": {
+    "entries": 12,
+    "semanticEquivalence": {
+     "value": 0.9166666666666666,
+     "n": 12
+    },
+    "fieldExtraction": {
+     "value": 0.9722222222222222,
+     "n": 12
+    }
+   },
+   "units": {
+    "entries": 12,
+    "semanticEquivalence": {
+     "value": 0.4166666666666667,
+     "n": 12
+    },
+    "fieldExtraction": {
+     "value": 0.6249999999999999,
+     "n": 12
+    }
+   },
+   "linguistic": {
+    "entries": 9,
+    "semanticEquivalence": {
+     "value": 0.7777777777777778,
+     "n": 9
+    },
+    "fieldExtraction": {
+     "value": 0.6296296296296297,
+     "n": 9
+    }
+   },
+   "missing": {
+    "entries": 7,
+    "semanticEquivalence": {
+     "value": 1,
+     "n": 7
+    },
+    "fieldExtraction": {
+     "value": 1,
+     "n": 3
+    }
+   },
+   "ambiguous": {
+    "entries": 7,
+    "semanticEquivalence": {
+     "value": 1,
+     "n": 7
+    },
+    "fieldExtraction": {
+     "value": 0.9523809523809524,
+     "n": 7
+    }
+   },
+   "infeasible": {
+    "entries": 4,
+    "semanticEquivalence": {
+     "value": 0.75,
+     "n": 4
+    },
+    "fieldExtraction": {
+     "value": 0.9166666666666666,
+     "n": 4
+    }
+   },
+   "unsupported": {
+    "entries": 7,
+    "semanticEquivalence": {
+     "value": 0.7142857142857143,
+     "n": 7
+    },
+    "fieldExtraction": {
+     "value": 1,
+     "n": 2
+    }
+   }
+  },
+  "latencyMs": {
+   "mean": 0.017241379310344827,
+   "median": 0,
+   "max": 1
+  },
+  "costUsd": {
+   "total": 0,
+   "mean": 0
+  }
+ },
+ "entries": [
+  {
+   "id": "s-basic-1",
+   "score": {
+    "id": "s-basic-1",
+    "category": "basic",
+    "domain": "structural",
+    "latencyMs": 1,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 meters"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 1,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-basic-2",
+   "score": {
+    "id": "s-basic-2",
+    "category": "basic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 4,
+      "actual": 4,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 3000,
+      "actual": 3000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 2.5,
+      "actual": 2.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 4,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "4 m"
+     },
+     {
+      "id": "load_N",
+      "value": 3000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 2.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor of 2.5"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-basic-3",
+   "score": {
+    "id": "s-basic-3",
+    "category": "basic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "massBudget_kg",
+      "expected": 2,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0.6666666666666666,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": false,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-constraint",
+     "wrong-objective"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-basic-4",
+   "score": {
+    "id": "s-basic-4",
+    "category": "basic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 1000,
+      "actual": 1000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "deflectionRatio",
+      "expected": 400,
+      "actual": 400,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "load_N",
+      "value": 1000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor 2"
+     },
+     {
+      "id": "materialId",
+      "value": "titanium-6al-4v",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "titanium"
+     },
+     {
+      "id": "deflectionRatio",
+      "value": 400,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "L/400"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-units-1",
+   "score": {
+    "id": "s-units-1",
+    "category": "units",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 1.5,
+      "actual": 1.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 2000,
+      "actual": 2000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 1.5,
+      "actual": 1.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 1.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1500 mm"
+     },
+     {
+      "id": "load_N",
+      "value": 2000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 1.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor of 1.5"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-units-2",
+   "score": {
+    "id": "s-units-2",
+    "category": "units",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 490.3325,
+      "actual": 490.3325,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "load_N",
+      "value": 490.3325,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "50 kg",
+      "note": "Converted 50 kg to 490.3 N using g = 9.80665 m/s^2.",
+      "rawUnit": "kg",
+      "rawValue": 50
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-units-3",
+   "score": {
+    "id": "s-units-3",
+    "category": "units",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2.5,
+      "actual": 2.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 750,
+      "actual": 750,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "deflectionRatio",
+      "expected": 300,
+      "actual": 300,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": false,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "wrong-objective"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "250 cm"
+     },
+     {
+      "id": "load_N",
+      "value": 750,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.75 kN"
+     },
+     {
+      "id": "deflectionRatio",
+      "value": 300,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "L/300"
+     },
+     {
+      "id": "objective",
+      "value": "compliance_J",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId",
+     "massBudget_kg"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-units-4",
+   "score": {
+    "id": "s-units-4",
+    "category": "units",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3.048,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "load_N",
+      "expected": 889.64432305,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": 0,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-units-5",
+   "score": {
+    "id": "s-units-5",
+    "category": "units",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 1200,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 1.8,
+      "actual": 1.8,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 0.6666666666666666,
+    "unitAccuracy": 0.6666666666666666,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2.0 metres"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 1.8,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "Safety factor 1.8"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "Steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "load_N"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ling-1",
+   "score": {
+    "id": "s-ling-1",
+    "category": "linguistic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ling-2",
+   "score": {
+    "id": "s-ling-2",
+    "category": "linguistic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 1000,
+      "actual": 1000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "load_N",
+      "value": 1000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "SF = 2"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ling-3",
+   "score": {
+    "id": "s-ling-3",
+    "category": "linguistic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2.4,
+      "actual": 2.4,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 600,
+      "actual": 600,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2.4,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2.4 m"
+     },
+     {
+      "id": "load_N",
+      "value": 600,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "600 N"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ling-4",
+   "score": {
+    "id": "s-ling-4",
+    "category": "linguistic",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-missing-1",
+   "score": {
+    "id": "s-missing-1",
+    "category": "missing",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-missing-2",
+   "score": {
+    "id": "s-missing-2",
+    "category": "missing",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "load_N",
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ambig-1",
+   "score": {
+    "id": "s-ambig-1",
+    "category": "ambiguous",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ambig-2",
+   "score": {
+    "id": "s-ambig-2",
+    "category": "ambiguous",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-ambig-3",
+   "score": {
+    "id": "s-ambig-3",
+    "category": "ambiguous",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s-infeasible-1",
+   "score": {
+    "id": "s-infeasible-1",
+    "category": "infeasible",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500000,
+      "actual": 500000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "deflectionRatio",
+      "expected": 1000,
+      "actual": 1000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": false,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "wrong-objective"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor of 2"
+     },
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "deflectionRatio",
+      "value": 1000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "L/1000"
+     },
+     {
+      "id": "objective",
+      "value": "compliance_J",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "massBudget_kg"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-basic-1",
+   "score": {
+    "id": "s3-basic-1",
+    "category": "basic",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 2000,
+      "actual": 2000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 meters"
+     },
+     {
+      "id": "load_N",
+      "value": 2000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 kN"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-basic-2",
+   "score": {
+    "id": "s3-basic-2",
+    "category": "basic",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 6,
+      "actual": 6,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 5000,
+      "actual": 5000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 6,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "6 m"
+     },
+     {
+      "id": "load_N",
+      "value": 5000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "5 kN"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor 2"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-units-1",
+   "score": {
+    "id": "s3-units-1",
+    "category": "units",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 4.5,
+      "actual": 4.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 2941.995,
+      "actual": 2941.995,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 4.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "4500 mm"
+     },
+     {
+      "id": "load_N",
+      "value": 2941.995,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "300 kg",
+      "note": "Converted 300 kg to 2942.0 N using g = 9.80665 m/s^2.",
+      "rawUnit": "kg",
+      "rawValue": 300
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-ling-1",
+   "score": {
+    "id": "s3-ling-1",
+    "category": "linguistic",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 4,
+      "actual": 4,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 3000,
+      "actual": 3000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 4,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "4 m"
+     },
+     {
+      "id": "load_N",
+      "value": 3000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 kN"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-missing-1",
+   "score": {
+    "id": "s3-missing-1",
+    "category": "missing",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "materialId",
+      "value": "titanium-6al-4v",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "titanium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "s3-ambig-1",
+   "score": {
+    "id": "s3-ambig-1",
+    "category": "ambiguous",
+    "domain": "structural3d",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 2000,
+      "actual": 2000,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural3d",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "load_N",
+      "value": 2000,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 kN"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-basic-1",
+   "score": {
+    "id": "r-basic-1",
+    "category": "basic",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.8,
+      "actual": 0.8,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 19.6133,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 0.8,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.8 m"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-basic-2",
+   "score": {
+    "id": "r-basic-2",
+    "category": "basic",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 5,
+      "actual": 5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 1.2,
+      "actual": 1.2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "safetyFactor",
+      "expected": 1.5,
+      "actual": 1.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "5 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 49.033249999999995,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 1.2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1.2 m"
+     },
+     {
+      "id": "safetyFactor",
+      "value": 1.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "safety factor 1.5"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-basic-3",
+   "score": {
+    "id": "r-basic-3",
+    "category": "basic",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 1,
+      "actual": 1,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.5,
+      "actual": 0.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 1,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 9.80665,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 0.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.5 m"
+     },
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-units-1",
+   "score": {
+    "id": "r-units-1",
+    "category": "units",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 2.0394324,
+      "actual": 2.0394324259558565,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.6,
+      "actual": 0.6,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 2.0394324259558565,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "20 N",
+      "rawValue": 20,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 0.6,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "600 mm"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-units-2",
+   "score": {
+    "id": "r-units-2",
+    "category": "units",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 3,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.75,
+      "actual": 0.75,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 0.5,
+    "unitAccuracy": 0.5,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "reach_m",
+      "value": 0.75,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "75 cm"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "payload_kg",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-units-3",
+   "score": {
+    "id": "r-units-3",
+    "category": "units",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 1.995806428,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.6096,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": 0,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "payload_kg",
+     "reach_m",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-ling-1",
+   "score": {
+    "id": "r-ling-1",
+    "category": "linguistic",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 2,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.8,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "payload_kg",
+     "reach_m",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-ling-2",
+   "score": {
+    "id": "r-ling-2",
+    "category": "linguistic",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 1.5,
+      "actual": 1.5,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.9,
+      "actual": 0.9,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 1.5,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1.5 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 14.709975,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 0.9,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.9 m"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-missing-1",
+   "score": {
+    "id": "r-missing-1",
+    "category": "missing",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "payload_kg",
+     "reach_m",
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-missing-2",
+   "score": {
+    "id": "r-missing-2",
+    "category": "missing",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "reach_m",
+      "expected": 1,
+      "actual": 1,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "reach_m",
+      "value": 1,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "1 m"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "payload_kg",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-ambig-1",
+   "score": {
+    "id": "r-ambig-1",
+    "category": "ambiguous",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 0.8,
+      "actual": 0.8,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 19.6133,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 0.8,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.8 m"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "r-infeasible-1",
+   "score": {
+    "id": "r-infeasible-1",
+    "category": "infeasible",
+    "domain": "robotics",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "payload_kg",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "reach_m",
+      "expected": 3,
+      "actual": 3,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "robotics",
+    "detectedDomain": "robotics",
+    "fields": [
+     {
+      "id": "payload_kg",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 kg",
+      "note": "Given as a force; converted to mass with g = 9.80665 m/s^2.",
+      "rawValue": 4903.325,
+      "rawUnit": "N"
+     },
+     {
+      "id": "reach_m",
+      "value": 3,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "3 m"
+     },
+     {
+      "id": "objective",
+      "value": "peakTorque_Nm",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-basic-1",
+   "score": {
+    "id": "t-basic-1",
+    "category": "basic",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-basic-2",
+   "score": {
+    "id": "t-basic-2",
+    "category": "basic",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 30,
+      "actual": 30,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80 C"
+     },
+     {
+      "id": "ambient_C",
+      "value": 30,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "30 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-basic-3",
+   "score": {
+    "id": "t-basic-3",
+    "category": "basic",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 25,
+      "actual": 25,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 70,
+      "actual": 70,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 20,
+      "actual": 20,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 25,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "25 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 70,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "70 C"
+     },
+     {
+      "id": "ambient_C",
+      "value": 20,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "20 C"
+     },
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "thermalResistance_K_W",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-units-1",
+   "score": {
+    "id": "t-units-1",
+    "category": "units",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 50,
+      "actual": 50,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 85,
+      "actual": 85,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 25,
+      "actual": 25,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": 1,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 50,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "0.05 kW"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 85,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "85°C"
+     },
+     {
+      "id": "ambient_C",
+      "value": 25,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "25°C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-units-2",
+   "score": {
+    "id": "t-units-2",
+    "category": "units",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": false,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 30,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 84.85,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 24.85,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": 0,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "wrong-domain",
+     "missing-value",
+     "missing-constraint"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [
+     "No structural keywords found; interpreted as a truss bridge because span/load were present."
+    ],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-units-3",
+   "score": {
+    "id": "t-units-3",
+    "category": "units",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 60,
+      "actual": 60,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 25,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0.3333333333333333,
+    "unitAccuracy": 0.3333333333333333,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "missing-constraint",
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 60,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "60 W"
+     },
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "maxTemperature_C",
+     "ambient_C"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-ling-1",
+   "score": {
+    "id": "t-ling-1",
+    "category": "linguistic",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": false,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "wrong-domain",
+     "missing-value",
+     "missing-constraint"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "materialId",
+      "value": "aluminum-6061-t6",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "aluminium"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [
+     "No structural keywords found; interpreted as a truss bridge because span/load were present."
+    ],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-ling-2",
+   "score": {
+    "id": "t-ling-2",
+    "category": "linguistic",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 15,
+      "actual": 15,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 75,
+      "actual": 75,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 35,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0.6666666666666666,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": true,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": false,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 15,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "15 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 75,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "75 C"
+     },
+     {
+      "id": "materialId",
+      "value": "steel-a36",
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "steel"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-missing-1",
+   "score": {
+    "id": "t-missing-1",
+    "category": "missing",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "power_W",
+     "maxTemperature_C",
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-missing-2",
+   "score": {
+    "id": "t-missing-2",
+    "category": "missing",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 20,
+      "actual": 20,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 20,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "20 W"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "maxTemperature_C",
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-ambig-1",
+   "score": {
+    "id": "t-ambig-1",
+    "category": "ambiguous",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-ambig-2",
+   "score": {
+    "id": "t-ambig-2",
+    "category": "ambiguous",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 25,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0.6666666666666666,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": false,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "missing-value",
+     "ambiguity-ignored"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-infeasible-1",
+   "score": {
+    "id": "t-infeasible-1",
+    "category": "infeasible",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 100,
+      "actual": 100,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": []
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 100,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "100 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80°C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "t-infeasible-2",
+   "score": {
+    "id": "t-infeasible-2",
+    "category": "infeasible",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 30,
+      "actual": 30,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "ambient_C",
+      "expected": 25,
+      "actual": null,
+      "provenance": null,
+      "outcome": "missing"
+     }
+    ],
+    "fieldAccuracy": 0.6666666666666666,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "missing-value"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 30,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "30 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-aero-1",
+   "score": {
+    "id": "u-aero-1",
+    "category": "unsupported",
+    "domain": "unsupported",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": false,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": null,
+    "validationPassed": true,
+    "semanticallyEquivalent": null,
+    "failures": []
+   },
+   "supported": false,
+   "kind": "unsupported-domain",
+   "reason": "This brief reads as a aerospace problem. NeuroForge currently solves planar truss bridges, planar manipulators and plate-fin heat sinks; aerospace domains are on the roadmap and are not simulated yet.",
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": null,
+    "detectedDomain": "aerospace",
+    "fields": [],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-aero-2",
+   "score": {
+    "id": "u-aero-2",
+    "category": "unsupported",
+    "domain": "unsupported",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": false,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": null,
+    "validationPassed": true,
+    "semanticallyEquivalent": null,
+    "failures": []
+   },
+   "supported": false,
+   "kind": "unsupported-domain",
+   "reason": "This brief reads as a aerospace problem. NeuroForge currently solves planar truss bridges, planar manipulators and plate-fin heat sinks; aerospace domains are on the roadmap and are not simulated yet.",
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": null,
+    "detectedDomain": "aerospace",
+    "fields": [],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-fluid-1",
+   "score": {
+    "id": "u-fluid-1",
+    "category": "unsupported",
+    "domain": "unsupported",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": false,
+    "domainCorrect": true,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": null,
+    "validationPassed": true,
+    "semanticallyEquivalent": null,
+    "failures": []
+   },
+   "supported": false,
+   "kind": "unsupported-domain",
+   "reason": "This brief reads as a fluids problem. NeuroForge currently solves planar truss bridges, planar manipulators and plate-fin heat sinks; fluids domains are on the roadmap and are not simulated yet.",
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": null,
+    "detectedDomain": "fluids",
+    "fields": [],
+    "missing": [],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-elec-1",
+   "score": {
+    "id": "u-elec-1",
+    "category": "unsupported",
+    "domain": "unsupported",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": false,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": null,
+    "validationPassed": false,
+    "semanticallyEquivalent": null,
+    "failures": [
+     "unsupported-domain-miss"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [
+     "No structural keywords found; interpreted as a truss bridge because span/load were present."
+    ],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-text-1",
+   "score": {
+    "id": "u-text-1",
+    "category": "unsupported",
+    "domain": "unsupported",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": false,
+    "fields": [],
+    "fieldAccuracy": null,
+    "unitAccuracy": null,
+    "missingDetected": null,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": null,
+    "materialCorrect": null,
+    "objectiveCorrect": null,
+    "validationPassed": false,
+    "semanticallyEquivalent": null,
+    "failures": [
+     "unsupported-domain-miss"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "medium"
+     }
+    ],
+    "missing": [
+     "span_m",
+     "load_N",
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [
+     "No structural keywords found; interpreted as a truss bridge because span/load were present."
+    ],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-element-1",
+   "score": {
+    "id": "u-element-1",
+    "category": "unsupported",
+    "domain": "thermal",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "power_W",
+      "expected": 40,
+      "actual": 40,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "maxTemperature_C",
+      "expected": 80,
+      "actual": 80,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": false,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "unsupported-element-miss"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "thermal",
+    "detectedDomain": "thermal",
+    "fields": [
+     {
+      "id": "power_W",
+      "value": 40,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "40 W"
+     },
+     {
+      "id": "maxTemperature_C",
+      "value": 80,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "80 C"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "ambient_C",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  },
+  {
+   "id": "u-element-2",
+   "score": {
+    "id": "u-element-2",
+    "category": "unsupported",
+    "domain": "structural",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "stage": "complete",
+    "schemaValid": true,
+    "supported": true,
+    "domainCorrect": true,
+    "fields": [
+     {
+      "field": "span_m",
+      "expected": 2,
+      "actual": 2,
+      "provenance": "explicit",
+      "outcome": "correct"
+     },
+     {
+      "field": "load_N",
+      "expected": 500,
+      "actual": 500,
+      "provenance": "explicit",
+      "outcome": "correct"
+     }
+    ],
+    "fieldAccuracy": 1,
+    "unitAccuracy": null,
+    "missingDetected": 1,
+    "ambiguityDetected": null,
+    "unsupportedElementsDetected": false,
+    "materialCorrect": null,
+    "objectiveCorrect": true,
+    "validationPassed": true,
+    "semanticallyEquivalent": true,
+    "failures": [
+     "unsupported-element-miss"
+    ]
+   },
+   "supported": true,
+   "spec": {
+    "schemaVersion": "1.0.0",
+    "domain": "structural",
+    "detectedDomain": "structural",
+    "fields": [
+     {
+      "id": "span_m",
+      "value": 2,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "2 m"
+     },
+     {
+      "id": "load_N",
+      "value": 500,
+      "provenance": "explicit",
+      "confidence": "high",
+      "sourceSpan": "500 N"
+     },
+     {
+      "id": "objective",
+      "value": "mass_kg",
+      "provenance": "inferred",
+      "confidence": "high"
+     }
+    ],
+    "missing": [
+     "safetyFactor",
+     "materialId"
+    ],
+    "ambiguities": [],
+    "unsupportedElements": [],
+    "conflicts": [],
+    "warnings": [],
+    "confidence": "medium"
+   },
+   "diagnostics": {
+    "interpreter": "rule-based-v1",
+    "kind": "rule",
+    "schemaVersion": "1.0.0",
+    "stage": "complete",
+    "latencyMs": 0,
+    "costUsd": 0,
+    "notes": []
+   }
+  }
+ ]
+}
