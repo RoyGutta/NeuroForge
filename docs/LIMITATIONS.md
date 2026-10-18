@@ -86,14 +86,29 @@ Be explicit about these when presenting results.
   tested; they are not general claims about surrogate-assisted optimisation.
 
 ## Interpretation
-- The rule-based interpreter handles span/load/safety-factor/material/deflection
-  phrasing in English with SI or kg units. Anything else becomes an assumption.
-- Non-structural briefs are declined, not solved.
+- Four problem families; a brief outside them is declined, not solved. A
+  brief without a family keyword falls through the rule-based interpreter to
+  a bridge with a warning (measured: two of seven unsupported benchmark
+  briefs); the hybrid interpreter lets the model's decline override that.
+- The rule-based reference reads English SI and kg phrasing only; numbers in
+  words, imperial units, kelvin and "kilonewtons" become assumptions, and it
+  flags no ambiguities (0 of 8 in the benchmark). It is kept frozen as the
+  reference.
+- A model-backed reading is not bit-reproducible; the record keeps the raw
+  output, model id, prompt and schema versions so it can be audited and
+  re-scored. The model-backed and hybrid benchmark records are not yet
+  committed (provider credit was unavailable when v1.4 was built); until
+  they are, no claim is made about model accuracy.
+- The hybrid prefers the rule-based value in a conflict and shows both; it
+  does not adjudicate.
+- Costs are list-price estimates from token counts.
 
 ## Software
 - Experiments persist in the browser's localStorage only.
 - Dense O(n³) solver; fine for hundreds of DOFs, not thousands.
-- No server, no authentication, no multi-user sharing.
+- The only server component is the interpretation endpoint; no
+  authentication, no multi-user sharing, no server-side computation. Its
+  rate limit is per function instance and best effort.
 
 ## What a result is
 A **preliminary computational study**. Not a validated engineering analysis and

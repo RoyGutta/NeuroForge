@@ -53,3 +53,4 @@ CLAUDE.md
 .agent*
 *.agent.md
 scratchpad/
+.claude-flow/

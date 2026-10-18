@@ -90,13 +90,14 @@ benchmarked, documented and verified live.
 - [x] M2 Per-run design retention: study records keep each run's design, metrics and per-constraint violation probabilities; the Benchmarks page shows the design behind a run and opens it in the workspace
 - [x] M3 Third engineering domain: plate-fin heat sink in natural convection (fin theory and the Bar-Cohen and Rohsenow correlation), baseline, responses, interpreter routing, UI, registered study `heat-sink-optimizers`
 - [x] M4 Spatial truss domain (dimension-generic solver and response model, triangular girder, baseline, study, lab) and a Three.js viewport bound to the solved structure (structure, axial force, utilisation, deformed with stated exaggeration; orbit, pan, zoom, reset; member and node inspection; generation scrubbing on recorded designs)
-- [ ] M5 LLM interpreter behind `ProblemInterpreter`, validated against the rule-based one
+- [x] M5 (v1.4, in progress) Validated interpreter pipeline: candidate specification with provenance, deterministic unit normalisation and realisation, model-backed and hybrid interpreters behind `ProblemInterpreter`, server-side provider adapter, 58-brief benchmark with per-dimension metrics and a failure taxonomy, interpretation workspace and comparison; rule-based reference measured (79 % semantic equivalence). Open: the model-backed and hybrid records (blocked on provider credit at the time of writing), the rule-versus-model research question Q21
 - [ ] M6 Server-side job execution; the browser architecture stays functional
 
 ## Beyond v1.1
-- [ ] Thermal or aerospace domain behind `EngineeringDomain`
-- [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
-- [ ] LLM-backed interpreter implementing `ProblemInterpreter`, validated against the rule-based one
+- [x] Thermal domain behind `EngineeringDomain` (v1.2)
+- [x] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields (v1.3)
+- [x] Model-backed interpreter implementing `ProblemInterpreter`, benchmarked against the rule-based one (v1.4)
+- [ ] Aerospace or fluids domain behind `EngineeringDomain`
 - [ ] Server-side job runner and shared experiment store
 
 ## Later domains and 3D
@@ -104,6 +105,6 @@ benchmarked, documented and verified live.
 - [ ] Spatial (3D) truss FEA; Three.js viewport with deformation and force fields
 
 ## Later
-- [ ] LLM-backed interpreter implementing `ProblemInterpreter`, validated against the rule-based one
+- [ ] Interpreter follow-ups: prompt and schema ablations (effort, model), a second provider adapter, retrieval of material data, lab integration of model-backed readings once the benchmark supports it
 - [ ] Neural surrogates, graph representations of structures, sketch-to-geometry, only with a real evaluation path
 - [ ] Server-side job runner and shared experiment store

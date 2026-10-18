@@ -3,7 +3,54 @@
 Measured comparisons of the registered optimisers on the canonical problem
 (2 m span, 500 N, Al 6061-T6, safety factor 2, four panels, 19 variables).
 Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
-here only when they come from that script.
+here only when they come from that script. The interpreter benchmark at the
+end of this file is produced by `npm run interpreter:study`.
+
+## 2026-10-08 · engine 1.3.0 · brief interpretation, 58 briefs, rule-based reference
+
+Dataset `benchmarks/interpreter/briefs-1.0.0.json` (v1.0.0), record
+`benchmarks/interpreter/results/2026-10-08-rule.json`. Method and metric
+definitions in `docs/INTERPRETER.md`; the question in `docs/RESEARCH.md`.
+
+| Dimension | Rule-based (entries) | Model-backed | Hybrid |
+|---|---|---|---|
+| Schema validity | 100 % (58) | pending | pending |
+| Domain classification | 93 % (58) | pending | pending |
+| Field extraction | 82 % (49) | pending | pending |
+| Unit normalisation | 62 % (12) | pending | pending |
+| Missing information detected | 100 % (43) | pending | pending |
+| Ambiguity flagged | 0 % (7) | pending | pending |
+| Unsupported domain declined | 60 % (5) | pending | pending |
+| Unsupported element flagged | 0 % (2) | pending | pending |
+| Material | 100 % (17) | pending | pending |
+| Objective | 94 % (53) | pending | pending |
+| Deterministic validation passed | 100 % (53) | pending | pending |
+| Semantically equivalent problem | 79 % (53) | pending | pending |
+| Mean latency | 0 ms | pending | pending |
+| Cost (list price) | 0 | pending | pending |
+
+| Category | Briefs | Rule-based semantic equivalence |
+|---|---|---|
+| basic | 12 | 92 % |
+| units | 12 | 42 % |
+| linguistic | 9 | 78 % |
+| missing | 7 | 100 % |
+| ambiguous | 7 | 100 % (primary value read, alternative never flagged) |
+| infeasible | 4 | 75 % |
+| unsupported | 7 | 71 % |
+
+Failures (rule-based): missing-value 12, ambiguity-ignored 7,
+missing-constraint 4, wrong-objective 3, wrong-domain 2,
+unsupported-domain-miss 2, unsupported-element-miss 2.
+
+Reading. The reference is strong where the brief is plain and honest about
+what it cannot read (every missing field becomes a low-confidence
+assumption, nothing is invented), and weak exactly where regexes are weak:
+imperial and scaled units it does not know (ft, lbf, lb, g, K, F,
+"kilonewtons"), numbers in words, briefs with no family keyword, and any
+alternative value. The model-backed and hybrid columns are pending: the
+provider account had no credit when this record was produced, and no
+number is reported that was not measured.
 
 ## 2026-10-08 · engine 1.3.0 · spatial truss optimisers, 10 seeds, 1,500 evaluations
 

@@ -128,7 +128,7 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 | Area | What exists |
 |---|---|
 | Problem specification | `EngineeringProblem` schema with objectives, constraints (metric, operator, limit, source), assumptions (field, value, reason, confidence), provenance, versioning; per-domain validation |
-| Interpretation | Rule-based natural-language interpreter for span, load (N, kN, kg), safety factor, material, deflection ratio and objective on structural briefs; payload, reach, material and objective on manipulator briefs; power, temperature limit, ambient, material and objective on heat-sink briefs; declines aerospace and fluids briefs explicitly |
+| Interpretation | Three interpreters behind one contract: the rule-based reference (span, load, safety factor, material, deflection ratio, objective; payload and reach; power, temperature limit, ambient), a model-backed interpreter whose output is constrained by a versioned JSON schema and then normalised and validated by deterministic code, and a hybrid that cross-checks the model against the rules and lists every disagreement as a conflict. Every value carries a provenance (explicit, inferred, assumed, unknown); a deterministic unit layer converts mm, cm, ft, in, kN, lbf, kg, g, lb, kW, K and F; the domain validator has the last word. Provider credentials stay on the server (`api/interpret`); the browser never holds a key. A 58-brief benchmark scores the interpreters per dimension with a failure taxonomy (`docs/INTERPRETER.md`) |
 | Structural analysis | Pin-jointed truss finite-element solver, dimension-generic (2D and 3D, three translational DOFs per node in space): stiffness assembly from member direction vectors, boundary conditions, Cholesky factorisation, member forces and stresses, reactions, compliance, mechanism detection; the planar adapter is verified bit for bit against the original solver |
 | Design checks | Yield stress with safety factor, Euler buckling of compression members (solid round section), serviceability deflection, self-weight as lumped nodal loads |
 | Robotics analysis | Planar two-link manipulator: closed-form inverse kinematics with elbow choice, static gravity torques at every task point, hollow tubular links checked for root bending stress and superposed cantilever tip deflection, reachability as a hard constraint; joint torques and tip deflections exposed as responses with an exact response model |
@@ -149,11 +149,10 @@ evolutionary algorithm. The record is sufficient to rerun the search exactly.
 
 ### Planned / research direction
 
-Further engineering domains (thermal, aerospace, fluids), 3D visualisation,
-an LLM-backed interpreter validated against the rule-based one, and a
-server-side job runner with a shared experiment store. None of these are implemented yet; the
-interface labels them as roadmap wherever they are mentioned. See
-[Roadmap](#roadmap).
+Further engineering domains (aerospace, fluids), a server-side job runner
+with a shared experiment store, and the open interpreter questions in
+`docs/INTERPRETER.md`. None of these are implemented yet; the interface
+labels them as roadmap wherever they are mentioned. See [Roadmap](#roadmap).
 
 ## Engineering engine
 
@@ -298,7 +297,11 @@ src/engine/            framework-free TypeScript; no React imports
   experiments/         experiment config, generator-based runner, records, stores
   explain/             sensitivity, binding constraints, design diff
   ml/                  datasets, metrics, SurrogateModel contract and models, held-out studies
-  interpret/           ProblemInterpreter contract and rule-based implementation
+  interpret/           ProblemInterpreter contract, candidate specification, unit normalisation,
+                       realisation and validation; rule-based, model-backed (llm/) and hybrid
+                       interpreters; benchmark/ dataset contract, scoring and taxonomy
+src/server/            server-only code: Anthropic adapter, interpretation endpoint handler
+api/                   Vercel function for the interpretation endpoint
 src/workers/           Web Worker that drives the runner
 src/app/               worker client and shared store
 src/pages/             React pages; workspace/, home/, projects/, technology/
@@ -398,10 +401,17 @@ The project has no backend. Experiments persist in the browser's local storage.
 ## Deployment
 
 The application is a static single-page build (Vite) with the engine running
-in a Web Worker in the visitor's browser; there is no server component.
-`vercel.json` rewrites every route to `index.html` so `/projects`,
-`/technology` and `/workspace` load directly, and marks hashed assets as
-immutable. Production deploys from the `main` branch of the repository.
+in a Web Worker in the visitor's browser. The one server component is the
+interpretation endpoint, a Vercel function (`api/interpret.ts`) that holds
+the model provider's key and accepts nothing but a brief; without
+`ANTHROPIC_API_KEY` in the deployment's environment it reports itself
+unconfigured and the application uses the rule-based interpreter only.
+`vercel.json` rewrites every route except `/api/` and `/assets/` to
+`index.html` so `/projects`, `/technology` and `/workspace` load directly,
+and marks hashed assets as immutable. Production deploys from the `main`
+branch of the repository. Environment variables for the function:
+`ANTHROPIC_API_KEY`, optional `NEUROFORGE_LLM_MODEL` (default
+`claude-opus-5`) and `NEUROFORGE_LLM_EFFORT` (default `medium`).
 
 ## Testing
 
@@ -415,7 +425,10 @@ solver against analytical cases, mass and buckling metrics, the problem schema
 and validation, the design space and baseline sizing, the evaluator, all five
 optimisers (convergence, determinism, lineage, bounds, diagnostics), the
 experiment runner (reproducibility, cancellation, baseline improvement), the
-stores, the sensitivity module, the interpreter, datasets and splits,
+stores, the sensitivity module, the interpreters (rule-based bit-identity
+against a v1.3 fixture, unit normalisation, schema rejection of malformed
+model output, validation authority over model values, hybrid conflicts, the
+endpoint handler, the benchmark dataset and scoring), datasets and splits,
 regression metrics, the ridge, MLP and Gaussian-process models against known
 functions (including interval calibration), the surrogate study, and the
 workspace form mapping.
@@ -465,8 +478,11 @@ commitments.
    third engineering domain (plate-fin heat sink, `heat-sink-optimizers`
    study), and v1.3: a spatial truss domain on a dimension-generic solver
    with a Three.js engineering viewport (`space-truss-optimizers` study).
-   Next: an LLM interpreter validated against the rule-based one,
-   server-side execution.
+   v1.4 (in progress): a validated interpreter pipeline, brief to model to
+   structured specification to deterministic normalisation and validation,
+   with rule-based, model-backed and hybrid interpreters behind one
+   contract and a 58-brief benchmark with a failure taxonomy
+   (`docs/INTERPRETER.md`). Next: server-side execution.
 12. Additional engineering domains behind the `EngineeringDomain` contract
    (thermal, aerospace, fluids), tubular truss sections, 3D trusses.
 13. Advanced learning components where they earn their place: neural

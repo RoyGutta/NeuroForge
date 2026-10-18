@@ -194,6 +194,73 @@ to the reference. Two conclusions: the representation result transfers
 rankings do not transfer between domains, which is what the autonomous
 lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 
+## Rule-based versus model-backed brief interpretation (2026-10-08, engine 1.3.0)
+
+**Question (Q21).** Does a language model, constrained to a versioned JSON
+schema and followed by deterministic unit normalisation and the engine's
+own validator, read engineering briefs more faithfully than the rule-based
+reference, on which categories, and at what cost in latency and tokens?
+
+**Hypotheses.** H1: the model matches the rules on plain briefs and beats
+them on units, words-for-numbers and reordered phrasing, where the regexes
+have known gaps. H2: the model flags ambiguities and unsupported elements
+the rules cannot see. H3: the model invents values for fields the brief
+does not state more often than the rules (which never do), and the schema
+plus the missing-field contract reduce but do not remove this. H4: the
+hybrid loses little accuracy to the model alone while making every
+disagreement visible. H5: the deterministic validator rejects a non-trivial
+share of model readings that the schema accepted.
+
+**Method.** Dataset `benchmarks/interpreter/briefs-1.0.0.json`, 58 public
+briefs, four families, seven categories, with reference readings in SI.
+The same `realizeSpec`, `checkSpec` and domain validator run after every
+interpreter, so only the reading differs. Metrics per dimension (schema
+validity, domain, fields, units, missing information, ambiguity,
+unsupported domain and element, material, objective, validation pass,
+semantic equivalence of the realised problem) and a failure taxonomy; no
+single accuracy number. `npm run interpreter:study`.
+
+**Results so far: the reference.** Rule-based, 58 briefs, deterministic,
+0 ms, no cost:
+
+| Dimension | Rate (entries) |
+|---|---|
+| Schema validity | 100 % (58) |
+| Domain classification | 93 % (58) |
+| Field extraction | 82 % (49) |
+| Unit normalisation (units category) | 62 % (12) |
+| Missing information detected | 100 % (43) |
+| Ambiguity flagged | 0 % (7) |
+| Unsupported domain declined | 60 % (5) |
+| Unsupported element flagged | 0 % (2) |
+| Material | 100 % (17) |
+| Objective | 94 % (53) |
+| Deterministic validation passed | 100 % (53) |
+| Semantically equivalent problem | 79 % (53) |
+
+By category (semantic equivalence): basic 92 %, units 42 %, linguistic
+78 %, missing 100 %, ambiguous 100 % (the primary value is read; the
+alternative is never flagged), infeasible 75 %, unsupported 71 %.
+Failures: missing-value 12, ambiguity-ignored 7, missing-constraint 4,
+wrong-objective 3, wrong-domain 2, unsupported-domain-miss 2,
+unsupported-element-miss 2. The two wrong domains are kelvin briefs and a
+"cooler" with no thermal keyword, which fall through to a bridge; the two
+unsupported-domain misses are an electronics brief and a request for a poem
+("bridges" does not match the `bridge` keyword, and the fallback builds a
+bridge with a warning). The three wrong objectives are briefs with a
+deflection limit and no mass word, which the rules read as a stiffness
+objective. None of these are fixed; the reference stays frozen so the
+comparison is against v1.3.
+
+**Status.** Investigating. The model-backed (`llm-v1`, `claude-opus-5`,
+effort medium, prompt 1.0.0, schema 1.0.0) and hybrid records could not be
+produced when this section was written because the provider account had no
+credit; the pipeline, prompt, schema and scoring are complete and tested
+(including the model-stage failure path, which is what the attempted run
+exercised). The records will be added under `benchmarks/interpreter/results/`
+and this section updated with the comparison, the per-category table and
+the cost and latency per brief. Until then H1 to H5 are untested.
+
 ## Research questions and status (2026-10-03)
 
 | Question | Status | Evidence |
@@ -213,6 +280,7 @@ lab's pilot stage is for. Full table in `docs/BENCHMARKS.md`.
 | How many perturbations does a robustness estimate need? | Answered (2026-10-05): standard error near 95 % follows sqrt(p(1-p)/n); 300 samples flip 5 % of threshold decisions in the 80–100 % band, 1,000 samples 1 %; in-loop copies of 8 to 32 are very noisy classifiers | estimator analysis over the retained designs |
 | Do robustness-formulation results transfer between domains? | Answered (2026-10-05): no. On the manipulator the zero-limit reach constraint defeats margins (50 % robust), post-hoc finds a passing design on 1 of 10 seeds, and the copy-based constraint wins at +2 % torque with 100 % robustness because the 4-variable problem converges within its reduced budget | study `robust-formulations-manipulator` |
 | Can a generic margin act on zero-limit constraints such as reachability? | Open; needs a domain-level geometric margin | manipulator study |
+| Does a schema-constrained language model, followed by deterministic normalisation and validation, read briefs more faithfully than the rule-based reference, on which categories, and at what cost? | Investigating: reference measured (79 % semantic equivalence, 0 % ambiguity, 60 % unsupported); model-backed and hybrid records pending provider credit | interpreter benchmark, `docs/INTERPRETER.md` |
 | Can the member surrogate screen the perturbed copies of robust mode? | Open | next formulation study |
 | Do multi-seed pilots pick a different strategy than single-seed pilots at equal budget? | Open; the lab now records both | lab records, v0.9 |
 

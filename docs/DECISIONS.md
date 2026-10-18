@@ -2,6 +2,53 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-08 — The language model reads; deterministic code decides
+**Decision.** A model-backed interpreter reports what a brief states, as a
+schema-constrained structure of numbers as written, units as written,
+provenance and quotes. Unit conversion, defaults, problem construction and
+validation are the same deterministic code the rule-based interpreter uses
+(`realizeSpec`). The model never converts, computes, fills in or touches an
+engineering result. **Why.** The thing to measure is reading quality, so
+everything else must be held equal; a model that converted units or chose
+defaults would mix its errors with the engine's. Keeping the realisation
+shared also means the workspace form, the rules and the model produce the
+same kind of problem. **Consequences.** Failures are typed by stage (model,
+schema, normalisation, validation), the hybrid can cross-check field by
+field, and the benchmark compares readings, not pipelines. A refusal or a
+truncated output is a model-stage failure, never a silently degraded
+specification.
+
+## 2026-10-08 — Provider credentials stay on a server the browser cannot steer
+**Decision.** The engine sees only `LLMProvider`; the Anthropic adapter and
+the endpoint live in `src/server` and `api/`. The endpoint accepts a brief
+and nothing else; prompt, schema and model are fixed server-side; without a
+key it reports itself unconfigured and the application stays fully
+functional on the rule-based interpreter. **Why.** No key in the browser,
+no open proxy over the key, and a static deployment that does not depend
+on the model being available. **Consequences.** The Vite dev server runs
+the same handler as the Vercel function; the benchmark script calls the
+adapter directly; a second provider is an adapter, not a rewrite.
+
+## 2026-10-08 — Surface interpreter conflicts, keep the deterministic value
+**Decision.** When the model and the rules read different explicit values
+for one field, the hybrid keeps the rule-based value at low confidence and
+lists both readings with their evidence as a conflict for the user to
+resolve. **Why.** Choosing silently would hide exactly the cases the
+benchmark exists to count; preferring the deterministic reading keeps the
+hybrid's failures explainable. The one exception is the rule-based
+fallback to a bridge when no family keyword is present, which is weak
+evidence and yields to the model's reading of the domain.
+
+## 2026-10-08 — Response ids and learning presentation belong to the domain
+**Decision.** `ResponseModel` declares `primaryResponseId` and an optional
+`displacementResponseId`; `CompiledProblem.presentation` carries learning
+targets, component labels and response-learning copy. **Why.** The v1.3
+audit found the hybrid predictor keyed on string literals and the learning
+panels holding per-domain maps; both would have broken silently for a
+domain that names its responses differently. **Consequences.** A fixture
+generated before the change proves the member studies bit-identical; a new
+domain declares its ids and labels once.
+
 ## 2026-10-08 — Generalise the solver over the spatial dimension instead of copying it
 **Decision.** The 3D truss solver and response model are dimension-generic
 cores; the planar solver and response model became adapters over them.

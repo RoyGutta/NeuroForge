@@ -170,10 +170,21 @@ robustness for manufacturing, screening reliability for surrogates, the
 seed-to-seed range of the pilots for statistical.
 
 ### `src/engine/interpret`
-`ProblemInterpreter` contract. The rule-based implementation extracts span,
-load (N, kN, kg→N), safety factor, material, deflection ratio and objective,
-records confidence per value, declines briefs from unsupported domains by
-keyword, and stamps its id into provenance.
+`ProblemInterpreter` contract over a `CandidateSpec`: ordered fields with a
+provenance (explicit, inferred, assumed, unknown), missing fields,
+ambiguities, unsupported elements and conflicts. `units.ts` normalises
+written units to SI deterministically; `realize.ts` maps a specification
+onto the domain templates, records every default as an assumption and runs
+the domain validator, which is authoritative. Three interpreters share it:
+the rule-based reference (regexes unchanged from v1.3, fixture-verified),
+the model-backed `llm-v1` (versioned prompt and JSON schema, provider
+behind `LLMProvider`, output checked by a hand-written schema validator)
+and `hybrid-v1` (model reading cross-checked against the rules, every
+disagreement listed as a conflict). `benchmark/` holds the dataset
+contract, per-dimension scoring and the failure taxonomy. The engine never
+imports a vendor SDK; the Anthropic adapter and the endpoint handler live in
+`src/server`, served by `api/interpret.ts` on Vercel and by a Vite
+middleware in development. Details in `docs/INTERPRETER.md`.
 
 ### Execution
 `src/workers/experiment.worker.ts` drives the generator and yields to the
@@ -186,15 +197,18 @@ Adding the spatial domain exposed what was and was not tied to the planar
 truss. Generalised: the solver and the response model (now cores over the
 spatial dimension), the utilisation helper (typed on members' areas rather
 than the planar model). Unchanged and reused as is: optimisers, runner,
-datasets and surrogates (the hybrid predictor keys on the response ids
-`memberForces_N` / `nodeDisplacements_m`, which the spatial domain shares),
-study registry, robustness, uncertainty taxonomy, autonomous lab,
-Benchmarks page, lab and experiment stores. Domain-specific by nature:
-template, design space, renderer (`pages/workspace/truss3d/`), specification
-form branch, interpreter routing. Still accidental: the hybrid predictor's
-displacement response id is a string literal rather than a response-model
-field, and the learning panels keep per-domain label maps; both are listed
-as follow-ups rather than refactored now.
+datasets and surrogates, study registry, robustness, uncertainty taxonomy,
+autonomous lab, Benchmarks page, lab and experiment stores.
+Domain-specific by nature: template, design space, renderer
+(`pages/workspace/truss3d/`), specification form branch, interpreter
+routing. Two accidental couplings were found and removed at the start of
+v1.4: the hybrid predictor keyed on the string literals `memberForces_N` and
+`nodeDisplacements_m`, and the learning panels held per-domain label maps.
+Each `ResponseModel` now declares `primaryResponseId` and an optional
+`displacementResponseId`, and each `CompiledProblem` may carry a
+`DomainPresentation` (learning targets, component labels, response-learning
+copy and representations); a fixture generated before the change proves the
+member studies bit-identical afterwards.
 
 ### UI
 `src/pages/workspace/` — `useWorkspace` (state), `SpecPanel`, `Viewport`

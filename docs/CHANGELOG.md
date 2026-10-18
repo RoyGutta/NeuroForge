@@ -1,5 +1,48 @@
 # Changelog
 
+## Unreleased (v1.4.0 candidate) · Validated brief interpretation
+- Contract: every interpreter produces a `CandidateSpec` (fields with
+  provenance explicit, inferred, assumed or unknown; missing fields;
+  ambiguities; unsupported elements; conflicts); one shared `realizeSpec`
+  maps it onto the domain templates, records defaults as assumptions and
+  runs `checkSpec` plus the domain validator, which is authoritative.
+  Failures are typed: unsupported-domain, model-error, schema-error,
+  validation-failed, each with the stage that produced it.
+- Deterministic unit normalisation (`interpret/units.ts`): length, force,
+  mass, power, temperature (with offsets), angle; load as mass and payload
+  as force converted with standard gravity and noted; unknown units
+  rejected, never guessed.
+- Rule-based interpreter refactored onto the contract; a fixture generated
+  from the v1.3 sources proves it bit-identical on 68 briefs.
+- Model-backed interpreter `llm-v1`: versioned prompt and JSON schema,
+  provider-agnostic `LLMProvider`, hand-written schema validator, usage,
+  request id, latency and list-price cost in diagnostics. Hybrid
+  interpreter `hybrid-v1`: model reading cross-checked against the rules,
+  disagreements listed as conflicts instead of resolved silently.
+- Server: Anthropic adapter (structured output through
+  `output_config.format`, adaptive thinking, effort), transport-agnostic
+  endpoint handler (brief only, 4,000 characters, 20 calls per minute per
+  address, no logging), Vercel function `api/interpret`, Vite dev
+  middleware; the browser never holds a key and the endpoint reports itself
+  unconfigured without one.
+- Benchmark: dataset `benchmarks/interpreter/briefs-1.0.0.json` (58
+  public briefs, seven categories, four families, validated on load),
+  per-dimension scoring and a fifteen-category failure taxonomy,
+  `npm run interpreter:study`, the rule-based record
+  (`benchmarks/interpreter/results/2026-10-08-rule.json`: 79 % semantic
+  equivalence, 82 % field extraction, 0 % ambiguity handling, 60 %
+  unsupported-domain detection).
+- Interface: interpreter selector with the server's status and a privacy
+  note, interpretation section (fields with provenance and evidence,
+  assumptions, ambiguities, conflicts, validation issues, model
+  diagnostics), interpreter comparison table, Benchmarks page report.
+- Contracts cleanup (first step of v1.4): `ResponseModel.primaryResponseId`
+  and `displacementResponseId` replace response-id string literals in the
+  hybrid predictor, member-surrogate optimiser and member study;
+  `DomainPresentation` on compiled problems replaces the per-domain label
+  maps in the learning panels; fixture-verified bit-identical.
+- `problem.provenance` may carry `model` and `promptVersion`.
+
 ## 1.3.0 — 2026-10-08 · Spatial truss and a Three.js engineering viewport
 - Dimension-generic direct-stiffness core (`truss/feaCore.ts`) and response
   model core (`truss/responseModelCore.ts`); the planar solver and response

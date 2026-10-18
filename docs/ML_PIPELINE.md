@@ -92,6 +92,15 @@ metric is regressed.
   run. Measured effect: `docs/BENCHMARKS.md`, `docs/RESEARCH.md`.
 - Bayesian optimisation: GPs drive constrained expected improvement.
 
+## Language-model interpretation (v1.4)
+The only language model in the system reads briefs; it never produces an
+engineering quantity. Its output is a schema-constrained reading (numbers
+and units as written, provenance, quotes, missing fields, ambiguities) that
+deterministic code normalises, realises through the domain templates and
+validates. The rule-based interpreter is the frozen reference; a 58-brief
+benchmark scores every interpreter per dimension with a failure taxonomy.
+See `docs/INTERPRETER.md`.
+
 ## Rules
 1. A surrogate never produces a recorded result; only the solver does.
 2. Every model reports held-out metrics before it is shown or used.
