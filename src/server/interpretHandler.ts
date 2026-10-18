@@ -7,11 +7,11 @@
  * (schema check, normalisation, realisation, validation) runs wherever the
  * result is consumed, so the browser validates what the server returns.
  */
-import { generatorFromProvider } from "../engine/interpret/llm/llmInterpreter";
-import { PROMPT_VERSION } from "../engine/interpret/llm/prompt";
-import { LLMProviderError, type LLMProvider, type ProviderErrorKind } from "../engine/interpret/llm/provider";
-import { LLM_SCHEMA_VERSION } from "../engine/interpret/llm/schema";
-import { SPEC_SCHEMA_VERSION } from "../engine/interpret/spec";
+import { generatorFromProvider } from "../engine/interpret/llm/generator.js";
+import { PROMPT_VERSION } from "../engine/interpret/llm/prompt.js";
+import { LLMProviderError, type LLMProvider, type ProviderErrorKind } from "../engine/interpret/llm/provider.js";
+import { LLM_SCHEMA_VERSION } from "../engine/interpret/llm/schema.js";
+import { SPEC_SCHEMA_VERSION } from "../engine/interpret/spec.js";
 
 export interface HandlerRequest {
   method: string;

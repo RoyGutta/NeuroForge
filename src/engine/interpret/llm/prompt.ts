@@ -5,7 +5,7 @@
  * invention, and asks for a verbatim quote behind every value.
  */
 import type { StructuredRequest } from "./provider";
-import { LLM_OUTPUT_SCHEMA } from "./schema";
+import { LLM_OUTPUT_SCHEMA } from "./schema.js";
 
 export const PROMPT_VERSION = "1.0.0";
 export const DEFAULT_MAX_TOKENS = 4096;

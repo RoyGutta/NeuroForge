@@ -4,9 +4,9 @@
  * and the Vercel function.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createAnthropicProvider } from "./anthropicProvider";
-import { configFromEnv } from "./config";
-import { createInterpretHandler } from "./interpretHandler";
+import { createAnthropicProvider } from "./anthropicProvider.js";
+import { configFromEnv } from "./config.js";
+import { createInterpretHandler } from "./interpretHandler.js";
 
 let cached: ReturnType<typeof createInterpretHandler> | null = null;
 

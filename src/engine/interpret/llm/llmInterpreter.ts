@@ -10,26 +10,12 @@ import { realizeSpec } from "../realize";
 import { SPEC_SCHEMA_VERSION } from "../spec";
 import type { InterpretDiagnostics, InterpretResult, ProblemInterpreter } from "../types";
 import { candidateFromLLMOutput } from "./candidate";
-import { buildInterpreterRequest, PROMPT_VERSION } from "./prompt";
-import { estimateCostUsd, LLMProviderError, type LLMProvider, type StructuredRequest, type StructuredResponse } from "./provider";
+import type { BriefGenerator } from "./generator";
+import { PROMPT_VERSION } from "./prompt";
+import { estimateCostUsd, LLMProviderError, type StructuredResponse } from "./provider";
 import { LLM_SCHEMA_VERSION, parseLLMOutput } from "./schema";
 
-/** Something that turns a brief into a structured model response: a provider behind the prompt, or a remote endpoint. */
-export interface BriefGenerator {
-  id: string;
-  model: string;
-  effort?: string;
-  generate(brief: string): Promise<StructuredResponse>;
-}
-
-export function generatorFromProvider(provider: LLMProvider, opts: { effort?: StructuredRequest["effort"]; maxTokens?: number; timeoutMs?: number } = {}): BriefGenerator {
-  return {
-    id: provider.id,
-    model: provider.model,
-    effort: opts.effort,
-    generate: (brief) => provider.generateStructured(buildInterpreterRequest(brief, opts)),
-  };
-}
+export { generatorFromProvider, type BriefGenerator } from "./generator";
 
 export const LLM_INTERPRETER_ID = "llm-v1";
 

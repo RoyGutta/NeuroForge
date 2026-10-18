@@ -5,7 +5,7 @@
  * rule-based interpreter. See docs/INTERPRETER.md.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { serveNode } from "../src/server/node";
+import { serveNode } from "../src/server/node.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   await serveNode(req, res, req.body);

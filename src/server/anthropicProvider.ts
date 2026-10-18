@@ -6,7 +6,7 @@
  * token usage, request id, stop reason and latency for every call.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { LLMProviderError, type LLMProvider, type StructuredRequest, type StructuredResponse } from "../engine/interpret/llm/provider";
+import { LLMProviderError, type LLMProvider, type StructuredRequest, type StructuredResponse } from "../engine/interpret/llm/provider.js";
 
 /** The subset of the SDK client the adapter uses; injectable for tests. */
 export interface MessagesClient {
