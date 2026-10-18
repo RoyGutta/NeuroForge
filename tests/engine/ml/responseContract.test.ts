@@ -10,6 +10,33 @@ import { runMemberStudy } from "../../../src/engine/ml/study";
 import { Rng } from "../../../src/engine/core/rng";
 import { memberStudyReference } from "../../fixtures/memberStudyReference";
 
+/**
+ * The fixture was generated before the refactor and matched bit for bit on the
+ * generating machine. Across Node versions and platforms the learned models
+ * differ in the last few ulps (about 1e-11 relative), so the cross-platform
+ * check uses a relative tolerance far below any behavioural change.
+ */
+function expectClose(actual: unknown, expected: unknown, path: string): void {
+  if (typeof expected === "number" && typeof actual === "number") {
+    if (Number.isNaN(expected)) return expect(Number.isNaN(actual), path).toBe(true);
+    const tol = 1e-9 * Math.max(1, Math.abs(expected));
+    expect(Math.abs(actual - expected), `${path}: ${actual} vs ${expected}`).toBeLessThanOrEqual(tol);
+    return;
+  }
+  if (Array.isArray(expected)) {
+    expect(Array.isArray(actual), path).toBe(true);
+    expect((actual as unknown[]).length, path).toBe(expected.length);
+    expected.forEach((e, i) => expectClose((actual as unknown[])[i], e, `${path}[${i}]`));
+    return;
+  }
+  if (expected && typeof expected === "object") {
+    expect(Object.keys(actual as object).sort(), path).toEqual(Object.keys(expected).sort());
+    for (const k of Object.keys(expected)) expectClose((actual as Record<string, unknown>)[k], (expected as Record<string, unknown>)[k], `${path}.${k}`);
+    return;
+  }
+  expect(actual, path).toEqual(expected);
+}
+
 const truss = compileProblem(createTrussBridgeProblem({ span_m: 2, load_N: 500, panels: 4 }));
 const space = compileProblem(createSpaceTrussProblem({ span_m: 3, load_N: 2000, bays: 2 }));
 const arm = compileProblem(createManipulatorProblem({ payload_kg: 2, reach_m: 0.8 }));
@@ -46,10 +73,10 @@ describe("response-id contract replaces string literals", () => {
       runExperimentToCompletion(cfg);
       const s = runMemberStudy(cfg, { memberModel: "ridge", riskK: 2, representation: rep, splitSeed: 3, maxTrainingPoints: 400 });
       expect(s.representation).toBe(fx[name].representation);
-      expect(s.forces.overallR2).toBe(fx[name].forcesR2);
-      expect(s.feasibility.precision).toBe(fx[name].precision);
-      expect(s.forces.perMemberMae).toEqual(fx[name].perMemberMae);
-      expect(s.derivedMetrics).toEqual(fx[name].derived);
+      expectClose(s.forces.overallR2, fx[name].forcesR2, `${name} forcesR2`);
+      expectClose(s.feasibility.precision, fx[name].precision, `${name} precision`);
+      expectClose(s.forces.perMemberMae, fx[name].perMemberMae, `${name} perMemberMae`);
+      expectClose(s.derivedMetrics, fx[name].derived, `${name} derived`);
     }
   });
 });
