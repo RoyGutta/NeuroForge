@@ -3,16 +3,37 @@ import type { EntryScore, InterpreterMetrics } from "../../engine/interpret/benc
 import type { CandidateSpec, InterpretDiagnostics } from "../../engine/interpret";
 import { normalizeReport, type NormalizedReport } from "./model";
 
-/** Benchmark records committed under benchmarks/results, bundled at build time. */
-const files = import.meta.glob("../../../benchmarks/results/*.json", { eager: true, import: "default" }) as Record<string, unknown>;
+/**
+ * Benchmark records committed under benchmarks/results. Each record is its own
+ * chunk, loaded when it is selected: study records reach several megabytes,
+ * and bundling all of them made every visit download every record.
+ */
+const files = import.meta.glob("../../../benchmarks/results/*.json", { import: "default" }) as Record<string, () => Promise<unknown>>;
 
-/** Analysis records (e.g. the robustness estimator) are derived from studies and are not rendered as reports. */
+/** Analyses written by scripts (robustness estimator, margin analysis) sit beside the records but are not reports. */
+export const ANALYSIS_FILE = /-(estimator|margins)-\d{4}-\d{2}-\d{2}\.json$/;
+
+/** Loaded analysis records are skipped as well, whatever their name. */
 const isReport = (raw: unknown) => (raw as { kind?: string } | null)?.kind !== "analysis";
 
-export const REPORTS: NormalizedReport[] = Object.entries(files)
-  .filter(([, raw]) => isReport(raw))
-  .map(([path, raw]) => normalizeReport(path.split("/").pop() ?? path, raw))
-  .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export interface ReportEntry {
+  file: string;
+  /** First date in the file name; records are listed newest first. */
+  date: string;
+  load(): Promise<NormalizedReport | null>;
+}
+
+export function reportEntries(glob: Record<string, () => Promise<unknown>>): ReportEntry[] {
+  return Object.entries(glob)
+    .map(([path, load]) => {
+      const file = path.split("/").pop() ?? path;
+      return { file, date: file.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? "", load: async () => { const raw = await load(); return isReport(raw) ? normalizeReport(file, raw) : null; } };
+    })
+    .filter((e) => !ANALYSIS_FILE.test(e.file))
+    .sort((a, b) => b.date.localeCompare(a.date) || a.file.localeCompare(b.file));
+}
+
+export const REPORT_ENTRIES: ReportEntry[] = reportEntries(files);
 
 /** Interpreter benchmark records (`benchmarks/interpreter/results/*.json`) and the dataset they score. */
 export interface InterpreterRecord {

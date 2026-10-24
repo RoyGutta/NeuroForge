@@ -1,0 +1,267 @@
+{
+  "id": "margin-sweep-manipulator-isolated",
+  "title": "Stage A: how much margin does each manipulator constraint need on its own under +/- 2 % tolerance?",
+  "hypothesis": "Pre-registered 2026-10-24 before any run. Criterion: a margin meets the robustness criterion for a constraint when, for every one of the 10 seeds, the 95 % Wilson upper bound of that constraint's failure rate over 1,000 independent +/- 2 % uniform perturbations of the run's best design is at most 5 %. Predictions: reach is guaranteed (not just sampled) from a 2 % reach margin, because the shortest perturbed chain is 0.98 (L1 + L2); the sampled threshold may be lower because the joint corner is rare. Tip deflection scales roughly as L^3 / r^4, so a box guarantee would need about 13-14 %, and the sampled threshold is expected well below that. Each sweep tightens only its own constraint (margin 0 elsewhere), so the other constraint is expected to keep failing; overall robustness is assessed in stage B. Same optimiser, budget and seeds as robust-formulations-manipulator, so nominal, uniform-3 and uniform-7 should reproduce that study's designs exactly.",
+  "benchmark": {
+    "problem": "planar-manipulator",
+    "payload_kg": 2,
+    "reach_m": 0.8,
+    "safetyFactor": 2
+  },
+  "budget": 6500,
+  "budgetUnit": "solverCalls",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reference": "nominal",
+  "methods": [
+    {
+      "id": "nominal",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "margin-0",
+      "margin": 0,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "uniform-3",
+      "margin": 0.03,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "uniform-7",
+      "margin": 0.07,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-0.5",
+      "margin": 0,
+      "margins": {
+        "reach": 0.005
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-1",
+      "margin": 0,
+      "margins": {
+        "reach": 0.01
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-1.5",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-2",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-2.5",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-3",
+      "margin": 0,
+      "margins": {
+        "reach": 0.03
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "reach-4",
+      "margin": 0,
+      "margins": {
+        "reach": 0.04
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-1",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.01
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-2",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.02
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-3",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.03
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-4",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.04
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-5",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.05
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-6",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.06
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-7",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.07
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-8",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.08
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-10",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.1
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-12",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.12
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "deflection-14",
+      "margin": 0,
+      "margins": {
+        "deflection": 0.14
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    }
+  ],
+  "metrics": [
+    "bestObjective",
+    "robustFeasibleFraction",
+    "solverCalls"
+  ],
+  "targetFraction": 0.97,
+  "robustCheck": {
+    "tolerance": 0.02,
+    "samples": 1000
+  }
+}

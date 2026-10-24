@@ -107,10 +107,19 @@ Be explicit about these when presenting results.
 - Reach is constrained through the worst task point's distance ratio; the
   arm's own joint limits, self-collision and obstacles are not modelled, so
   "reachable" means geometrically reachable by a two-link chain.
-- A uniform margin tightens every constraint by the same fraction; the
-  7 % margin that made the manipulator robust at ±2 % tolerance was chosen
-  before the experiment, not tuned, and smaller margins (3 %) were not
-  enough on any seed.
+- Margin thresholds (reach 2 %, deflection 7 to 8 %, uniform 8 %) hold for
+  this arm (2 kg, 0.8 m, SF 2), this optimiser budget, ±2 % independent
+  uniform tolerance on all four variables, and a 5 % failure criterion over
+  10 seeds. They are measured, not general rules; other tolerances,
+  distributions or task sets need their own sweep.
+- Only reach has a guarantee (an analytic bound). Deflection robustness is
+  a sampled estimate with a Wilson bound; the box-corner check is evidence,
+  not proof, because monotonicity of the deflection in every variable is not
+  established. No result is "100 % robust" beyond the sample.
+- The deflection threshold is 7 or 8 % depending on the check size (10,000
+  or 1,000 perturbations); the data do not resolve it more finely.
+  Neighbouring margins differ in cost by less than the optimiser's
+  seed-to-seed noise (about 0.15 %).
 
 ## Software
 - Experiments persist in the browser's localStorage only.

@@ -5,12 +5,12 @@ import { compileProblem } from "../engine/domains/registry";
 import type { ExperimentRecord } from "../engine/experiments/experiment";
 import { createExperimentConfig } from "../engine/experiments/runner";
 import { studyProblem } from "../engine/experiments/study";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Footer } from "../components/Footer";
 import { NavBar } from "../components/NavBar";
 import { usePageMeta } from "../hooks/usePageMeta";
 import css from "../styles/benchmarks.css?inline";
-import { REPORTS } from "./benchmarks/loadReports";
+import { REPORT_ENTRIES } from "./benchmarks/loadReports";
 import { InterpreterReport } from "./benchmarks/InterpreterReport";
 import { aggregateCurves, evaluationGrid, type NormalizedGroup, type NormalizedReport } from "./benchmarks/model";
 
@@ -19,7 +19,17 @@ const COLORS = ["#79f2c0", "#7c8cff", "#f2d279", "#f28b79", "#c0e584", "#dfa75b"
 export function BenchmarksPage() {
   usePageMeta("Benchmarks — NeuroForge", "Measured comparisons of NeuroForge's optimisers at equal solver budget across seeds, from committed benchmark records.");
   const [fileIdx, setFileIdx] = useState(0);
-  const report: NormalizedReport | undefined = REPORTS[fileIdx];
+  /** undefined while the selected record loads, null when it cannot be read. */
+  const [report, setReport] = useState<NormalizedReport | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    const entry = REPORT_ENTRIES[fileIdx];
+    setReport(entry ? undefined : null);
+    entry?.load().then((r) => alive && setReport(r), () => alive && setReport(null));
+    return () => {
+      alive = false;
+    };
+  }, [fileIdx]);
   const [selected, setSelected] = useState<{ group: number; seed: number } | null>(null);
 
   return (
@@ -40,11 +50,11 @@ export function BenchmarksPage() {
                 interquartile ranges across seeds. Nothing is generated in the browser.
               </p>
             </div>
-            {REPORTS.length > 1 && (
+            {REPORT_ENTRIES.length > 1 && (
               <label className="picker">
                 Record
                 <select value={fileIdx} onChange={(e) => (setFileIdx(Number(e.target.value)), setSelected(null))}>
-                  {REPORTS.map((r, i) => (
+                  {REPORT_ENTRIES.map((r, i) => (
                     <option key={r.file} value={i}>
                       {r.file}
                     </option>
@@ -53,8 +63,12 @@ export function BenchmarksPage() {
               </label>
             )}
           </section>
-          {!report ? (
+          {REPORT_ENTRIES.length === 0 ? (
             <p className="fine">No benchmark records are committed yet.</p>
+          ) : report === undefined ? (
+            <p className="fine">Loading {REPORT_ENTRIES[fileIdx]?.file}.</p>
+          ) : report === null ? (
+            <p className="fine">This record could not be read as a benchmark report.</p>
           ) : (
             <>
               {report.kind === "study" && (

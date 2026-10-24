@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased (v1.4.0 candidate) · Minimum effective robustness margins
+- Registered studies `margin-sweep-manipulator-isolated` (220 runs) and
+  `margin-sweep-manipulator-joint` (260 runs), records in
+  `benchmarks/results/`. Findings: reach 2 % (guaranteed), deflection 8 %
+  alone, jointly reach 2 % with deflection 7 to 8 % at +0.58 to +0.63 %
+  torque; uniform needs 8 % at +1.93 %; failure rates add across
+  constraints (`docs/BENCHMARKS.md`).
+- `src/engine/robustness/marginAnalysis.ts` (tested): Wilson score
+  interval, box-corner check, per-method margin analysis against a fixed
+  criterion with paired cost, isolated-threshold search with a
+  monotonicity flag. `reachUtilizationBound` (tested): analytic worst-case
+  reach under a relative tolerance.
+- `npm run margins:analyze`: per-run failure counts, intervals, reach
+  guarantee, corner check, independence prediction, optional confirmation
+  with fresh perturbations (`--confirm all --confirm-samples 10000`);
+  writes a `kind: "analysis"` record.
+- Benchmarks page loads records on demand (page chunk 11.5 MB to 120 KB).
+- No engine change: the engine version stays 1.4.0-dev.1.
+
 ## Unreleased (v1.4.0 candidate) · Continuous reach constraint and a publication guard
 - Manipulator: new metric `reachUtilization` = max over task points of
   max(d / (L1 + L2), |L1 − L2| / d); the reach constraint is now

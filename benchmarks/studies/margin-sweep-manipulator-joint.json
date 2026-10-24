@@ -1,0 +1,320 @@
+{
+  "id": "margin-sweep-manipulator-joint",
+  "title": "Stage B: the smallest joint reach and deflection margins that make the manipulator robust under +/- 2 % tolerance",
+  "hypothesis": "Designed 2026-10-24 after stage A (margin-sweep-manipulator-isolated), with the same pre-registered criterion: every one of the 10 seeds' best designs must have a 95 % Wilson upper bound of at most 5 % on the failure rate over 1,000 independent +/- 2 % uniform perturbations, here for overall failure (any constraint). Stage A found the isolated thresholds reach 2 % (analytically guaranteed) and deflection 8 % (sampled only; box corners fail below 12 %), and that a reach margin alone raises deflection failures from 32 % to about 50 % by lengthening the links. Hypotheses: (1) the joint threshold is reach 2 % with deflection 8 %, if the deflection margin absorbs the longer links; otherwise the interaction raises the required deflection margin. (2) A uniform margin needs about 8-10 % on every constraint and costs more than the targeted pair. (3) CMA-ES reaches the same conclusion at the candidate joint points. Stress is not margined; it never failed in stage A.",
+  "benchmark": {
+    "problem": "planar-manipulator",
+    "payload_kg": 2,
+    "reach_m": 0.8,
+    "safetyFactor": 2
+  },
+  "budget": 6500,
+  "budgetUnit": "solverCalls",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reference": "nominal",
+  "methods": [
+    {
+      "id": "nominal",
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d6",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.06
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d7",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.07
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d8",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.08
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d9",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.09
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d10",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.1
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r1.5-d12",
+      "margin": 0,
+      "margins": {
+        "reach": 0.015,
+        "deflection": 0.12
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d6",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.06
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d7",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.07
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d8",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.08
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d9",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.09
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d10",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.1
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2-d12",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.12
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d6",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.06
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d7",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.07
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d8",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.08
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d9",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.09
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d10",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.1
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "joint-r2.5-d12",
+      "margin": 0,
+      "margins": {
+        "reach": 0.025,
+        "deflection": 0.12
+      },
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "uniform-8",
+      "margin": 0.08,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "uniform-9",
+      "margin": 0.09,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "uniform-10",
+      "margin": 0.1,
+      "optimizer": "evolutionary",
+      "params": {
+        "populationSize": 30
+      }
+    },
+    {
+      "id": "cmaes-nominal",
+      "optimizer": "cmaes",
+      "params": {}
+    },
+    {
+      "id": "cmaes-joint-r2-d8",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.08
+      },
+      "optimizer": "cmaes",
+      "params": {}
+    },
+    {
+      "id": "cmaes-joint-r2-d9",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.09
+      },
+      "optimizer": "cmaes",
+      "params": {}
+    },
+    {
+      "id": "cmaes-joint-r2-d10",
+      "margin": 0,
+      "margins": {
+        "reach": 0.02,
+        "deflection": 0.1
+      },
+      "optimizer": "cmaes",
+      "params": {}
+    }
+  ],
+  "metrics": [
+    "bestObjective",
+    "robustFeasibleFraction",
+    "solverCalls"
+  ],
+  "targetFraction": 0.97,
+  "robustCheck": {
+    "tolerance": 0.02,
+    "samples": 1000
+  }
+}

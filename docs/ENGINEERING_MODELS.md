@@ -110,6 +110,23 @@ Before the change a margin scaled the zero limit to zero and left reach
 untouched; the robustness study measured the consequence (below and in
 `docs/BENCHMARKS.md`).
 
+Worst case under a relative tolerance `t` on the link lengths
+(`reachUtilizationBound`):
+
+```
+u_box ≤ max over k of max( d_k / ((1 − t)(L1 + L2)),  (|L1 − L2| + t (L1 + L2)) / d_k )
+```
+
+The outer term is exact (the shortest chain is (1 − t)(L1 + L2)); the inner
+term bounds |L1' − L2'|. Clamping to the variable bounds keeps every value in
+the same box. So a reach margin m with 1 − m ≤ 1 − t, that is m ≥ t,
+guarantees reach for every perturbation when the outer boundary governs,
+which the margin study confirmed on every design (2 % margin at ±2 %). Tip
+deflection has no such bound in the code: it scales roughly as L³ / r⁴, a
+first-order worst case of about +14 % for ±2 % on lengths and radii, and the
+study's box-corner check found failing corners up to a 10 % margin and none
+at 12 %.
+
 ### Static joint torques (`statics.ts`)
 Gravity only, holding still. With link masses `m1`, `m2` at mid-length and the
 payload `mp` at the tip (`g = 9.80665 m/s²`):

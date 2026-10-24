@@ -17,7 +17,8 @@
     "reproduce:lab": "vite-node scripts/reproduce-lab.ts",
     "robustness:estimator": "vite-node scripts/robustness-estimator.ts",
     "interpreter:study": "vite-node scripts/interpreter-study.ts",
-    "check:publication": "vite-node scripts/check-publication.ts"
+    "check:publication": "vite-node scripts/check-publication.ts",
+    "margins:analyze": "vite-node scripts/margin-analysis.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",

@@ -93,6 +93,8 @@ benchmarked, documented and verified live.
 - [x] M5 (v1.4, in progress) Validated interpreter pipeline: candidate specification with provenance, deterministic unit normalisation and realisation, model-backed and hybrid interpreters behind `ProblemInterpreter`, server-side provider adapter, 58-brief benchmark with per-dimension metrics and a failure taxonomy, interpretation workspace and comparison; rule-based reference measured (79 % semantic equivalence). Open: the model-backed and hybrid records (blocked on provider credit at the time of writing), the rule-versus-model research question Q21
 - [x] Continuous reach constraint for the manipulator (reach utilisation, same feasible set, margins act on it); both manipulator studies re-run (2026-10-24)
 - [x] Publication guard in CI over the tracked files (2026-10-24)
+- [x] Minimum effective margins per manipulator constraint, isolated and joint, with interval-based criterion and analysis tooling; Benchmarks page loads records on demand (2026-10-24)
+- [ ] Margin sweeps on the truss and heat sink with the same criterion; margins at other tolerances; a deflection worst-case bound
 - [ ] M6 Server-side job execution; the browser architecture stays functional
 
 ## Beyond v1.1

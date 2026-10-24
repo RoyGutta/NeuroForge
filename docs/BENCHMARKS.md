@@ -6,6 +6,115 @@ Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script. The interpreter benchmark at the
 end of this file is produced by `npm run interpreter:study`.
 
+## 2026-10-24 · engine 1.4.0-dev.1 · minimum effective margins on the manipulator, 480 runs
+
+Two registered studies, same problem, optimiser, budget and seeds as
+`robust-formulations-manipulator` (2 kg, 0.8 m, SF 2; evolutionary algorithm,
+population 30; 6,500 solver calls per run, 6,510 to 6,624 actually spent
+because the last generation overshoots; seeds 1 to 10), independent check of
+every run's best design with 1,000 uniform ±2 % perturbations of all four
+variables (common perturbation seeds across methods), then a confirmation
+of every design with 10,000 fresh perturbations (different seed).
+
+- `benchmarks/studies/margin-sweep-manipulator-isolated.json` (stage A, 22
+  methods, 220 runs): reach-only margins 0.5 to 4 %, deflection-only margins 1
+  to 14 %, plus nominal, margin 0, uniform 3 % and 7 %. Criterion and
+  predictions were written into the spec before it ran.
+- `benchmarks/studies/margin-sweep-manipulator-joint.json` (stage B, 26
+  methods, 260 runs): designed after stage A; reach 1.5, 2, 2.5 % crossed with
+  deflection 6 to 12 %, uniform 8 to 10 %, and CMA-ES at three joint points.
+- Analyses: `npm run margins:analyze -- <record> --confirm all --confirm-samples 10000`,
+  written to `*-margins-2026-10-24.json` beside each record.
+
+**Criterion** (pre-registered): a margin meets it for a constraint, or
+overall, when every one of the 10 seeds' designs has a 95 % Wilson upper bound
+of at most 5 % on the failure rate. The 10,000-sample confirmation was added
+after the 1,000-sample screen showed designs near the boundary passing or
+failing on the width of the interval alone; both sets of results are kept.
+
+Checks of the setup: margin 0 reproduces the nominal designs exactly;
+nominal, uniform 3 % and uniform 7 % reproduce the registered study's
+designs exactly (30 of 30); no run ended without a feasible design; stress
+never failed in any check of any design (0 of 1,000 and 0 of 10,000).
+
+Isolated margins (stage A). Failure of the margined constraint, confirmation
+n = 10,000:
+
+| Reach margin | Reach failure median / max | Seeds passing (screen, confirm) | Reach guaranteed | Cost |
+|---|---|---|---|---|
+| 0 % | 49.5 % / 50.6 % | 0, 0 | 0 of 10 | – |
+| 1.0 % | 12.6 % / 13.7 % | 0, 0 | 0 of 10 | +0.19 % |
+| 1.5 % | 3.0 % / 3.4 % | 9, 10 | 0 of 10 | +0.22 % |
+| 2.0 % | 0 / 0 | 10, 10 | 10 of 10 | +0.33 % |
+| 4.0 % | 0 / 0 | 10, 10 | 10 of 10 | +0.72 % |
+
+| Deflection margin | Deflection failure median / max | Seeds passing (screen, confirm) | Seeds with a failing box corner | Cost |
+|---|---|---|---|---|
+| 0 % | 32.3 % / 33.7 % | 0, 0 | 10 | – |
+| 5 % | 8.7 % / 13.5 % | 0, 1 | 10 | +0.51 % |
+| 6 % | 4.8 % / 9.3 % | 0, 3 | 10 | +0.40 % |
+| 7 % | 2.5 % / 5.9 % | 8, 8 | 10 | +0.42 % |
+| 8 % | 1.0 % / 2.3 % | 10, 10 | 10 | +0.33 % |
+| 10 % | 0.03 % / 0.10 % | 10, 10 | 10 | +0.65 % |
+| 12 % | 0 / 0 | 10, 10 | 0 | +0.68 % |
+
+A reach margin alone raises deflection failures from 32 % to about 50 % (the
+links lengthen), and a deflection margin alone leaves reach failing in 50 %
+of perturbations; neither isolated margin gives a robust arm.
+
+Joint margins (stage B), overall failure (any constraint):
+
+| Margins (reach / deflection) | Optimiser | Overall failure median / max (n = 10,000) | Seeds passing (screen, confirm) | Cost |
+|---|---|---|---|---|
+| 2 / 6 % | EA | 5.7 % / 7.7 % | 0, 1 | +0.57 % |
+| **2 / 7 %** | EA | 2.4 % / 3.4 % | 9, **10** | **+0.58 %** |
+| **2 / 8 %** | EA | 1.0 % / 2.2 % | **10**, 10 | +0.63 % |
+| 2 / 8 % | CMA-ES | 0.8 % / 0.9 % | 10, 10 | +0.55 % |
+| 2 / 10 % | EA | 0.03 % / 0.12 % | 10, 10 | +0.77 % |
+| 2 / 12 % | EA | 0 / 0 | 10, 10 | +1.23 % |
+| 1.5 / 9 % | EA | 3.7 % / 6.1 % | 4, 8 | +0.99 % |
+| 1.5 / 10 % | EA | 3.1 % / 4.3 % | 7, 10 | +1.08 % |
+| 2.5 / 8 % | EA | 0.8 % / 1.8 % | 10, 10 | +0.80 % |
+| uniform 7 % | EA | 2.9 % / 5.0 % | 5, 7 | +1.58 % |
+| uniform 8 % | EA | 0.9 % / 1.8 % | 10, 10 | +1.93 % |
+| uniform 10 % | EA | 0.03 % / 0.51 % | 10, 10 | +2.52 % |
+
+Cost is the median over seeds of the paired change in peak torque against
+the nominal run with the same seed (nominal median 16.971 N m). Differences
+below about 0.15 % between neighbouring settings are within the optimiser's
+seed-to-seed noise (a 2 % deflection margin came out cheaper than 1 %).
+
+Reading.
+- **Reach** needs 2 % to be guaranteed: the analytic bound
+  max(d / ((1 − t)(L1 + L2)), (|L1 − L2| + t(L1 + L2)) / d) is at most 1 on
+  every seed's design from a 2 % margin, exactly the pre-registered
+  prediction. 1.5 % passes the sampled criterion (3 % failures) but is not
+  guaranteed.
+- **Tip deflection** needs 8 % on its own on every seed (7 % fails on 2 of
+  10 seeds at up to 5.9 % failure). No design is free of failing box
+  corners below 12 %; the 12 % designs pass all 16 corners, which is
+  evidence rather than proof because monotonicity of the deflection in
+  every variable is not established.
+- **Jointly**, the cheapest setting meeting the criterion is reach 2 % with
+  deflection 7 % (+0.58 % torque, worst seed 3.4 % failure); 2 % with 8 % is
+  the smallest that also passes the 1,000-sample screen on every seed
+  (+0.63 %). CMA-ES agrees. The deflection threshold is 7 to 8 % depending on
+  the check size; the evidence does not separate them more finely.
+- **Interaction.** Failure rates add: reach fails when the links shorten,
+  deflection when they lengthen, so the two rarely fail together (nominal
+  design: 81 % overall against 65 % predicted by independence). Meeting 5 %
+  per constraint is therefore not enough overall: reach 1.5 % with
+  deflection 9 % meets the per-constraint criterion yet fails overall on 2
+  of 10 seeds. The cheaper route is to drive the cheap constraint (reach) to
+  zero and give the failure budget to the expensive one.
+- **Uniform margins** need 8 % and cost +1.93 %, about three times the
+  targeted pair, because 8 % on reach lengthens the links far beyond what
+  reach needs.
+- **Correction to earlier records.** The 2026-10-24 robustness-formulation
+  record reported the 7 % uniform margin as "10 of 10 seeds at least 95 %
+  robust", a point estimate on 300 samples. Under this study's criterion it
+  passes on 5 of 10 seeds at 1,000 samples and 7 of 10 at 10,000.
+
 ## 2026-10-24 · engine 1.4.0-dev.1 · robustness formulations on the manipulator with a continuous reach constraint, 10 seeds
 
 Same registered study as 2026-10-05 (`benchmarks/studies/robust-formulations-manipulator.json`,

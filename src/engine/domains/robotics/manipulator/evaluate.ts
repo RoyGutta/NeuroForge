@@ -42,6 +42,27 @@ export function reachUtilization(L1: number, L2: number, points: TaskPoint[]): n
   return u;
 }
 
+/**
+ * Upper bound on reach utilisation when each link length is perturbed by a
+ * relative amount in [-t, +t] (independently, as in the robustness study).
+ * The outer term is exact: the shortest chain is (1 - t)(L1 + L2). The inner
+ * term uses |L1' - L2'| <= |L1 - L2| + t (L1 + L2). Clamping to the variable
+ * bounds keeps every value inside the same box, so the bound still holds.
+ * A bound <= 1 is a guarantee that every task point stays reachable for every
+ * such perturbation, not a sampled estimate.
+ */
+export function reachUtilizationBound(L1: number, L2: number, points: TaskPoint[], t: number): number {
+  if (t === 0) return reachUtilization(L1, L2, points);
+  let u = 0;
+  const outer = (1 - t) * (L1 + L2);
+  const inner = Math.abs(L1 - L2) + t * (L1 + L2);
+  for (const p of points) {
+    const r = Math.hypot(p.x_m, p.y_m);
+    u = Math.max(u, r / outer, r > 0 ? inner / r : Infinity);
+  }
+  return u;
+}
+
 export interface ArmDesign {
   L1_m: number;
   L2_m: number;

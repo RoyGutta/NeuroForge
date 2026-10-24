@@ -2,6 +2,30 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-24 — Targeted per-constraint margins, sized against a joint failure budget
+**Decision.** For the manipulator under ±2 % tolerance the recommended
+margins are reach 2 % (guaranteed) and tip deflection 8 % (7 % meets the
+criterion with the 10,000-sample check but not on every seed with 1,000),
+stress none, instead of a uniform margin. Margins are judged by a fixed
+criterion: every seed's 95 % Wilson upper bound on the failure rate at most
+5 %, overall rather than per constraint. **Why.** Measured over 480 runs:
+the targeted pair costs +0.58 to +0.63 % torque, the cheapest passing
+uniform margin (8 %) +1.93 %, because it applies four times the reach
+margin that reach needs. Failure rates of reach and deflection add
+(they fail in different perturbations), so a per-constraint criterion does
+not imply the joint one; reach 1.5 % with deflection 9 % passes each alone
+and fails overall. **Consequences.** Robustness claims carry their sample
+size and interval; a guarantee is stated only where an analytic bound
+exists (reach). The analysis tooling (`npm run margins:analyze`) reports
+both. The earlier "10 of 10 robust" reading of the uniform 7 % margin was a
+300-sample point estimate and is corrected in `docs/BENCHMARKS.md`.
+
+## 2026-10-24 — Load benchmark records on demand
+**Decision.** The Benchmarks page lists records by file name and loads the
+selected one as its own chunk. **Why.** The two margin-sweep records (4 to
+5 MB each) doubled the eagerly bundled page chunk to 11.5 MB; it is now
+120 KB and each record downloads when selected.
+
 ## 2026-10-24 — Constrain reach by a continuous utilisation, not a count
 **Decision.** The manipulator's reach constraint is `reachUtilization <= 1`,
 the worst ratio of task-point distance to the outer (L1 + L2) or inner
