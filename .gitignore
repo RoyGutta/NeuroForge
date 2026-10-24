@@ -54,3 +54,11 @@ CLAUDE.md
 *.agent.md
 scratchpad/
 .claude-flow/
+.swarm/
+ruvector.db
+*.db-shm
+*.db-wal
+.hive-mind/
+.roo/
+/memory/
+/coordination/
