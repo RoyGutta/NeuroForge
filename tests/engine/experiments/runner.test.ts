@@ -33,7 +33,7 @@ describe("experiment runner", () => {
     // Best-so-far objective is monotone non-increasing across generations.
     const bests = record.generations.map((g) => g.bestSoFar.evaluation!.objectives.mass);
     for (let i = 1; i < bests.length; i++) expect(bests[i]).toBeLessThanOrEqual(bests[i - 1]);
-    expect(record.engineVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(record.engineVersion).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/);
   });
 
   test("beats the conventional baseline on the truss problem", () => {

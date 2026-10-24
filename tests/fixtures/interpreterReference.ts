@@ -1,4 +1,4 @@
-/** Rule-based interpreter outputs captured before the v1.4 contract refactor (engine 1.3.0, generated from the committed v1.3 sources). Generated; do not edit. */
+/** Rule-based interpreter outputs from the v1.3 interpretation sources (commit a3126b1) run against the current domain templates (engine 1.4.0-dev.1: manipulator reach constraint on reach utilisation). Generated; do not edit. */
 export const interpreterReference = [
  {
   "brief": "Design a lightweight bridge spanning 2 meters that supports 500 N.",
@@ -4284,10 +4284,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -4498,10 +4498,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -4710,10 +4710,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -4923,10 +4923,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -5136,10 +5136,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -5350,10 +5350,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -5565,10 +5565,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -5780,10 +5780,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -5994,10 +5994,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -6208,10 +6208,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -6422,10 +6422,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -6636,10 +6636,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -10390,10 +10390,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {
@@ -10926,10 +10926,10 @@ export const interpreterReference = [
    "constraints": [
     {
      "id": "reach",
-     "metric": "unreachableFraction",
+     "metric": "reachUtilization",
      "op": "<=",
-     "limit": 0,
-     "label": "Every task point reachable",
+     "limit": 1,
+     "label": "Every task point reachable (reach utilisation <= 1)",
      "source": "user"
     },
     {

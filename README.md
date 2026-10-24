@@ -189,7 +189,9 @@ payload moments; each link is a hollow tube treated as an Euler-Bernoulli
 cantilever for root bending stress and tip deflection, with the tip slope of
 link 1 rotating link 2. Twelve task points across the working envelope are
 evaluated per design; the peak joint torque, bending-stress utilisation, tip
-deflection and the fraction of unreachable points are the metrics. The
+deflection, the fraction of unreachable points and a continuous reach
+utilisation (the constrained reach measure, so margins act on it) are the
+metrics. The
 derivations and their closed-form tests are in
 [docs/ENGINEERING_MODELS.md](docs/ENGINEERING_MODELS.md).
 
@@ -433,8 +435,10 @@ regression metrics, the ridge, MLP and Gaussian-process models against known
 functions (including interval calibration), the surrogate study, and the
 workspace form mapping.
 
-Continuous integration runs type-checking, tests, the production build, and
-the reproduction script on every push.
+Continuous integration runs a publication guard (`npm run check:publication`:
+no agent or tool state, local databases, environment files, key material or
+credential-shaped content may be tracked), type-checking, tests, the
+production build, and the reproduction script on every push.
 
 ## Roadmap
 

@@ -41,7 +41,7 @@ describe("study registry", () => {
     expect(cmp.varghaDelaneyA).toBeLessThanOrEqual(1);
     expect(Math.abs(cmp.cliffsDelta)).toBeLessThanOrEqual(1);
     expect(["large", "medium", "small", "negligible"]).toContain(cmp.effectLabel);
-    expect(analysis.engineVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(analysis.engineVersion).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/);
   });
 
   test("is deterministic in both runs and analysis", () => {

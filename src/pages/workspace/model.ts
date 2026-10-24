@@ -336,6 +336,7 @@ export function formatMetric(id: string, v: number | undefined): string {
     case "stressUtilization":
     case "bucklingUtilization":
     case "unreachableFraction":
+    case "reachUtilization":
       return `${formatNumber(v * 100, 0)} %`;
     case "robustFeasibleFraction":
       return `${formatNumber(v * 100, 1)} %`;

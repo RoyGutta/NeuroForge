@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased (v1.4.0 candidate) · Continuous reach constraint and a publication guard
+- Manipulator: new metric `reachUtilization` = max over task points of
+  max(d / (L1 + L2), |L1 − L2| / d); the reach constraint is now
+  `reachUtilization <= 1` instead of `unreachableFraction <= 0`. Same
+  feasible set (tested), but violations have a magnitude and constraint
+  margins act on reach. Derivable from either response. Engine version
+  1.4.0-dev.1 (manipulator numbers change; other domains do not).
+- Registered studies `robust-formulations-manipulator` and
+  `manipulator-optimizers` re-run at the new engine; new records beside the
+  old ones. Uniform 7 % margin: 0 of 10 seeds robust before, 10 of 10 after,
+  at +1.7 % peak torque (results in `docs/BENCHMARKS.md`).
+- Publication guard `scripts/publication.ts` (tested) runs first in CI over
+  `git ls-files`. Four agent-tool database files committed by mistake in
+  19c5a70 are no longer tracked (they remain in history).
+- Engine-version tests accept a semver pre-release suffix; the interpreter
+  fixture was regenerated from the v1.3 interpreter sources against the new
+  manipulator template, and the manipulator entry of the member-study
+  fixture at the new engine.
+
 ## Unreleased (v1.4.0 candidate) · Validated brief interpretation
 - Contract: every interpreter produces a `CandidateSpec` (fields with
   provenance explicit, inferred, assumed or unknown; missing fields;

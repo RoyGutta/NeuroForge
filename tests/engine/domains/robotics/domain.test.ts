@@ -15,7 +15,7 @@ describe("robotics domain: planar manipulator", () => {
     expect(problem.geometry.kind).toBe("planar-manipulator");
     expect(validateProblem(problem)).toEqual([]);
     expect(problem.objectives[0].metric).toBe("peakTorque_Nm");
-    expect(problem.constraints.map((c) => c.metric)).toEqual(expect.arrayContaining(["unreachableFraction", "stressUtilization", "maxTipDeflection_m"]));
+    expect(problem.constraints.map((c) => c.metric)).toEqual(expect.arrayContaining(["reachUtilization", "stressUtilization", "maxTipDeflection_m"]));
     expect(problem.assumptions.map((a) => a.field)).toEqual(expect.arrayContaining(["taskPoints", "linkModel", "elbowChoice"]));
   });
 

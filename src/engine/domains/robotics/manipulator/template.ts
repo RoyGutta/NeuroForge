@@ -61,7 +61,7 @@ export function createManipulatorProblem(opts: ManipulatorOptions): EngineeringP
           ]
         : [{ id: "torque", metric: "peakTorque_Nm", direction: "minimize", label: "Peak torque" }];
   const constraints: ConstraintSpec[] = [
-    { id: "reach", metric: "unreachableFraction", op: "<=", limit: 0, label: "Every task point reachable", source: "user" },
+    { id: "reach", metric: "reachUtilization", op: "<=", limit: 1, label: "Every task point reachable (reach utilisation <= 1)", source: "user" },
     { id: "stress", metric: "stressUtilization", op: "<=", limit: 1, label: `Link bending stress x ${safetyFactor} <= yield strength`, source: "design-code" },
     { id: "deflection", metric: "maxTipDeflection_m", op: "<=", limit: deflectionLimit, label: `Tip deflection <= ${(deflectionLimit * 1000).toFixed(2)} mm`, source: opts.deflectionLimit_m === undefined ? "assumed" : "user" },
   ];

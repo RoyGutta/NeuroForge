@@ -2,6 +2,21 @@
 
 Short records of choices that shape the system. Newest first.
 
+## 2026-10-24 — Constrain reach by a continuous utilisation, not a count
+**Decision.** The manipulator's reach constraint is `reachUtilization <= 1`,
+the worst ratio of task-point distance to the outer (L1 + L2) or inner
+(|L1 − L2|) workspace radius, instead of `unreachableFraction <= 0`.
+**Why.** Both define the same feasible set, but the count is a step
+function with a zero limit: it gives the optimisers no measure of how far
+out of reach a design is, and a generic margin scales a zero limit to zero,
+which the 2026-10-05 robustness study showed (margins 50 % robust, reach
+violated in half the perturbations). A utilisation with limit 1 is the
+same shape as every other constraint in the platform. **Consequences.**
+Margins became geometric reach margins and the 7 % margin went from 0 to
+10 of 10 robust seeds at +1.7 % torque; the nominal optimum is unchanged.
+The engine version moved to 1.4.0-dev.1 and both manipulator studies were
+re-run; the old records stay as history. The count is still reported.
+
 ## 2026-10-08 — The language model reads; deterministic code decides
 **Decision.** A model-backed interpreter reports what a brief states, as a
 schema-constrained structure of numbers as written, units as written,

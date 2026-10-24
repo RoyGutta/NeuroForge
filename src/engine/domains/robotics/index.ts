@@ -36,10 +36,10 @@ function compile(problem: EngineeringProblem): CompiledProblem<ManipulatorArtifa
   const responseModel: ResponseModel = {
     responseIds: ["jointTorques_Nm", "tipDeflections_m"],
     primaryResponseId: "jointTorques_Nm",
-    derivableMetrics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction", "maxTipDeflection_m"],
+    derivableMetrics: ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction", "reachUtilization", "maxTipDeflection_m"],
     derivableFrom(id) {
-      if (id === "jointTorques_Nm") return ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction"];
-      if (id === "tipDeflections_m") return ["maxTipDeflection_m", "mass_kg", "unreachableFraction"];
+      if (id === "jointTorques_Nm") return ["peakTorque_Nm", "mass_kg", "stressUtilization", "unreachableFraction", "reachUtilization"];
+      if (id === "tipDeflections_m") return ["maxTipDeflection_m", "mass_kg", "unreachableFraction", "reachUtilization"];
       return [];
     },
     derive(params, responses) {

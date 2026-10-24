@@ -6,6 +6,76 @@ Reproduce with `npm run benchmark -- <seeds> <budget>`. Results are recorded
 here only when they come from that script. The interpreter benchmark at the
 end of this file is produced by `npm run interpreter:study`.
 
+## 2026-10-24 · engine 1.4.0-dev.1 · robustness formulations on the manipulator with a continuous reach constraint, 10 seeds
+
+Same registered study as 2026-10-05 (`benchmarks/studies/robust-formulations-manipulator.json`,
+unchanged: 2 kg, 0.8 m, SF 2, 6,500 solver calls, independent check 300
+perturbations at ±2 %), re-run after the reach constraint changed from
+`unreachableFraction <= 0` to `reachUtilization <= 1`. Record
+`benchmarks/results/robust-formulations-manipulator-2026-10-24.json`; the
+engine-1.1.0 record stays beside it.
+
+| Method | Median N m (before) | Median N m (now) | Robust median, before → now | Seeds ≥ 95 % robust, before → now | Reach violation median, before → now |
+|---|---|---|---|---|---|
+| nominal (EA) | 16.978 | 16.971 | 20 % → 20 % | 0 → 0 | 47 % → 47 % |
+| posthoc-95-strided | 17.156 | 17.181 | 99 % → 97 % (designs on 1 → 2 seeds) | 1 → 1 | 0 % → 0 % |
+| margin-3 | 17.015 | 17.070 | 35 % → 77 % | 0 → 0 | 48 % → 0 % |
+| margin-7 | 17.097 | 17.265 | 50 % → 97 % | 0 → **10** | 49 % → 0 % |
+| robust-k12-p95 | 17.334 | 17.176 | 100 % → 99 % | 9 → 9 | 0 % → 0 % |
+| cmaes-nominal | 16.950 | 16.950 | 18 % → 18 % | 0 → 0 | 49 % → 49 % |
+| cmaes-margin-7 | 16.997 | 17.219 | 50 % → 98 % | 0 → **10** | 49 % → 0 % |
+
+Reading. The nominal optima did not move (the feasible set is identical),
+so the nominal arm still sits on the reach boundary and fails it in half
+the perturbations. With reach measured continuously the uniform margin
+acts on it: the 7 % margin removes every reach violation and becomes robust
+on all ten seeds, under both the evolutionary algorithm and CMA-ES, for
+1.7 % (EA) and 1.6 % (CMA-ES) more peak torque than the nominal optimum,
+at one solver call per design. The residual failures are tip deflection
+(4 % and 2 % median violation). A 3 % margin is not enough: reach is fixed
+but deflection is still violated in 24 % of perturbations. The copy-based
+constraint stays robust on 9 of 10 seeds and is now cheaper than before
+(17.176 against 17.334 N m), because its search also gets a graded reach
+violation. Post-hoc selection still rarely finds a passing design: the
+nominal trajectory never leaves the reach boundary.
+The 2026-10-05 reading, that "the zero-limit reach constraint defeats
+margins", is confirmed as a property of the constraint's formulation, not
+of margins.
+
+Control. Both manipulator studies were also re-run at engine 1.3.0 (commit
+443debe, before the change) on the same day: every run's best value
+matched the committed records exactly (70 of 70 and 60 of 60), so the
+differences in these tables are caused by the reach constraint alone, and
+the old records remain reproducible. The control records were not
+committed; they duplicate the old ones.
+
+## 2026-10-24 · engine 1.4.0-dev.1 · manipulator optimisers with a continuous reach constraint, 10 seeds, 1,500 evaluations
+
+Registered study `benchmarks/studies/manipulator-optimizers.json`
+(unchanged), record `benchmarks/results/manipulator-optimizers-2026-10-24.json`;
+the engine-0.8.0 record stays beside it.
+
+| Method | Median N m before (95 % CI) | Median N m now (95 % CI) | Runs reaching target, before → now |
+|---|---|---|---|
+| evolutionary (reference) | 16.981 (16.977–17.000) | 16.980 (16.969–16.997) | 10 → 10 |
+| global-surrogate | 17.281 (17.129–17.355) | 16.987 (16.968–17.025) | 2 → 8 |
+| member-k0 | 16.970 (16.958–16.989) | 16.976 (16.957–17.013) | 10 → 8 |
+| member-k2 | 16.968 (16.961–16.978) | 16.975 (16.959–17.018) | 10 → 8 |
+| cmaes | 16.950 (16.950–16.950) | 16.950 (16.950–16.950) | 10 → 10 |
+| bayesian | 17.394 (17.227–17.518) | 17.076 (17.039–17.116) | 0 → 2 |
+
+Reading. CMA-ES still finds the same optimum on every seed and stays
+first. The methods that search with a model of the objective and
+constraints gained most: the global surrogate moved from 2.0 % to 0.2 %
+above CMA-ES and Bayesian optimisation from 2.6 % to 0.7 %, consistent
+with a constraint whose violation is now a smooth, learnable function of
+the link lengths instead of a step. The member-response methods are
+statistically unchanged in median (overlapping intervals) but reached the
+target on 8 rather than 10 seeds; reach is derived exactly from geometry
+in their predictor, so this is a change in search trajectories, not in
+what they learn. One study, one problem, ten seeds: a ranking shift, not a
+general claim about surrogates and step constraints.
+
 ## 2026-10-08 · engine 1.3.0 · brief interpretation, 58 briefs, rule-based reference
 
 Dataset `benchmarks/interpreter/briefs-1.0.0.json` (v1.0.0), record

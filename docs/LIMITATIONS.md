@@ -103,6 +103,15 @@ Be explicit about these when presenting results.
   does not adjudicate.
 - Costs are list-price estimates from token counts.
 
+## Robotics constraints
+- Reach is constrained through the worst task point's distance ratio; the
+  arm's own joint limits, self-collision and obstacles are not modelled, so
+  "reachable" means geometrically reachable by a two-link chain.
+- A uniform margin tightens every constraint by the same fraction; the
+  7 % margin that made the manipulator robust at ±2 % tolerance was chosen
+  before the experiment, not tuned, and smaller margins (3 %) were not
+  enough on any seed.
+
 ## Software
 - Experiments persist in the browser's localStorage only.
 - Dense O(n³) solver; fine for hundreds of DOFs, not thousands.

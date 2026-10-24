@@ -20,7 +20,27 @@ export const MANIPULATOR_METRICS: MetricDescriptor[] = [
   { id: "stressUtilization", label: "Bending stress utilisation", unit: "-", description: "Peak root bending stress x safety factor / yield. Must stay <= 1." },
   { id: "maxTipDeflection_m", label: "Max tip deflection", unit: "m", description: "Largest static tip deflection over the task points." },
   { id: "unreachableFraction", label: "Unreachable task points", unit: "-", description: "Fraction of task points outside the arm's workspace." },
+  { id: "reachUtilization", label: "Reach utilisation", unit: "-", description: "Largest of r / (L1 + L2) and |L1 - L2| / r over the task points. Every point is reachable exactly when it is <= 1." },
 ];
+
+/**
+ * Continuous reach measure. A point at distance r from the base is reachable
+ * exactly when |L1 - L2| <= r <= L1 + L2, so the largest of r / (L1 + L2)
+ * (outer boundary) and |L1 - L2| / r (inner boundary) over the task points is
+ * <= 1 for precisely the designs that reach every point. Unlike the fraction
+ * of unreachable points, it says how far out of reach a design is, so
+ * constraint violations have a magnitude and a margin on its limit means a
+ * geometric reach margin.
+ */
+export function reachUtilization(L1: number, L2: number, points: TaskPoint[]): number {
+  let u = 0;
+  for (const p of points) {
+    const r = Math.hypot(p.x_m, p.y_m);
+    const inner = Math.abs(L1 - L2);
+    u = Math.max(u, r / (L1 + L2), r > 0 ? inner / r : inner > 0 ? Infinity : 0);
+  }
+  return u;
+}
 
 export interface ArmDesign {
   L1_m: number;
@@ -130,7 +150,7 @@ export function metricsFromResponses(problem: EngineeringProblem, d: ArmDesign, 
     stressUtil = Math.max(stressUtil, (bendingStress_Pa(t1, s1) * sf) / sy, (bendingStress_Pa(t2, s2) * sf) / sy);
     if (deflections) maxDefl = Math.max(maxDefl, Math.abs(deflections[i]));
   });
-  const out: Record<string, number> = { peakTorque_Nm: peak, mass_kg: m1 + m2, stressUtilization: stressUtil, unreachableFraction: unreachable / g.taskPoints.length };
+  const out: Record<string, number> = { peakTorque_Nm: peak, mass_kg: m1 + m2, stressUtilization: stressUtil, unreachableFraction: unreachable / g.taskPoints.length, reachUtilization: reachUtilization(d.L1_m, d.L2_m, g.taskPoints) };
   if (deflections) out.maxTipDeflection_m = maxDefl;
   return out;
 }

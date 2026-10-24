@@ -91,7 +91,24 @@ Forward: `x = L1 cos θ1 + L2 cos(θ1 + θ2)`, `y = L1 sin θ1 + L2 sin(θ1 + θ
 Inverse: a point at distance `d` is reachable when `|L1 − L2| ≤ d ≤ L1 + L2`;
 `cos θ2 = (d² − L1² − L2²) / (2 L1 L2)` gives the elbow-up and elbow-down
 solutions, one solution on the workspace boundary, none outside. Unreachable
-task points count towards `unreachableFraction`, which must be zero.
+task points are counted in `unreachableFraction` (reported, not constrained).
+
+The reach constraint is continuous (since engine 1.4.0-dev.1):
+
+```
+reachUtilization = max over task points k of  max( d_k / (L1 + L2),  |L1 − L2| / d_k )
+```
+
+A point is reachable exactly when both ratios are at most 1, so
+`reachUtilization ≤ 1` holds for precisely the designs whose
+`unreachableFraction` is 0 (tested on 2,000 random designs, outside the
+1e-9 IK tolerance band). The difference is the violation: the fraction is a
+step from 0 to 1/12, while the utilisation says how far out of reach the
+worst point is, so Deb's rules can rank infeasible arms and a constraint
+margin `m` means a geometric reach margin, `L1 + L2 ≥ d_max / (1 − m)`.
+Before the change a margin scaled the zero limit to zero and left reach
+untouched; the robustness study measured the consequence (below and in
+`docs/BENCHMARKS.md`).
 
 ### Static joint torques (`statics.ts`)
 Gravity only, holding still. With link masses `m1`, `m2` at mid-length and the
@@ -131,8 +148,9 @@ constraints. Sized by the same evaluator as every candidate.
 ### Responses and response model
 Responses: `jointTorques_Nm` (2 per task point) and `tipDeflections_m` (one
 per task point). The response model derives `peakTorque_Nm`,
-`stressUtilization`, `mass_kg` and `unreachableFraction` exactly from the
-torques (mass and reachability are pure geometry) and `maxTipDeflection_m`
+`stressUtilization`, `mass_kg`, `unreachableFraction` and
+`reachUtilization` exactly from the torques (mass and reachability are pure
+geometry) and `maxTipDeflection_m`
 from the deflections. There is no linear displacement-to-force map, so the
 hybrid predictor uses its `forces` representation for this domain and
 regresses tip deflection separately.

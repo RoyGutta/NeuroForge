@@ -29,6 +29,7 @@ npm test            # vitest
 npm run typecheck   # application and tests
 npm run build
 npm run reproduce   # canonical experiment; must print reproducible: true
+npm run check:publication   # nothing private or secret is tracked
 ```
 
 Open a pull request with a short description of what changed, why, and how it
